@@ -9,6 +9,6 @@
 		<description lang="en">Tulip Routine Libraries are based on Lambda's "lamlib". It has some additions, most being in control module.</description>
 		<platform>all</platform>
 		<license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
-		<source>https://github.com/lambda81/script.module.lamlib</source>
+		<source>https://github.com/Twilight0/script.module.tulip</source>
 	</extension>
 </addon>
