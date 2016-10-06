@@ -6,7 +6,7 @@
 	<extension point="xbmc.python.module" library="lib" />
 	<extension point="xbmc.addon.metadata">
 		<summary lang="en">Tulip Helper module</summary>
-		<description lang="en">Tulip Routine Libraries are based on Lambda's "lamlib". It has some additions, most being in control module. tknorris's dispatcher and log utils modules have also been incorporated.</description>
+		<description lang="en">Tulip Routine Libraries are based on Lambda's "lamlib". It has some additions, most being in control module.</description>
 		<platform>all</platform>
 		<license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
 		<source>https://github.com/lambda81/script.module.lamlib</source>
