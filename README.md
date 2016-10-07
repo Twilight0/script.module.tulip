@@ -10,7 +10,7 @@ To use it first you have to insert this line in your addon.xml, "requires" secti
 
 Then insert these in your **default.py** (or addon.py, or whatever name of the root module is in your addon.xml):
 
-    from lamlib import "name of the module"
+    from tulip import "name of the module"
 
 ### Available modules:
 
