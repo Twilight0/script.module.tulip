@@ -58,6 +58,7 @@ button = xbmcgui.ControlButton
 image = xbmcgui.ControlImage
 alphanum_input = xbmcgui.INPUT_ALPHANUM
 password_input = xbmcgui.INPUT_PASSWORD
+hide_input = xbmcgui.ALPHANUM_HIDE_INPUT
 item = xbmcgui.ListItem
 
 openFile = xbmcvfs.File
@@ -86,8 +87,8 @@ def okDialog(heading, line1):
     return dialog.ok(heading, line1)
 
 
-def inputDialog(heading, type=''):
-    return dialog.input(heading, type)
+def inputDialog(heading, _type_=''):
+    return dialog.input(heading, _type_)
 
 
 def yesnoDialog(line1, line2, line3, heading=addonInfo('name'), nolabel='', yeslabel=''):
@@ -111,17 +112,12 @@ def openSettings(query=None, id=addonInfo('id')):
         return
 
 
-# def openSettings_alt(query=None):
-#     try:
-#         idle()
-#         xbmcaddon.Addon().openSettings()
-#         if query == None:
-#             raise Exception()
-#         c, f = query.split('.')
-#         execute('SetFocus(%i)' % (int(c) + 100))
-#         execute('SetFocus(%i)' % (int(f) + 200))
-#     except:
-#         return
+def openSettings_alt():
+    try:
+        idle()
+        xbmcaddon.Addon().openSettings()
+    except:
+        return
 
 
 def openPlaylist():

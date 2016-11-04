@@ -1,3 +1,8 @@
+[B]1.0.2[/B]
+- Added trailer module
+- Added alternative settings window call
+- Miscellaneous other changes
+
 [B]1.0.1[/B]
 - Added retriever function in client module
 

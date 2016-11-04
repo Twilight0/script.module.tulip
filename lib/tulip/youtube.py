@@ -23,13 +23,14 @@ import re,json
 
 import client
 import workers
+import control
 
 
 class youtube(object):
     def __init__(self, key=''):
         self.list = [] ; self.data = []
         self.base_link = 'http://www.youtube.com'
-        self.key_link = '&key=%s' % key
+        self.key_link = '&key={0}'.format(control.setting('api_key'))
         self.playlists_link = 'https://www.googleapis.com/youtube/v3/playlists?part=snippet&maxResults=50&channelId=%s'
         self.playlist_link = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=%s'
         self.videos_link = 'https://www.googleapis.com/youtube/v3/search?part=snippet&order=date&maxResults=50&channelId=%s'
