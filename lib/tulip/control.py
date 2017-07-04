@@ -30,6 +30,7 @@ addon = xbmcaddon.Addon
 addonInfo = xbmcaddon.Addon().getAddonInfo
 
 addItem = xbmcplugin.addDirectoryItem
+addItems = xbmcplugin.addDirectoryItems
 directory = xbmcplugin.endOfDirectory
 content = xbmcplugin.setContent
 property = xbmcplugin.setProperty
@@ -59,6 +60,7 @@ image = xbmcgui.ControlImage
 alphanum_input = xbmcgui.INPUT_ALPHANUM
 password_input = xbmcgui.INPUT_PASSWORD
 hide_input = xbmcgui.ALPHANUM_HIDE_INPUT
+verify = xbmcgui.PASSWORD_VERIFY
 item = xbmcgui.ListItem
 
 openFile = xbmcvfs.File
@@ -67,6 +69,8 @@ deleteFile = xbmcvfs.delete
 deleteDir = xbmcvfs.rmdir
 listDir = xbmcvfs.listdir
 exists = xbmcvfs.exists
+copy = xbmcvfs.copy
+winlegal = xbmcvfs
 
 join = os.path.join
 settingsFile = os.path.join(dataPath, 'settings.xml')
@@ -87,8 +91,8 @@ def okDialog(heading, line1):
     return dialog.ok(heading, line1)
 
 
-def inputDialog(heading, _type_=''):
-    return dialog.input(heading, _type_)
+def inputDialog(heading):
+    return dialog.input(heading)
 
 
 def yesnoDialog(line1, line2, line3, heading=addonInfo('name'), nolabel='', yeslabel=''):
@@ -112,10 +116,10 @@ def openSettings(query=None, id=addonInfo('id')):
         return
 
 
-def openSettings_alt():
+def Settings(id=addonInfo('id')):
     try:
         idle()
-        xbmcaddon.Addon().openSettings()
+        xbmcaddon.Addon(id).openSettings()
     except:
         return
 
@@ -134,3 +138,11 @@ def idle():
 
 def set_view_mode(vmid):
     return execute('Container.SetViewMode({0})'.format(vmid))
+
+
+# for compartmentalized theme addons
+def addonmedia(addonid, icon, theme=None):
+    if not theme:
+        return join(addon(addonid).getAddonInfo('path'), 'resources', 'media', icon)
+    else:
+        return join(addon(addonid).getAddonInfo('path'), 'resources', 'media', theme, icon)

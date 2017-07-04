@@ -18,29 +18,37 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-
 import re, unicodedata
 
 
 def get(title):
-    if title == None: return
+
+    if title is None:
+        return
+
     title = re.sub('&#(\d+);', '', title)
     title = re.sub('(&#[0-9]+)([^;^0-9]+)', '\\1;\\2', title)
     title = title.replace('&quot;', '\"').replace('&amp;', '&')
     title = re.sub('\n|([[].+?[]])|([(].+?[)])|\s(vs|v[.])\s|(:|;|-|"|,|\'|\_|\.|\?)|\s', '', title).lower()
+
     return title
 
 
 def query(title):
-    if title == None: return
+
+    if title is None:
+        return
     title = title.replace('\'', '').rsplit(':', 1)[0]
+
     return title
 
 
 def normalize(title):
     try:
-        try: return title.decode('ascii').encode("utf-8")
-        except: pass
+        try:
+            return title.decode('ascii').encode("utf-8")
+        except:
+            pass
 
         t = ''
         for i in title:
@@ -50,6 +58,6 @@ def normalize(title):
             t += c
 
         return t.encode("utf-8")
+
     except:
         return title
-

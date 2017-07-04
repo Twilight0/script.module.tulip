@@ -18,17 +18,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-
 import re, urllib, json, urlparse, base64
-
-import client
-import control
+import client, control
 
 
 class Trailer:
-    def __init__(self):
+    def __init__(self, key=''):
         self.base_link = 'http://www.youtube.com'
-        self.key_link = control.setting('api_key')
+        self.key_link = control.setting('api_key') or key
         self.key_link = '&key=%s' % base64.urlsafe_b64decode(self.key_link)
         self.search_link = 'https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=%s'
         self.youtube_search = 'https://www.googleapis.com/youtube/v3/search?q='
@@ -37,16 +34,20 @@ class Trailer:
     def play(self, name, url=None):
         try:
             url = self.worker(name, url)
-            if url == None: return
+            if url == None:
+                return
 
             title = control.infoLabel('listitem.title')
-            if title == '': title = control.infoLabel('listitem.label')
+            if title == '':
+                title = control.infoLabel('listitem.label')
             icon = control.infoLabel('listitem.icon')
 
             item = control.item(path=url, iconImage=icon, thumbnailImage=icon)
-            try: item.setArt({'icon': icon})
-            except: pass
-            item.setInfo(type='Video', infoLabels = {'title': title})
+            try:
+                item.setArt({'icon': icon})
+            except:
+                pass
+            item.setInfo(type='Video', infoLabels={'title': title})
             control.player.play(url, item)
         except:
             pass
@@ -55,12 +56,14 @@ class Trailer:
         try:
             if url.startswith(self.base_link):
                 url = self.resolve(url)
-                if url == None: raise Exception()
+                if url == None:
+                    raise Exception()
                 return url
             elif not url.startswith('http://'):
                 url = self.youtube_watch % url
                 url = self.resolve(url)
-                if url == None: raise Exception()
+                if url == None:
+                    raise Exception()
                 return url
             else:
                 raise Exception()
@@ -70,7 +73,6 @@ class Trailer:
             url = self.search(query)
             if url == None: return
             return url
-
 
     def search(self, url):
         try:
@@ -89,22 +91,22 @@ class Trailer:
         except:
             return
 
-
     def resolve(self, url):
         try:
             id = url.split('?v=')[-1].split('/')[-1].split('?')[0].split('&')[0]
             result = client.request('http://www.youtube.com/watch?v=%s' % id)
 
-            message = client.parseDOM(result, 'div', attrs = {'id': 'unavailable-submessage'})
+            message = client.parseDOM(result, 'div', attrs={'id': 'unavailable-submessage'})
             message = ''.join(message)
 
-            alert = client.parseDOM(result, 'div', attrs = {'id': 'watch7-notification-area'})
+            alert = client.parseDOM(result, 'div', attrs={'id': 'watch7-notification-area'})
 
-            if len(alert) > 0: raise Exception()
-            if re.search('[a-zA-Z]', message): raise Exception()
+            if len(alert) > 0:
+                raise Exception()
+            if re.search('[a-zA-Z]', message):
+                raise Exception()
 
             url = 'plugin://plugin.video.youtube/play/?video_id=%s' % id
             return url
         except:
             return
-

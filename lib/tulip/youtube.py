@@ -19,18 +19,17 @@
 '''
 
 
-import re,json
+import re, json
 
-import client
-import workers
-import control
+import client, workers, control
 
 
 class youtube(object):
+
     def __init__(self, key=''):
         self.list = [] ; self.data = []
         self.base_link = 'http://www.youtube.com'
-        self.key_link = '&key={0}'.format(control.setting('api_key'))
+        self.key_link = '&key={0}'.format(control.setting('api_key') or key)
         self.playlists_link = 'https://www.googleapis.com/youtube/v3/playlists?part=snippet&maxResults=50&channelId=%s'
         self.playlist_link = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=%s'
         self.videos_link = 'https://www.googleapis.com/youtube/v3/search?part=snippet&order=date&maxResults=50&channelId=%s'
@@ -159,12 +158,18 @@ class youtube(object):
                 d = d[0][1]['duration']
 
                 duration = 0
-                try: duration += 60 * 60 * int(re.findall('(\d*)H', d)[0])
-                except: pass
-                try: duration += 60 * int(re.findall('(\d*)M', d)[0])
-                except: pass
-                try: duration += int(re.findall('(\d*)S', d)[0])
-                except: pass
+                try:
+                    duration += 60 * 60 * int(re.findall('(\d*)H', d)[0])
+                except:
+                    pass
+                try:
+                    duration += 60 * int(re.findall('(\d*)M', d)[0])
+                except:
+                    pass
+                try:
+                    duration += int(re.findall('(\d*)S', d)[0])
+                except:
+                    pass
                 duration = str(duration)
 
                 self.list[item]['duration'] = duration
@@ -179,5 +184,3 @@ class youtube(object):
             self.data[i] = result
         except:
             return
-
-

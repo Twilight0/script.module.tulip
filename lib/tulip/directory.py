@@ -19,18 +19,17 @@
 '''
 
 
-import urllib, os, sys
+import urllib
 import control
+from init import sysaddon, syshandle
 
-syshandle = int(sys.argv[1])
 
 def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video'):
 
-    if items is None or len(items) is 0:
+    if items is None or len(items) == 0:
         return
 
-    sysaddon = sys.argv[0]
-    sysicon = os.path.join(control.addonInfo('path'), 'resources', 'media')
+    sysicon = control.join(control.addonInfo('path'), 'resources', 'media')
     sysimage = control.addonInfo('icon')
     sysfanart = control.addonInfo('fanart')
 
@@ -49,7 +48,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
             elif 'poster' in i and not i['poster'] == '0':
                 image = i['poster']
             elif 'icon' in i and not i['icon'] == '0':
-                image = os.path.join(sysicon, i['icon'])
+                image = control.join(sysicon, i['icon'])
             else:
                 image = sysimage
 
@@ -89,7 +88,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
                 except:
                     pass
 
-            meta = dict((k,v) for k, v in i.iteritems() if not k == 'cm' and not v == '0')
+            meta = dict((k, v) for k, v in i.iteritems() if not k == 'cm' and not v == '0')
             if not mediatype == None:
                 meta['mediatype'] = mediatype
 
@@ -102,7 +101,10 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
             item.addContextMenuItems(cm)
             item.setInfo(type=infotype, infoLabels = meta)
             if isFolder is False:
-                item.setProperty('IsPlayable', 'true')
+                item.setProperty('IsPlayable', 'true') if not i['action'] == 'pvr_client' else item.setProperty('IsPlayable', 'false')
+                if not i['action'] == 'pvr_client' and infotype == 'video':
+                    item.addStreamInfo('video', {'codec': 'h264'})
+
             control.addItem(handle=syshandle, url=url, listitem=item, isFolder=isFolder)
         except:
             pass
@@ -113,7 +115,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
             raise Exception()
 
         url = '%s?action=%s&url=%s' % (sysaddon, i['nextaction'], urllib.quote_plus(i['next']))
-        icon = i['nexticon'] if 'nexticon' in i else os.path.join(sysicon, 'next.png')
+        icon = i['nexticon'] if 'nexticon' in i else control.join(sysicon, 'next.png')
         fanart = i['nextfanart'] if 'nextfanart' in i else sysfanart
         try:
             label = control.lang(i['nextlabel']).encode('utf-8')
@@ -129,18 +131,18 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
 
     if not content is None:
         control.content(syshandle, content)
+
     control.directory(syshandle, cacheToDisc=cacheToDisc)
 
 
 def resolve(url, meta=None, icon=None):
+
     item = control.item(path=url)
 
     if not icon is None:
         item.setArt({'icon': icon, 'thumb': icon})
 
     if not meta is None:
-        item.setInfo(type='Video', infoLabels = meta)
+        item.setInfo(type='Video', infoLabels=meta)
 
     control.resolve(syshandle, True, item)
-
-

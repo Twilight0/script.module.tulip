@@ -80,7 +80,8 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
         if redirect == False:
 
             class NoRedirection(urllib2.HTTPErrorProcessor):
-                def http_response(self, request, response): return response
+                def http_response(self, request, response):
+                    return response
 
             opener = urllib2.build_opener(NoRedirection)
             opener = urllib2.install_opener(opener)
@@ -94,9 +95,11 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
 
         try:
             response = urllib2.urlopen(request, timeout=int(timeout))
+
         except urllib2.HTTPError as response:
 
             if response.code == 503:
+
                 if 'cf-browser-verification' in response.read(5242880):
 
                     netloc = '%s://%s' % (urlparse.urlparse(url).scheme, urlparse.urlparse(url).netloc)
@@ -115,12 +118,15 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
             elif error == False:
                 return
 
-
         if output == 'cookie':
-            try: result = '; '.join(['%s=%s' % (i.name, i.value) for i in cookies])
-            except: pass
-            try: result = cf
-            except: pass
+            try:
+                result = '; '.join(['%s=%s' % (i.name, i.value) for i in cookies])
+            except:
+                pass
+            try:
+                result = cf
+            except:
+                pass
 
         elif output == 'response':
             if limit == '0':
@@ -137,10 +143,14 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
             result = response.read(16 * 1024)
 
         elif output == 'extended':
-            try: cookie = '; '.join(['%s=%s' % (i.name, i.value) for i in cookies])
-            except: pass
-            try: cookie = cf
-            except: pass
+            try:
+                cookie = '; '.join(['%s=%s' % (i.name, i.value) for i in cookies])
+            except:
+                pass
+            try:
+                cookie = cf
+            except:
+                pass
             content = response.headers
             result = response.read(5242880)
             return (result, headers, content, cookie)
@@ -164,6 +174,7 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
             response.close()
 
         return result
+
     except:
         return
 
@@ -173,19 +184,29 @@ def retriever(source, destination):
 
 
 def parseDOM(html, name=u"", attrs={}, ret=False):
-    # Copyright (C) 2010-2011 Tobias Ussing And Henrik Mosgaard Jensen
+
+    print("Name: " + repr(name) + " - Attrs:" + repr(attrs) + " - Ret: " + repr(ret) + " - HTML: " + str(type(html)), 3)
+
+    if isinstance(name, str):  # Should be handled
+        try:
+            name = name  # .decode("utf-8")
+        except:
+            print("Couldn't decode name binary string: " + repr(name))
 
     if isinstance(html, str):
         try:
-            html = [html.decode("utf-8")]
+            html = [html.decode("utf-8")]  # Replace with chardet thingy
         except:
+            print("Couldn't decode html binary string. Data length: " + repr(len(html)))
             html = [html]
     elif isinstance(html, unicode):
         html = [html]
     elif not isinstance(html, list):
+        print("Input isn't list or string/unicode.")
         return u""
 
     if not name.strip():
+        print("Missing tag name")
         return u""
 
     ret_lst = []
@@ -194,85 +215,129 @@ def parseDOM(html, name=u"", attrs={}, ret=False):
         for match in temp_item:
             item = item.replace(match, match.replace("\n", " "))
 
-        lst = []
-        for key in attrs:
-            lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=[\'"]' + attrs[key] + '[\'"].*?>))', re.M | re.S).findall(item)
-            if len(lst2) == 0 and attrs[key].find(" ") == -1:
-                lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=' + attrs[key] + '.*?>))', re.M | re.S).findall(item)
-
-            if len(lst) == 0:
-                lst = lst2
-                lst2 = []
-            else:
-                test = range(len(lst))
-                test.reverse()
-                for i in test:
-                    if not lst[i] in lst2:
-                        del(lst[i])
-
-        if len(lst) == 0 and attrs == {}:
-            lst = re.compile('(<' + name + '>)', re.M | re.S).findall(item)
-            if len(lst) == 0:
-                lst = re.compile('(<' + name + ' .*?>)', re.M | re.S).findall(item)
+        lst = _getDOMElements(item, name, attrs)
 
         if isinstance(ret, str):
+            print("Getting attribute %s content for %s matches " % (ret, len(lst) ), 3)
             lst2 = []
             for match in lst:
-                attr_lst = re.compile('<' + name + '.*?' + ret + '=([\'"].[^>]*?[\'"])>', re.M | re.S).findall(match)
-                if len(attr_lst) == 0:
-                    attr_lst = re.compile('<' + name + '.*?' + ret + '=(.[^>]*?)>', re.M | re.S).findall(match)
-                for tmp in attr_lst:
-                    cont_char = tmp[0]
-                    if cont_char in "'\"":
-                        if tmp.find('=' + cont_char, tmp.find(cont_char, 1)) > -1:
-                            tmp = tmp[:tmp.find('=' + cont_char, tmp.find(cont_char, 1))]
-
-                        if tmp.rfind(cont_char, 1) > -1:
-                            tmp = tmp[1:tmp.rfind(cont_char)]
-                    else:
-                        if tmp.find(" ") > 0:
-                            tmp = tmp[:tmp.find(" ")]
-                        elif tmp.find("/") > 0:
-                            tmp = tmp[:tmp.find("/")]
-                        elif tmp.find(">") > 0:
-                            tmp = tmp[:tmp.find(">")]
-
-                    lst2.append(tmp.strip())
+                lst2 += _getDOMAttributes(match, name, ret)
             lst = lst2
         else:
+            print("Getting element content for %s matches " % len(lst), 3)
             lst2 = []
             for match in lst:
-                endstr = u"</" + name
-
-                start = item.find(match)
-                end = item.find(endstr, start)
-                pos = item.find("<" + name, start + 1 )
-
-                while pos < end and pos != -1:
-                    tend = item.find(endstr, end + len(endstr))
-                    if tend != -1:
-                        end = tend
-                    pos = item.find("<" + name, pos + 1)
-
-                if start == -1 and end == -1:
-                    temp = u""
-                elif start > -1 and end > -1:
-                    temp = item[start + len(match):end]
-                elif end > -1:
-                    temp = item[:end]
-                elif start > -1:
-                    temp = item[start + len(match):]
-
-                if ret:
-                    endstr = item[end:item.find(">", item.find(endstr)) + 1]
-                    temp = match + temp + endstr
-
+                print("Getting element content for %s" % match, 4)
+                temp = _getDOMContent(item, name, match, ret).strip()
                 item = item[item.find(temp, item.find(match)) + len(temp):]
                 lst2.append(temp)
             lst = lst2
         ret_lst += lst
 
+    print("Done: " + repr(ret_lst), 3)
     return ret_lst
+
+
+def _getDOMContent(html, name, match, ret):  # Cleanup
+    print("match: " + match, 3)
+
+    endstr = u"</" + name  # + ">"
+
+    start = html.find(match)
+    end = html.find(endstr, start)
+    pos = html.find("<" + name, start + 1 )
+
+    print(str(start) + " < " + str(end) + ", pos = " + str(pos) + ", endpos: " + str(end), 8)
+
+    while pos < end and pos != -1:  # Ignore too early </endstr> return
+        tend = html.find(endstr, end + len(endstr))
+        if tend != -1:
+            end = tend
+        pos = html.find("<" + name, pos + 1)
+        print("loop: " + str(start) + " < " + str(end) + " pos = " + str(pos), 8)
+
+    print("start: %s, len: %s, end: %s" % (start, len(match), end), 3)
+    if start == -1 and end == -1:
+        result = u""
+    elif start > -1 and end > -1:
+        result = html[start + len(match):end]
+    elif end > -1:
+        result = html[:end]
+    elif start > -1:
+        result = html[start + len(match):]
+
+    if ret:
+        endstr = html[end:html.find(">", html.find(endstr)) + 1]
+        result = match + result + endstr
+
+    print("done result length: " + str(len(result)), 3)
+    return result
+
+
+def _getDOMAttributes(match, name, ret):
+    print("", 3)
+
+    lst = re.compile('<' + name + '.*?' + ret + '=([\'"].[^>]*?[\'"])>', re.M | re.S).findall(match)
+    if len(lst) == 0:
+        lst = re.compile('<' + name + '.*?' + ret + '=(.[^>]*?)>', re.M | re.S).findall(match)
+    ret = []
+    for tmp in lst:
+        cont_char = tmp[0]
+        if cont_char in "'\"":
+            print("Using %s as quotation mark" % cont_char, 3)
+
+            # Limit down to next variable.
+            if tmp.find('=' + cont_char, tmp.find(cont_char, 1)) > -1:
+                tmp = tmp[:tmp.find('=' + cont_char, tmp.find(cont_char, 1))]
+
+            # Limit to the last quotation mark
+            if tmp.rfind(cont_char, 1) > -1:
+                tmp = tmp[1:tmp.rfind(cont_char)]
+        else:
+            print("No quotation mark found", 3)
+            if tmp.find(" ") > 0:
+                tmp = tmp[:tmp.find(" ")]
+            elif tmp.find("/") > 0:
+                tmp = tmp[:tmp.find("/")]
+            elif tmp.find(">") > 0:
+                tmp = tmp[:tmp.find(">")]
+
+        ret.append(tmp.strip())
+
+    print("Done: " + repr(ret), 3)
+    return ret
+
+
+def _getDOMElements(item, name, attrs):
+    print("", 3)
+
+    lst = []
+    for key in attrs:
+        lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=[\'"]' + attrs[key] + '[\'"].*?>))', re.M | re.S).findall(item)
+        if len(lst2) == 0 and attrs[key].find(" ") == -1:  # Try matching without quotation marks
+            lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=' + attrs[key] + '.*?>))', re.M | re.S).findall(item)
+
+        if len(lst) == 0:
+            print("Setting main list " + repr(lst2), 5)
+            lst = lst2
+            lst2 = []
+        else:
+            print("Setting new list " + repr(lst2), 5)
+            test = range(len(lst))
+            test.reverse()
+            for i in test:  # Delete anything missing from the next list.
+                if not lst[i] in lst2:
+                    print("Purging mismatch " + str(len(lst)) + " - " + repr(lst[i]), 3)
+                    del(lst[i])
+
+    if len(lst) == 0 and attrs == {}:
+        print("No list found, trying to match on name only", 3)
+        lst = re.compile('(<' + name + '>)', re.M | re.S).findall(item)
+        if len(lst) == 0:
+            lst = re.compile('(<' + name + ' .*?>)', re.M | re.S).findall(item)
+
+    print("Done: " + str(type(lst)), 3)
+    return lst
 
 
 def replaceHTMLCodes(txt):
@@ -303,6 +368,18 @@ def randomagent():
 
 def agent():
     return 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko'
+
+
+def mobile_agent():
+    return 'Mozilla/5.0 (Android 4.4; Mobile; rv:18.0) Gecko/18.0 Firefox/18.0'
+
+
+def ios_agent():
+    return 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25'
+
+
+def agent_appender(agent=randomagent()):
+    return '|User-Agent=' + urllib.quote_plus(agent)
 
 
 def cfcookie(netloc, ua, timeout):
