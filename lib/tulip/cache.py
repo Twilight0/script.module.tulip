@@ -128,10 +128,14 @@ def clear(table=None, withyes=True):
             table = [table]
 
         if withyes:
+
             yes = control.yesnoDialog(control.lang(30401).encode('utf-8'), '', '')
+
             if not yes:
                 return
+
         else:
+
             pass
 
         dbcon = database.connect(control.cacheFile)
@@ -148,5 +152,23 @@ def clear(table=None, withyes=True):
         control.infoDialog(control.lang(30402).encode('utf-8'))
     except:
         pass
+
+
+def delete(dbfile=control.cacheFile, withyes=True):
+
+    if withyes:
+
+        yes = control.yesnoDialog(control.lang(30401).encode('utf-8'), '', '')
+
+        if not yes:
+            return
+
+    else:
+
+        pass
+
+    control.deleteFile(dbfile)
+
+    control.infoDialog(control.lang(30402).encode('utf-8'))
 
 

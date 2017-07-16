@@ -20,15 +20,17 @@
 
 
 import re, sys, cookielib, time, random
-import urllib, urllib2, urlparse, HTMLParser
+import urllib2, urlparse, HTMLParser
 import cache
 
+from urllib import URLopener
 
 def request(url, close=True, redirect=True, error=False, proxy=None, post=None, headers=None, mobile=False, limit=None, referer=None, cookie=None, output='', timeout='30'):
+
     try:
         handlers = []
 
-        if not proxy == None:
+        if proxy is not None:
             handlers += [urllib2.ProxyHandler({'http':'%s' % (proxy)}), urllib2.HTTPHandler]
             opener = urllib2.build_opener(*handlers)
             opener = urllib2.install_opener(opener)
@@ -77,7 +79,7 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
         elif not cookie == None:
             headers['Cookie'] = cookie
 
-        if redirect == False:
+        if redirect is False:
 
             class NoRedirection(urllib2.HTTPErrorProcessor):
                 def http_response(self, request, response):
@@ -170,7 +172,7 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
             else:
                 result = response.read(5242880)
 
-        if close == True:
+        if close is True:
             response.close()
 
         return result
@@ -180,7 +182,11 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
 
 
 def retriever(source, destination):
-    urllib.URLopener().retrieve(source, destination)
+
+    class Opener(URLopener):
+        version = randomagent()
+
+    Opener().retrieve(source, destination)
 
 
 def parseDOM(html, name=u"", attrs={}, ret=False):
@@ -341,6 +347,7 @@ def _getDOMElements(item, name, attrs):
 
 
 def replaceHTMLCodes(txt):
+
     txt = re.sub("(&#[0-9]+)([^;^0-9]+)", "\\1;\\2", txt)
     txt = HTMLParser.HTMLParser().unescape(txt)
     txt = txt.replace("&quot;", "\"")
@@ -351,18 +358,26 @@ def replaceHTMLCodes(txt):
 
 
 def randomagent():
-    BR_VERS = [
-        ['%s.0' % i for i in xrange(18, 43)],
-        ['37.0.2062.103', '37.0.2062.120', '37.0.2062.124', '38.0.2125.101', '38.0.2125.104', '38.0.2125.111', '39.0.2171.71', '39.0.2171.95', '39.0.2171.99', '40.0.2214.93', '40.0.2214.111',
-         '40.0.2214.115', '42.0.2311.90', '42.0.2311.135', '42.0.2311.152', '43.0.2357.81', '43.0.2357.124', '44.0.2403.155', '44.0.2403.157', '45.0.2454.101', '45.0.2454.85', '46.0.2490.71',
-         '46.0.2490.80', '46.0.2490.86', '47.0.2526.73', '47.0.2526.80'],
-        ['11.0']]
-    WIN_VERS = ['Windows NT 10.0', 'Windows NT 7.0', 'Windows NT 6.3', 'Windows NT 6.2', 'Windows NT 6.1', 'Windows NT 6.0', 'Windows NT 5.1', 'Windows NT 5.0']
+
+    BR_VERS = [['%s.0' % i for i in xrange(18, 43)], ['37.0.2062.103', '37.0.2062.120', '37.0.2062.124', '38.0.2125.101',
+                                                      '38.0.2125.104', '38.0.2125.111', '39.0.2171.71', '39.0.2171.95',
+                                                      '39.0.2171.99', '40.0.2214.93', '40.0.2214.111', '40.0.2214.115',
+                                                      '42.0.2311.90', '42.0.2311.135', '42.0.2311.152', '43.0.2357.81',
+                                                      '43.0.2357.124', '44.0.2403.155', '44.0.2403.157', '45.0.2454.101',
+                                                      '45.0.2454.85', '46.0.2490.71', '46.0.2490.80', '46.0.2490.86',
+                                                      '47.0.2526.73', '47.0.2526.80'], ['11.0']]
+
+    WIN_VERS = ['Windows NT 10.0', 'Windows NT 7.0', 'Windows NT 6.3', 'Windows NT 6.2', 'Windows NT 6.1', 'Windows NT 6.0',
+                'Windows NT 5.1', 'Windows NT 5.0']
+
     FEATURES = ['; WOW64', '; Win64; IA64', '; Win64; x64', '']
+
     RAND_UAS = ['Mozilla/5.0 ({win_ver}{feature}; rv:{br_ver}) Gecko/20100101 Firefox/{br_ver}',
                 'Mozilla/5.0 ({win_ver}{feature}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{br_ver} Safari/537.36',
                 'Mozilla/5.0 ({win_ver}{feature}; Trident/7.0; rv:{br_ver}) like Gecko']
+
     index = random.randrange(len(RAND_UAS))
+
     return RAND_UAS[index].format(win_ver=random.choice(WIN_VERS), feature=random.choice(FEATURES), br_ver=random.choice(BR_VERS[index]))
 
 
@@ -378,8 +393,13 @@ def ios_agent():
     return 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25'
 
 
-def agent_appender(agent=randomagent()):
-    return '|User-Agent=' + urllib.quote_plus(agent)
+def spoofer(_agent=True, age_str=randomagent(), referer=False, ref_str=''):
+    if _agent and referer:
+        return '|User-Agent=' + urllib.quote_plus(age_str) + '&Referer=' + urllib.quote_plus(ref_str)
+    elif _agent:
+        return '|User-Agent=' + urllib.quote_plus(age_str)
+    elif referer:
+        return '|Referer=' + urllib.quote_plus(ref_str)
 
 
 def cfcookie(netloc, ua, timeout):

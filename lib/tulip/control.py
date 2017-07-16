@@ -70,7 +70,6 @@ deleteDir = xbmcvfs.rmdir
 listDir = xbmcvfs.listdir
 exists = xbmcvfs.exists
 copy = xbmcvfs.copy
-winlegal = xbmcvfs
 
 join = os.path.join
 settingsFile = os.path.join(dataPath, 'settings.xml')
@@ -79,11 +78,16 @@ cacheFile = os.path.join(dataPath, 'cache.db')
 
 
 def infoDialog(message, heading=addonInfo('name'), icon='', time=3000):
+
     if icon == '':
         icon = addonInfo('icon')
+
     try:
+
         dialog.notification(heading, message, icon, time, sound=False)
+
     except:
+
         execute("Notification(%s, %s, %s, %s)" % (heading, message, time, icon))
 
 
@@ -104,7 +108,9 @@ def selectDialog(list, heading=addonInfo('name')):
 
 
 def openSettings(query=None, id=addonInfo('id')):
+
     try:
+
         idle()
         execute('Addon.OpenSettings(%s)' % id)
         if query is None:
@@ -112,15 +118,21 @@ def openSettings(query=None, id=addonInfo('id')):
         c, f = query.split('.')
         execute('SetFocus(%i)' % (int(c) + 100))
         execute('SetFocus(%i)' % (int(f) + 200))
+
     except:
+
         return
 
 
 def Settings(id=addonInfo('id')):
+
     try:
+
         idle()
         xbmcaddon.Addon(id).openSettings()
+
     except:
+
         return
 
 

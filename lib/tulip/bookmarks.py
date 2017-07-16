@@ -22,15 +22,20 @@
 import hashlib, json
 
 try:
+
     from sqlite3 import dbapi2 as database
-except:
+
+except ImportError:
+    # noinspection PyUnresolvedReferences
     from pysqlite2 import dbapi2 as database
 
 import control
 
 
 def add(url):
+
     try:
+
         data = json.loads(url)
 
         dbid = hashlib.md5()
@@ -48,12 +53,16 @@ def add(url):
         dbcur.execute("DELETE FROM bookmark WHERE dbid = '%s'" % dbid)
         dbcur.execute("INSERT INTO bookmark Values (?, ?)", (dbid, item))
         dbcon.commit()
+
     except:
+
         pass
 
 
 def delete(url):
+
     try:
+
         data = json.loads(url)
 
         dbid = hashlib.md5()
@@ -69,11 +78,14 @@ def delete(url):
         dbcon.commit()
 
         control.refresh()
+
     except:
+
         pass
 
 
 def get():
+
     try:
         control.makeFile(control.dataPath)
         dbcon = database.connect(control.bookmarksFile)
@@ -81,8 +93,11 @@ def get():
         dbcur.execute("SELECT * FROM bookmark")
         items = dbcur.fetchall()
         items = [eval(i[1].encode('utf-8')) for i in items]
+
         return items
+
     except:
+
         pass
 
 
