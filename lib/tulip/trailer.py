@@ -24,17 +24,18 @@ import client, control
 
 class Trailer:
     def __init__(self, key=''):
+
         self.base_link = 'http://www.youtube.com'
-        self.key_link = control.setting('api_key') or key
-        self.key_link = '&key=%s' % base64.urlsafe_b64decode(self.key_link)
+        self.key_link = '&key={0}'.format(control.setting('api_key') or key)
         self.search_link = 'https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=%s'
         self.youtube_search = 'https://www.googleapis.com/youtube/v3/search?q='
         self.youtube_watch = 'http://www.youtube.com/watch?v=%s'
 
     def play(self, name, url=None):
+
         try:
             url = self.worker(name, url)
-            if url == None:
+            if url is None:
                 return
 
             title = control.infoLabel('listitem.title')
@@ -53,6 +54,7 @@ class Trailer:
             pass
 
     def worker(self, name, url):
+
         try:
             if url.startswith(self.base_link):
                 url = self.resolve(url)
@@ -75,6 +77,7 @@ class Trailer:
             return url
 
     def search(self, url):
+
         try:
             query = urlparse.parse_qs(urlparse.urlparse(url).query)['q'][0]
 
@@ -87,7 +90,8 @@ class Trailer:
 
             for url in items:
                 url = self.resolve(url)
-                if not url is None: return url
+                if url is not None:
+                    return url
         except:
             return
 

@@ -20,10 +20,9 @@
 
 
 import re, sys, cookielib, time, random
-import urllib2, urlparse, HTMLParser
+import urllib, urllib2, urlparse, HTMLParser
 import cache
 
-from urllib import URLopener
 
 def request(url, close=True, redirect=True, error=False, proxy=None, post=None, headers=None, mobile=False, limit=None, referer=None, cookie=None, output='', timeout='30'):
 
@@ -183,7 +182,7 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
 
 def retriever(source, destination):
 
-    class Opener(URLopener):
+    class Opener(urllib.URLopener):
         version = randomagent()
 
     Opener().retrieve(source, destination)
