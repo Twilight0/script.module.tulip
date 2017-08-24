@@ -39,8 +39,12 @@ def add(url):
         data = json.loads(url)
 
         dbid = hashlib.md5()
-        for i in data['bookmark']: dbid.update(str(i))
-        for i in data['action']: dbid.update(str(i))
+
+        for i in data['bookmark']:
+            dbid.update(str(i))
+        for i in data['action']:
+            dbid.update(str(i))
+
         dbid = str(dbid.hexdigest())
 
         item = dict((k,v) for k, v in data.iteritems() if not k == 'bookmark')
@@ -66,8 +70,13 @@ def delete(url):
         data = json.loads(url)
 
         dbid = hashlib.md5()
-        for i in data['delbookmark']: dbid.update(str(i))
-        for i in data['action']: dbid.update(str(i))
+
+        for i in data['delbookmark']:
+            dbid.update(str(i))
+
+        for i in data['action']:
+            dbid.update(str(i))
+
         dbid = str(dbid.hexdigest())
 
         control.makeFile(control.dataPath)
@@ -87,6 +96,7 @@ def delete(url):
 def get():
 
     try:
+
         control.makeFile(control.dataPath)
         dbcon = database.connect(control.bookmarksFile)
         dbcur = dbcon.cursor()

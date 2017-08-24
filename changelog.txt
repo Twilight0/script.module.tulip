@@ -1,3 +1,24 @@
+[B]1.2.4[/B]
+- Added title parameter for url calls in directory module
+
+[B]1.2.3[/B]
+- Added setting for youtube streams
+
+[B]1.2.2[/B]
+- Slight tweak in addonmedia method
+- Deprecated sysicon variable in directory module
+
+[B]1.2.1[/B]
+- Added waitForAbort method in control module (and monitor)
+
+[B]1.2.0[/B]
+- Added conditional for youtube play_link
+- Merged youtube & trailer modules
+- Added downloader module (untested)
+- Made requests module optional
+- Removed print statements from client module
+- Code cosmetics
+
 [B]1.1.4[/B]
 - Fixed error in urllib import
 - Minor changes in trailer module

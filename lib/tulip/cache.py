@@ -24,16 +24,17 @@ import re, hashlib, time
 try:
     from sqlite3 import dbapi2 as database
 except:
+    # noinspection PyUnresolvedReferences
     from pysqlite2 import dbapi2 as database
 
 import control
 
 
-def get(function, timeout, *args, **table):
+def get(definition, time_out, *args, **table):
     try:
         response = None
 
-        f = repr(function)
+        f = repr(definition)
         f = re.sub('.+\smethod\s|.+function\s|\sat\s.+|\sof\s.+', '', f)
 
         a = hashlib.md5()
@@ -58,17 +59,17 @@ def get(function, timeout, *args, **table):
 
         t1 = int(match[3])
         t2 = int(time.time())
-        update = (abs(t2 - t1) / 3600) >= int(timeout)
-        if update == False:
+        update = (abs(t2 - t1) / 3600) >= int(time_out)
+        if not update:
             return response
     except:
         pass
 
     try:
-        r = function(*args)
-        if (r == None or r == []) and not response == None:
+        r = definition(*args)
+        if (r is None or r == []) and response is not None:
             return response
-        elif (r == None or r == []):
+        elif (r is None or r == []):
             return r
     except:
         return
@@ -89,11 +90,11 @@ def get(function, timeout, *args, **table):
         pass
 
 
-def timeout(function, *args, **table):
+def timeout(definition, *args, **table):
     try:
         response = None
 
-        f = repr(function)
+        f = repr(definition)
         f = re.sub('.+\smethod\s|.+function\s|\sat\s.+|\sof\s.+', '', f)
 
         a = hashlib.md5()
@@ -119,6 +120,7 @@ def timeout(function, *args, **table):
 
 
 def clear(table=None, withyes=True):
+
     try:
         control.idle()
 

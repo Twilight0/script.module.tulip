@@ -24,6 +24,7 @@ from collections import namedtuple
 DomMatch = namedtuple('DOMMatch', ['attrs', 'content'])
 re_type = type(re.compile(''))
 
+
 def __get_dom_content(html, name, match):
     if match.endswith('/>'): return ''
     
@@ -57,6 +58,7 @@ def __get_dom_content(html, name, match):
         result = ''
 
     return result
+
 
 def __get_dom_elements(item, name, attrs):
     if not attrs:
@@ -93,6 +95,7 @@ def __get_dom_elements(item, name, attrs):
     
     return this_list
 
+
 def __get_attribs(element):
     attribs = {}
     for match in re.finditer('''\s+(?P<key>[^=]+)=\s*(?:(?P<delim>["'])(?P<value1>.*?)(?P=delim)|(?P<value2>[^"'][^>\s]*))''', element):
@@ -104,8 +107,10 @@ def __get_attribs(element):
         attribs[match['key'].lower().strip()] = value
     return attribs
 
+
 def parse_dom(html, name='', attrs=None, req=False, exclude_comments=False):
-    if attrs is None: attrs = {}
+    if attrs is None:
+        attrs = {}
     name = name.strip()
     # log.log('parse_dom: Name: |%s| Attrs: |%s| Ret: |%s| - HTML: %s' % (name, attrs, req, type(html)), log.LOGDEBUG)
     if isinstance(html, unicode) or isinstance(html, DomMatch):

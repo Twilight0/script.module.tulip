@@ -29,7 +29,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
     if items is None or len(items) == 0:
         return
 
-    sysicon = control.join(control.addonInfo('path'), 'resources', 'media')
+    # sysicon = control.join(control.addonInfo('path'), 'resources', 'media')
     sysimage = control.addonInfo('icon')
     sysfanart = control.addonInfo('fanart')
 
@@ -48,7 +48,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
             elif 'poster' in i and not i['poster'] == '0':
                 image = i['poster']
             elif 'icon' in i and not i['icon'] == '0':
-                image = control.join(sysicon, i['icon'])
+                image = control.addonmedia(i['icon'])
             else:
                 image = sysimage
 
@@ -73,6 +73,10 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
                 url += '&image=%s' % urllib.quote_plus(i['image'])
             except:
                 pass
+            try:
+                url += '&title=%s' % urllib.quote_plus(i['title'])
+            except:
+                pass
 
             cm = []
             menus = i['cm'] if 'cm' in i else []
@@ -89,19 +93,24 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
                     pass
 
             meta = dict((k, v) for k, v in i.iteritems() if not k == 'cm' and not v == '0')
-            if not mediatype == None:
+            if mediatype is not None:
                 meta['mediatype'] = mediatype
 
             item = control.item(label=label, iconImage=image, thumbnailImage=image)
 
-            item.setArt({'icon': image, 'thumb': image, 'poster': image, 'tvshow.poster': image, 'season.poster': image, 'banner': banner, 'tvshow.banner': banner, 'season.banner': banner})
+            item.setArt({'icon': image, 'thumb': image, 'poster': image, 'tvshow.poster': image, 'season.poster': image,
+                         'banner': banner, 'tvshow.banner': banner, 'season.banner': banner})
 
             item.setProperty('Fanart_Image', fanart)
 
             item.addContextMenuItems(cm)
-            item.setInfo(type=infotype, infoLabels = meta)
+            item.setInfo(type=infotype, infoLabels=meta)
+
             if isFolder is False:
-                item.setProperty('IsPlayable', 'true') if not i['action'] == 'pvr_client' else item.setProperty('IsPlayable', 'false')
+                if not i['action'] == 'pvr_client':
+                    item.setProperty('IsPlayable', 'true')
+                else:
+                    item.setProperty('IsPlayable', 'false')
                 if not i['action'] == 'pvr_client' and infotype == 'video':
                     item.addStreamInfo('video', {'codec': 'h264'})
 
@@ -115,7 +124,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
             raise Exception()
 
         url = '%s?action=%s&url=%s' % (sysaddon, i['nextaction'], urllib.quote_plus(i['next']))
-        icon = i['nexticon'] if 'nexticon' in i else control.join(sysicon, 'next.png')
+        icon = i['nexticon'] if 'nexticon' in i else control.addonmedia('next.png')
         fanart = i['nextfanart'] if 'nextfanart' in i else sysfanart
         try:
             label = control.lang(i['nextlabel']).encode('utf-8')

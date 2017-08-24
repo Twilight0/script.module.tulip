@@ -45,6 +45,8 @@ execute = xbmc.executebuiltin
 skin = xbmc.getSkinDir()
 player = xbmc.Player()
 playlist = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+monitor = xbmc.Monitor()
+wait = monitor.waitForAbort
 
 transPath = xbmc.translatePath
 skinPath = xbmc.translatePath('special://skin/')
@@ -99,7 +101,7 @@ def inputDialog(heading):
     return dialog.input(heading)
 
 
-def yesnoDialog(line1, line2, line3, heading=addonInfo('name'), nolabel='', yeslabel=''):
+def yesnoDialog(line1, line2='', line3='', heading=addonInfo('name'), nolabel=None, yeslabel=None):
     return dialog.yesno(heading, line1, line2, line3, nolabel, yeslabel)
 
 
@@ -124,6 +126,7 @@ def openSettings(query=None, id=addonInfo('id')):
         return
 
 
+# Alternative method
 def Settings(id=addonInfo('id')):
 
     try:
@@ -153,7 +156,7 @@ def set_view_mode(vmid):
 
 
 # for compartmentalized theme addons
-def addonmedia(addonid, icon, theme=None):
+def addonmedia(icon, addonid=addonInfo('id'), theme=None):
     if not theme:
         return join(addon(addonid).getAddonInfo('path'), 'resources', 'media', icon)
     else:

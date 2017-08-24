@@ -19,22 +19,29 @@
 '''
 
 
-import re, json
-
+import re, json, urllib, urlparse
 import client, workers, control
 
 
 class youtube(object):
 
     def __init__(self, key=''):
+
         self.list = [] ; self.data = []
         self.base_link = 'http://www.youtube.com'
-        self.key_link = '&key={0}'.format(control.setting('api_key') or key)
+        self.key_link = '&key={0}'.format(control.setting('yt_api_key') or key)
         self.playlists_link = 'https://www.googleapis.com/youtube/v3/playlists?part=snippet&maxResults=50&channelId=%s'
         self.playlist_link = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=%s'
         self.videos_link = 'https://www.googleapis.com/youtube/v3/search?part=snippet&order=date&maxResults=50&channelId=%s'
         self.content_link = 'https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=%s'
-        self.play_link = 'plugin://plugin.video.youtube/play/?video_id=%s'
+        self.search_link = 'https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=%s'
+        self.youtube_search = 'https://www.googleapis.com/youtube/v3/search?q='
+        self.youtube_watch = 'http://www.youtube.com/watch?v=%s'
+
+        if control.condVisibility('System.HasAddon(script.module.urlresolver)') and control.setting('yt_resolve') == 'true':
+            self.play_link = 'https://www.youtube.com/embed/%s'
+        else:
+            self.play_link = 'plugin://plugin.video.youtube/play/?video_id=%s'
 
     def playlists(self, url):
         url = self.playlists_link % url + self.key_link
@@ -182,5 +189,90 @@ class youtube(object):
         try:
             result = client.request(url)
             self.data[i] = result
+        except:
+            return
+
+    def play(self, name, url=None):
+
+        try:
+            url = self.worker(name, url)
+            if url is None:
+                return
+
+            title = control.infoLabel('listitem.title')
+            if title == '':
+                title = control.infoLabel('listitem.label')
+            icon = control.infoLabel('listitem.icon')
+
+            item = control.item(path=url, iconImage=icon, thumbnailImage=icon)
+            try:
+                item.setArt({'icon': icon})
+            except:
+                pass
+            item.setInfo(type='Video', infoLabels={'title': title})
+            control.player.play(url, item)
+        except:
+            pass
+
+    def worker(self, name, url):
+
+        try:
+            if url.startswith(self.base_link):
+                url = self.resolve(url)
+                if url is None:
+                    raise Exception()
+                return url
+            elif not url.startswith('http://'):
+                url = self.youtube_watch % url
+                url = self.resolve(url)
+                if url == None:
+                    raise Exception()
+                return url
+            else:
+                raise Exception()
+        except:
+            query = name + ' trailer'
+            query = self.youtube_search + query
+            url = self.search(query)
+            if url is None:
+                return
+            return url
+
+    def search(self, url):
+
+        try:
+            query = urlparse.parse_qs(urlparse.urlparse(url).query)['q'][0]
+
+            url = self.search_link % urllib.quote_plus(query) + self.key_link
+
+            result = client.request(url)
+
+            items = json.loads(result)['items']
+            items = [(i['id']['videoId']) for i in items]
+
+            for url in items:
+                url = self.resolve(url)
+                if url is not None:
+                    return url
+        except:
+            return
+
+    def resolve(self, url):
+        try:
+            id = url.split('?v=')[-1].split('/')[-1].split('?')[0].split('&')[0]
+            result = client.request('http://www.youtube.com/watch?v=%s' % id)
+
+            message = client.parseDOM(result, 'div', attrs={'id': 'unavailable-submessage'})
+            message = ''.join(message)
+
+            alert = client.parseDOM(result, 'div', attrs={'id': 'watch7-notification-area'})
+
+            if len(alert) > 0:
+                raise Exception()
+            if re.search('[a-zA-Z]', message):
+                raise Exception()
+
+            url = 'plugin://plugin.video.youtube/play/?video_id=%s' % id
+            return url
         except:
             return
