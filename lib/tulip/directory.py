@@ -18,7 +18,6 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-
 import urllib
 import control
 from init import sysaddon, syshandle
@@ -34,7 +33,9 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
     sysfanart = control.addonInfo('fanart')
 
     for i in items:
+
         try:
+
             try:
                 label = control.lang(i['title']).encode('utf-8')
             except:
@@ -77,6 +78,18 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
                 url += '&title=%s' % urllib.quote_plus(i['title'])
             except:
                 pass
+            try:
+                url += '&name=%s' % urllib.quote_plus(i['name'].encode('utf-8'))
+            except:
+                pass
+            try:
+                url += '&plot=%s' % urllib.quote_plus(i['plot'].encode('utf-8'))
+            except:
+                pass
+            try:
+                url += '&genre=%s' % urllib.quote_plus(i['genre'])
+            except:
+                pass
 
             cm = []
             menus = i['cm'] if 'cm' in i else []
@@ -98,8 +111,12 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
 
             item = control.item(label=label, iconImage=image, thumbnailImage=image)
 
-            item.setArt({'icon': image, 'thumb': image, 'poster': image, 'tvshow.poster': image, 'season.poster': image,
-                         'banner': banner, 'tvshow.banner': banner, 'season.banner': banner})
+            item.setArt(
+                {
+                    'icon': image, 'thumb': image, 'poster': image, 'tvshow.poster': image, 'season.poster': image,
+                    'banner': banner, 'tvshow.banner': banner, 'season.banner': banner
+                }
+            )
 
             item.setProperty('Fanart_Image', fanart)
 
@@ -115,10 +132,13 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
                     item.addStreamInfo('video', {'codec': 'h264'})
 
             control.addItem(handle=syshandle, url=url, listitem=item, isFolder=isFolder)
+
         except:
+
             pass
 
     try:
+
         i = items[0]
         if i['next'] == '':
             raise Exception()
@@ -126,19 +146,27 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
         url = '%s?action=%s&url=%s' % (sysaddon, i['nextaction'], urllib.quote_plus(i['next']))
         icon = i['nexticon'] if 'nexticon' in i else control.addonmedia('next.png')
         fanart = i['nextfanart'] if 'nextfanart' in i else sysfanart
+
         try:
             label = control.lang(i['nextlabel']).encode('utf-8')
         except:
             label = 'next'
 
         item = control.item(label=label, iconImage=icon, thumbnailImage=icon)
-        item.setArt({'icon': icon, 'thumb': icon, 'poster': icon, 'tvshow.poster': icon, 'season.poster': icon, 'banner': icon, 'tvshow.banner': icon, 'season.banner': icon})
+
+        item.setArt(
+            {
+                'icon': icon, 'thumb': icon, 'poster': icon, 'tvshow.poster': icon, 'season.poster': icon,
+                'banner': icon, 'tvshow.banner': icon, 'season.banner': icon
+            }
+        )
+
         item.setProperty('Fanart_Image', fanart)
         control.addItem(handle=syshandle, url=url, listitem=item, isFolder=True)
     except:
         pass
 
-    if not content is None:
+    if content is not None:
         control.content(syshandle, content)
 
     control.directory(syshandle, cacheToDisc=cacheToDisc)

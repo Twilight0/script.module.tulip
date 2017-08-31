@@ -1,3 +1,8 @@
+[B]1.2.5[/B]
+- Added plot, name, genre quote_plus in directory module
+- Added sortmethods in control module
+- Added conditional in youtube play module so it can be called with setresolved url method
+
 [B]1.2.4[/B]
 - Added title parameter for url calls in directory module
 
