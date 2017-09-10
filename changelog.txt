@@ -1,3 +1,6 @@
+[B]1.2.6[/B]
+- Changes to sort methods from plain integers to module variables
+
 [B]1.2.5[/B]
 - Added plot, name, genre quote_plus in directory module
 - Added sortmethods in control module
