@@ -82,7 +82,7 @@ bookmarksFile = os.path.join(dataPath, 'bookmarks.db')
 cacheFile = os.path.join(dataPath, 'cache.db')
 
 
-def infoDialog(message, heading=addonInfo('name'), icon='', time=xbmcplugin.SORT_METHOD_NONE00):
+def infoDialog(message, heading=addonInfo('name'), icon='', time=3000):
 
     if icon == '':
         icon = addonInfo('icon')
