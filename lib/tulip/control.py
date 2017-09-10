@@ -215,7 +215,10 @@ def sortmethods(method, mask='%D'):
     elif method == 'genre':
         return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_GENRE)
     elif method == 'year':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_YEAR)
+        try:
+            return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_YEAR)
+        except:
+            return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_YEAR)
     elif method == 'video_rating':
         return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_RATING)
     elif method == 'program_count':
