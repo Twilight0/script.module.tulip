@@ -1,3 +1,6 @@
+[B]1.2.8[/B]
+- Log function tweaks
+
 [B]1.2.7[/B]
 - Added utf-8 encoding for title parameter in directory module
 - Cosmetics
