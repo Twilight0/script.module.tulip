@@ -50,7 +50,7 @@ player = xbmc.Player()
 playlist = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
 monitor = xbmc.Monitor()
 wait = monitor.waitForAbort
-aborted = monitor.abortRequested()
+aborted = monitor.abortRequested
 
 transPath = xbmc.translatePath
 skinPath = xbmc.translatePath('special://skin/')
@@ -114,7 +114,7 @@ def openSettings(query=None, id=addonInfo('id')):
     try:
 
         idle()
-        execute('Addon.OpenSettings(%s)' % id)
+        execute('Addon.OpenSettings({0})'.format(id))
         if query is None:
             raise Exception()
         c, f = query.split('.')
@@ -137,6 +137,7 @@ def Settings(id=addonInfo('id')):
 
 
 def openPlaylist():
+
     return execute('ActivateWindow(VideoPlaylist)')
 
 
@@ -271,7 +272,7 @@ def sortmethods(method='unsorted', mask='%D'):
 
 def json_rpc(command):
 
-    """This function was taken from tknorris's kodi.py"""
+    # This function was taken from tknorris's kodi.py
 
     if not isinstance(command, basestring):
         command = json.dumps(command)
@@ -318,8 +319,11 @@ def addon_details(addon_id, fields=None):
 
     return result
 
+
 def enable_addon(addon_id, enable=True):
 
-    command = {"jsonrpc":"2.0", "method": "Addons.SetAddonEnabled", "params": {"addonid": addon_id, "enabled": enable}, "id": 1}
+    command = {
+        "jsonrpc":"2.0", "method": "Addons.SetAddonEnabled", "params": {"addonid": addon_id, "enabled": enable}, "id": 1
+    }
 
     json_rpc(command)

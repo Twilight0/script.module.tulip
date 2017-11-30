@@ -90,7 +90,7 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
 
         if 'Cookie' in headers:
             pass
-        elif not cookie == None:
+        elif cookie is not None:
             headers['Cookie'] = cookie
 
         if redirect is False:

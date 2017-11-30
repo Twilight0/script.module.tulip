@@ -18,6 +18,7 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+__all__ = ['log_notice', 'log_debug', 'log_info', 'log_warning', 'log_error']
 
 import xbmc
 from tulip import control
@@ -48,6 +49,14 @@ def log_error(msg):
     log(msg, level=LOGERROR)
 
 
+def log_info(msg):
+    log(msg, level=LOGINFO)
+
+
+def log_severe(msg):
+    log(msg, level=LOGSEVERE)
+
+
 def log(msg, level=LOGDEBUG):
     # override message level to force logging when addon logging turned on
     if control.setting('debug') == 'true' and level == LOGDEBUG:
@@ -60,6 +69,6 @@ def log(msg, level=LOGDEBUG):
         xbmc.log('{0}, {1}:: {2}'.format(control.addonInfo('name'), control.addonInfo('version'), msg), level)
     except Exception as e:
         try:
-            xbmc.log('Logging Failure: %s' % (e), level)
+            xbmc.log('Logging Failure: %s' % e, level)
         except:
             pass  # just give up

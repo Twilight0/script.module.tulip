@@ -69,7 +69,7 @@ def get(definition, time_out, *args, **table):
         r = definition(*args)
         if (r is None or r == []) and response is not None:
             return response
-        elif (r is None or r == []):
+        elif r is None or r == []:
             return r
     except:
         return

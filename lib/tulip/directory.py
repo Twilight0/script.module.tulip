@@ -94,6 +94,10 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
                 url += '&dash=%s' % urllib.quote_plus(i['dash'])
             except:
                 pass
+            try:
+                url += '&query=%s' % urllib.quote_plus(i['query'])
+            except:
+                pass
 
             cm = []
             menus = i['cm'] if 'cm' in i else []
