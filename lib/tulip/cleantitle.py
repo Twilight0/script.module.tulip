@@ -44,6 +44,7 @@ def query(title):
 
 
 def normalize(title):
+
     try:
         try:
             return title.decode('ascii').encode("utf-8")
@@ -61,3 +62,12 @@ def normalize(title):
 
     except:
         return title
+
+
+def strip_accents(string):
+
+    import unicodedata
+
+    result = ''.join(c for c in unicodedata.normalize('NFD', string) if unicodedata.category(c) != 'Mn')
+
+    return result

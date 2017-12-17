@@ -28,18 +28,25 @@ class youtube(object):
     def __init__(self, key=''):
 
         self.list = [];  self.data = []
-        self.base_link = 'http://www.youtube.com'
-        self.key_link = '&key={0}'.format(control.setting('yt_api_key') or key)
-        self.playlists_link = 'https://www.googleapis.com/youtube/v3/playlists?part=snippet&maxResults=50&channelId=%s'
-        self.playlist_link = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=%s'
-        self.videos_link = 'https://www.googleapis.com/youtube/v3/search?part=snippet&order=date&maxResults=50&channelId=%s'
-        self.content_link = 'https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=%s'
-        self.search_link = 'https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=%s'
-        self.youtube_search = 'https://www.googleapis.com/youtube/v3/search?q='
-        self.youtube_watch = 'http://www.youtube.com/watch?v=%s'
 
-        if control.condVisibility('System.HasAddon(script.module.urlresolver)') and control.setting('yt_resolve') == 'true':
-            self.play_link = 'https://www.youtube.com/embed/%s'
+        self.base_link = 'http://www.youtube.com/'
+        self.google_base_link = 'https://www.googleapis.com/youtube/v3/'
+
+        self.key_link = '&key={0}'.format(control.setting('yt_api_key') or key)
+
+        self.playlists_link = self.google_base_link + 'playlists?part=snippet&maxResults=50&channelId=%s'
+        self.playlist_link = self.google_base_link + 'playlistItems?part=snippet&maxResults=50&playlistId=%s'
+        self.videos_link = self.google_base_link + 'search?part=snippet&order=date&maxResults=50&channelId=%s'
+        self.content_link = self.google_base_link + 'videos?part=contentDetails&id=%s'
+        self.search_link = self.google_base_link + 'search?part=snippet&type=video&maxResults=5&q=%s'
+        self.youtube_search = self.google_base_link + 'search?q='
+
+        self.youtube_watch = self.base_link + 'watch?v=%s'
+
+        self.resolver = 'script.module.urlresolver'
+
+        if control.condVisibility('System.HasAddon({0})'.format(self.resolver)) and control.setting('yt_resolve') == 'true':
+            self.play_link = self.youtube_watch
         else:
             self.play_link = 'plugin://plugin.video.youtube/play/?video_id=%s'
 
@@ -58,6 +65,7 @@ class youtube(object):
         return self.video_list(cid, url, pagination)
 
     def play_list(self, url):
+
         try:
             result = client.request(url)
             result = json.loads(result)
@@ -67,7 +75,8 @@ class youtube(object):
 
         for i in range(1, 5):
             try:
-                if not 'nextPageToken' in result: raise Exception()
+                if not 'nextPageToken' in result:
+                    raise Exception()
                 next = url + '&pageToken=' + result['nextPageToken']
                 result = client.request(next)
                 result = json.loads(result)
@@ -84,7 +93,8 @@ class youtube(object):
                 url = url.encode('utf-8')
 
                 image = item['snippet']['thumbnails']['high']['url']
-                if '/default.jpg' in image: raise Exception()
+                if '/default.jpg' in image:
+                    raise Exception()
                 image = image.encode('utf-8')
 
                 self.list.append({'title': title, 'url': url, 'image': image})
@@ -192,6 +202,7 @@ class youtube(object):
         return self.list
 
     def thread(self, url, i):
+
         try:
             result = client.request(url)
             self.data[i] = result
@@ -301,3 +312,17 @@ class youtube(object):
         except:
 
             return
+
+    def convert(self, items_list, thumb_quality='medium'):
+
+        for item in items_list[:-1]:
+
+            title = item['snippet']['title']
+            url = self.play_link % item['id']['videoId']
+            image = item['snippet']['thumbnails'][thumb_quality]['url']
+            plot = item['snippet']['description']
+
+            data = {'title': title, 'url': url, 'image': image, 'plot': plot}
+            self.list.append(data)
+
+        return self.list
