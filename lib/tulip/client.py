@@ -18,16 +18,28 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-
-import re, sys, cookielib, time, random
-import urllib, urllib2, urlparse, HTMLParser
-import cache
+try:
+    import cookielib
+    from urllib import URLopener, quote_plus
+    import urllib2
+    import urlparse
+    from HTMLParser import HTMLParser
+    un_escape = HTMLParser().unescape
+except ImportError:
+    from http import cookiejar as cookielib
+    import urllib.request as urllib2
+    URLopener = urllib2.URLopener
+    import urllib.parse as urlparse
+    quote_plus = urlparse.quote_plus
+    from html import unescape as un_escape
 
 try:
-    import requests
-    requester = requests.get
-except ImportError:
-    requester = None
+    uni_code = unicode
+except:
+    uni_code = str
+
+import re, sys, time, random
+from . import cache
 
 
 def request(url, close=True, redirect=True, error=False, proxy=None, post=None, headers=None, mobile=False, limit=None,
@@ -55,9 +67,10 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
                 raise Exception()
 
             import ssl
+            from _ssl import CERT_NONE
             ssl_context = ssl.create_default_context()
             ssl_context.check_hostname = False
-            ssl_context.verify_mode = ssl.CERT_NONE
+            ssl_context.verify_mode = CERT_NONE
             handlers += [urllib2.HTTPSHandler(context=ssl_context)]
             opener = urllib2.build_opener(*handlers)
             urllib2.install_opener(opener)
@@ -111,6 +124,7 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
         req = urllib2.Request(url, data=post, headers=headers)
 
         try:
+
             response = urllib2.urlopen(req, timeout=int(timeout))
 
         except urllib2.HTTPError as response:
@@ -125,9 +139,9 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
 
                     headers['Cookie'] = cf
 
-                    request = urllib2.Request(url, data=post, headers=headers)
+                    req = urllib2.Request(url, data=post, headers=headers)
 
-                    response = urllib2.urlopen(request, timeout=int(timeout))
+                    response = urllib2.urlopen(req, timeout=int(timeout))
 
                 elif error is False:
                     return
@@ -206,7 +220,7 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
 
 def retriever(source, destination, *args):
 
-    class Opener(urllib.URLopener):
+    class Opener(URLopener):
         version = randomagent()
 
     Opener().retrieve(source, destination, *args)
@@ -228,7 +242,7 @@ def parseDOM(html, name=u"", attrs=None, ret=False):
             html = [html.decode("utf-8")]  # Replace with chardet thingy
         except:
             html = [html]
-    elif isinstance(html, unicode):
+    elif isinstance(html, uni_code):
         html = [html]
     elif not isinstance(html, list):
         return u""
@@ -335,7 +349,7 @@ def _getDOMElements(item, name, attrs):
             lst2 = []
         else:
 
-            test = range(len(lst))
+            test = list(range(len(lst)))
             test.reverse()
             for i in test:  # Delete anything missing from the next list.
                 if not lst[i] in lst2:
@@ -352,7 +366,7 @@ def _getDOMElements(item, name, attrs):
 def replaceHTMLCodes(txt):
 
     txt = re.sub("(&#[0-9]+)([^;^0-9]+)", "\\1;\\2", txt)
-    txt = HTMLParser.HTMLParser().unescape(txt)
+    txt = un_escape(txt)
     txt = txt.replace("&quot;", "\"")
     txt = txt.replace("&amp;", "&")
     txt = txt.replace("&#38;", "&")
@@ -362,13 +376,15 @@ def replaceHTMLCodes(txt):
 
 def randomagent():
 
-    BR_VERS = [['%s.0' % i for i in xrange(18, 43)], ['37.0.2062.103', '37.0.2062.120', '37.0.2062.124', '38.0.2125.101',
+    BR_VERS = [
+        ['%s.0' % i for i in list(range(18, 43))], ['37.0.2062.103', '37.0.2062.120', '37.0.2062.124', '38.0.2125.101',
                                                       '38.0.2125.104', '38.0.2125.111', '39.0.2171.71', '39.0.2171.95',
                                                       '39.0.2171.99', '40.0.2214.93', '40.0.2214.111', '40.0.2214.115',
                                                       '42.0.2311.90', '42.0.2311.135', '42.0.2311.152', '43.0.2357.81',
                                                       '43.0.2357.124', '44.0.2403.155', '44.0.2403.157', '45.0.2454.101',
                                                       '45.0.2454.85', '46.0.2490.71', '46.0.2490.80', '46.0.2490.86',
-                                                      '47.0.2526.73', '47.0.2526.80'], ['11.0']]
+                                                      '47.0.2526.73', '47.0.2526.80'], ['11.0']
+    ]
 
     WIN_VERS = ['Windows NT 10.0', 'Windows NT 7.0', 'Windows NT 6.3', 'Windows NT 6.2', 'Windows NT 6.1', 'Windows NT 6.0',
                 'Windows NT 5.1', 'Windows NT 5.0']
@@ -399,11 +415,11 @@ def ios_agent():
 def spoofer(_agent=True, age_str=randomagent(), referer=False, ref_str=''):
 
     if _agent and referer:
-        return '|User-Agent=' + urllib.quote_plus(age_str) + '&Referer=' + urllib.quote_plus(ref_str)
+        return '|User-Agent=' + quote_plus(age_str) + '&Referer=' + quote_plus(ref_str)
     elif _agent:
-        return '|User-Agent=' + urllib.quote_plus(age_str)
+        return '|User-Agent=' + quote_plus(age_str)
     elif referer:
-        return '|Referer=' + urllib.quote_plus(ref_str)
+        return '|Referer=' + quote_plus(ref_str)
 
 
 def cfcookie(netloc, ua, timeout):
@@ -431,9 +447,9 @@ def cfcookie(netloc, ua, timeout):
 
             if len(line) > 0 and '=' in line:
 
-                sections=line.split('=')
+                sections = line.split('=')
                 line_val = parseJSString(sections[1])
-                decryptVal = int(eval(str(decryptVal)+sections[0][-1]+str(line_val)))
+                decryptVal = int(eval(str(decryptVal) + str(sections[0][-1]) + str(line_val)))
 
         answer = decryptVal + len(urlparse.urlparse(netloc).netloc)
 
@@ -441,7 +457,9 @@ def cfcookie(netloc, ua, timeout):
 
         if 'type="hidden" name="pass"' in result:
             passval = re.findall('name="pass" value="(.*?)"', result)[0]
-            query = '%s/cdn-cgi/l/chk_jschl?pass=%s&jschl_vc=%s&jschl_answer=%s' % (netloc, urllib.quote_plus(passval), jschl, answer)
+            query = '%s/cdn-cgi/l/chk_jschl?pass=%s&jschl_vc=%s&jschl_answer=%s' % (
+                netloc, quote_plus(passval), jschl, answer
+            )
             time.sleep(5)
 
         cookies = cookielib.LWPCookieJar()
@@ -450,8 +468,8 @@ def cfcookie(netloc, ua, timeout):
         urllib2.install_opener(opener)
 
         try:
-            request = urllib2.Request(query, headers=headers)
-            urllib2.urlopen(request, timeout=int(timeout))
+            req = urllib2.Request(query, headers=headers)
+            urllib2.urlopen(req, timeout=int(timeout))
         except:
             pass
 
@@ -464,8 +482,8 @@ def cfcookie(netloc, ua, timeout):
 
 def parseJSString(s):
     try:
-        offset=1 if s[0]=='+' else 0
-        val = int(eval(s.replace('!+[]','1').replace('!![]','1').replace('[]','0').replace('(','str(')[offset:]))
+        offset = 1 if s[0] == '+' else 0
+        val = int(eval(s.replace('!+[]', '1').replace('!![]', '1').replace('[]','0').replace('(', 'str(')[offset:]))
         return val
     except:
         pass

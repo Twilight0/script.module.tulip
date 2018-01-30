@@ -21,7 +21,7 @@
 __all__ = ['log_notice', 'log_debug', 'log_info', 'log_warning', 'log_error']
 
 import xbmc
-from tulip import control
+from . import control
 
 LOGDEBUG = xbmc.LOGDEBUG
 LOGERROR = xbmc.LOGERROR
@@ -63,9 +63,6 @@ def log(msg, level=LOGDEBUG):
         level = LOGNOTICE
 
     try:
-        if isinstance(msg, unicode):
-            msg = '%s (ENCODED)' % (msg.encode('utf-8'))
-
         xbmc.log('{0}, {1}:: {2}'.format(control.addonInfo('name'), control.addonInfo('version'), msg), level)
     except Exception as e:
         try:

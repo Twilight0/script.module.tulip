@@ -27,7 +27,7 @@ except ImportError:
     # noinspection PyUnresolvedReferences
     from pysqlite2 import dbapi2 as database
 
-import control
+from . import control
 
 
 def add(url):

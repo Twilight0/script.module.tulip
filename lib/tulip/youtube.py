@@ -18,9 +18,14 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+try:
+    from urllib import quote_plus
+    from urlparse import parse_qs, urlparse
+except ImportError:
+    from urllib.parse import quote_plus, parse_qs, urlparse
 
-import re, json, urllib, urlparse
-import client, workers, control, directory
+import re, json
+from . import client, workers, control, directory
 
 
 class youtube(object):
@@ -154,7 +159,7 @@ class youtube(object):
                 pass
 
         try:
-            u = [range(0, len(self.list))[i:i+50] for i in range(len(range(0, len(self.list))))[::50]]
+            u = [list(range(0, len(self.list)))[i:i+50] for i in list(range(len(list(range(0, len(self.list))))))[::50]]
             u = [','.join([self.list[x]['url'] for x in i]) for i in u]
             u = [self.content_link % i + self.key_link for i in u]
 
@@ -272,9 +277,9 @@ class youtube(object):
     def search(self, url):
 
         try:
-            query = urlparse.parse_qs(urlparse.urlparse(url).query)['q'][0]
+            query = parse_qs(urlparse(url).query)['q'][0]
 
-            url = self.search_link % urllib.quote_plus(query) + self.key_link
+            url = self.search_link % quote_plus(query) + self.key_link
 
             result = client.request(url)
 

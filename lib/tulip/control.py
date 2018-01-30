@@ -21,8 +21,12 @@
 
 import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
 import os, json
-from init import syshandle
+from .init import syshandle
 
+try:
+    base_string = basestring
+except:
+    base_string = str
 
 integer = 1000
 lang = xbmcaddon.Addon().getLocalizedString
@@ -55,7 +59,11 @@ aborted = monitor.abortRequested
 transPath = xbmc.translatePath
 skinPath = xbmc.translatePath('special://skin/')
 addonPath = xbmc.translatePath(addonInfo('path'))
-dataPath = xbmc.translatePath(addonInfo('profile')).decode('utf-8')
+
+try:
+    dataPath = xbmc.translatePath(addonInfo('profile')).decode('utf-8')
+except AttributeError:
+    dataPath = xbmc.translatePath(addonInfo('profile'))
 
 window = xbmcgui.Window(10000)
 dialog = xbmcgui.Dialog()
@@ -274,7 +282,7 @@ def json_rpc(command):
 
     # This function was taken from tknorris's kodi.py
 
-    if not isinstance(command, basestring):
+    if not isinstance(command, base_string):
         command = json.dumps(command)
     response = jsonrpc(command)
 

@@ -18,9 +18,12 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import urllib
-import control
-from init import sysaddon, syshandle
+try:
+    from urllib import quote_plus, urlencode
+except ImportError:
+    from urllib.parse import quote_plus, urlencode
+from . import control
+from .init import sysaddon, syshandle
 
 
 def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video'):
@@ -67,35 +70,35 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
             url = '%s?action=%s' % (sysaddon, i['action'])
 
             try:
-                url += '&url=%s' % urllib.quote_plus(i['url'])
+                url += '&url=%s' % quote_plus(i['url'])
             except:
                 pass
             try:
-                url += '&image=%s' % urllib.quote_plus(i['image'])
+                url += '&image=%s' % quote_plus(i['image'])
             except:
                 pass
             try:
-                url += '&title=%s' % urllib.quote_plus(i['title'].encode('utf-8'))
+                url += '&title=%s' % quote_plus(i['title'].encode('utf-8'))
             except:
                 pass
             try:
-                url += '&name=%s' % urllib.quote_plus(i['name'].encode('utf-8'))
+                url += '&name=%s' % quote_plus(i['name'].encode('utf-8'))
             except:
                 pass
             try:
-                url += '&plot=%s' % urllib.quote_plus(i['plot'].encode('utf-8'))
+                url += '&plot=%s' % quote_plus(i['plot'].encode('utf-8'))
             except:
                 pass
             try:
-                url += '&genre=%s' % urllib.quote_plus(i['genre'])
+                url += '&genre=%s' % quote_plus(i['genre'])
             except:
                 pass
             try:
-                url += '&dash=%s' % urllib.quote_plus(i['dash'])
+                url += '&dash=%s' % quote_plus(i['dash'])
             except:
                 pass
             try:
-                url += '&query=%s' % urllib.quote_plus(i['query'])
+                url += '&query=%s' % quote_plus(i['query'])
             except:
                 pass
 
@@ -108,7 +111,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
                         tmenu = control.lang(menu['title']).encode('utf-8')
                     except:
                         tmenu = menu['title']
-                    qmenu = urllib.urlencode(menu['query'])
+                    qmenu = urlencode(menu['query'])
                     cm.append((tmenu, 'RunPlugin(%s?%s)' % (sysaddon, qmenu)))
                 except:
                     pass
@@ -152,7 +155,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
         if i['next'] == '':
             raise Exception()
 
-        url = '%s?action=%s&url=%s' % (sysaddon, i['nextaction'], urllib.quote_plus(i['next']))
+        url = '%s?action=%s&url=%s' % (sysaddon, i['nextaction'], quote_plus(i['next']))
         icon = i['nexticon'] if 'nexticon' in i else control.addonmedia('next.png')
         fanart = i['nextfanart'] if 'nextfanart' in i else sysfanart
 
