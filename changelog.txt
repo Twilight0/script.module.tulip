@@ -1,4 +1,5 @@
 [B]1.4.0[/B]
+- Added some functions in control module
 - Adapted library to dual python 2/3 compatibility
 - Removed optional requests import
 - Removed downloader module

@@ -11,8 +11,11 @@
 		<license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
 		<source>https://github.com/Twilight0/script.module.tulip</source>
 		<news>[B]1.4.0[/B]
+- Added some functions in control module
 - Adapted library to dual python 2/3 compatibility
 - Removed optional requests import
-- Removed downloader module</news>
+- Removed downloader module
+- Removed unicode logging ability from log module
+- Removed parsedom module, using client.parsedom instead</news>
 	</extension>
 </addon>
