@@ -133,7 +133,7 @@ class youtube(object):
         except:
             next = ''
 
-        for item in items: 
+        for item in items:
             try:
                 title = item['snippet']['title']
                 title = title.encode('utf-8')
