@@ -67,5 +67,5 @@ def log(msg, level=LOGDEBUG):
     except Exception as e:
         try:
             xbmc.log('Logging Failure: %s' % e, level)
-        except:
+        except BaseException:
             pass  # just give up

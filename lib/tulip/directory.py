@@ -41,7 +41,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
 
             try:
                 label = control.lang(i['title']).encode('utf-8')
-            except:
+            except BaseException:
                 label = i['title']
 
             if 'label' in i and not i['label'] == '0':
@@ -71,35 +71,35 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
 
             try:
                 url += '&url=%s' % quote_plus(i['url'])
-            except:
+            except BaseException:
                 pass
             try:
                 url += '&image=%s' % quote_plus(i['image'])
-            except:
+            except BaseException:
                 pass
             try:
                 url += '&title=%s' % quote_plus(i['title'].encode('utf-8'))
-            except:
+            except BaseException:
                 pass
             try:
                 url += '&name=%s' % quote_plus(i['name'].encode('utf-8'))
-            except:
+            except BaseException:
                 pass
             try:
                 url += '&plot=%s' % quote_plus(i['plot'].encode('utf-8'))
-            except:
+            except BaseException:
                 pass
             try:
                 url += '&genre=%s' % quote_plus(i['genre'])
-            except:
+            except BaseException:
                 pass
             try:
                 url += '&dash=%s' % quote_plus(i['dash'])
-            except:
+            except BaseException:
                 pass
             try:
                 url += '&query=%s' % quote_plus(i['query'])
-            except:
+            except BaseException:
                 pass
 
             cm = []
@@ -109,11 +109,11 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
                 try:
                     try:
                         tmenu = control.lang(menu['title']).encode('utf-8')
-                    except:
+                    except BaseException:
                         tmenu = menu['title']
                     qmenu = urlencode(menu['query'])
                     cm.append((tmenu, 'RunPlugin(%s?%s)' % (sysaddon, qmenu)))
-                except:
+                except BaseException:
                     pass
 
             meta = dict((k, v) for k, v in i.iteritems() if not k == 'cm' and not v == '0')
@@ -145,7 +145,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
 
             control.addItem(handle=syshandle, url=url, listitem=item, isFolder=isFolder)
 
-        except:
+        except BaseException:
 
             pass
 
@@ -161,7 +161,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
 
         try:
             label = control.lang(i['nextlabel']).encode('utf-8')
-        except:
+        except BaseException:
             label = 'next'
 
         item = control.item(label=label, iconImage=icon, thumbnailImage=icon)
@@ -175,7 +175,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
 
         item.setProperty('Fanart_Image', fanart)
         control.addItem(handle=syshandle, url=url, listitem=item, isFolder=True)
-    except:
+    except BaseException:
         pass
 
     if content is not None:

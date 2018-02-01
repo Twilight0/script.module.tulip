@@ -23,7 +23,7 @@ import re, hashlib, time
 
 try:
     from sqlite3 import dbapi2 as database
-except:
+except BaseException:
     # noinspection PyUnresolvedReferences
     from pysqlite2 import dbapi2 as database
 
@@ -40,12 +40,12 @@ def get(definition, time_out, *args, **table):
         a = hashlib.md5()
         for i in args: a.update(str(i))
         a = str(a.hexdigest())
-    except:
+    except BaseException:
         pass
 
     try:
         table = table['table']
-    except:
+    except BaseException:
         table = 'rel_list'
 
     try:
@@ -62,7 +62,7 @@ def get(definition, time_out, *args, **table):
         update = (abs(t2 - t1) / 3600) >= int(time_out)
         if not update:
             return response
-    except:
+    except BaseException:
         pass
 
     try:
@@ -71,7 +71,7 @@ def get(definition, time_out, *args, **table):
             return response
         elif r is None or r == []:
             return r
-    except:
+    except BaseException:
         return
 
     try:
@@ -81,12 +81,12 @@ def get(definition, time_out, *args, **table):
         dbcur.execute("DELETE FROM %s WHERE func = '%s' AND args = '%s'" % (table, f, a))
         dbcur.execute("INSERT INTO %s Values (?, ?, ?, ?)" % table, (f, a, r, t))
         dbcon.commit()
-    except:
+    except BaseException:
         pass
 
     try:
         return eval(r.encode('utf-8'))
-    except:
+    except BaseException:
         pass
 
 
@@ -101,12 +101,12 @@ def timeout(definition, *args, **table):
         a = hashlib.md5()
         for i in args: a.update(str(i))
         a = str(a.hexdigest())
-    except:
+    except BaseException:
         pass
 
     try:
         table = table['table']
-    except:
+    except BaseException:
         table = 'rel_list'
 
     try:
@@ -116,7 +116,7 @@ def timeout(definition, *args, **table):
         dbcur.execute("SELECT * FROM %s WHERE func = '%s' AND args = '%s'" % (table, f, a))
         match = dbcur.fetchone()
         return int(match[3])
-    except:
+    except BaseException:
         return
 
 
@@ -149,11 +149,11 @@ def clear(table=None, withyes=True):
                 dbcur.execute("DROP TABLE IF EXISTS %s" % t)
                 dbcur.execute("VACUUM")
                 dbcon.commit()
-            except:
+            except BaseException:
                 pass
 
         control.infoDialog(control.lang(30402).encode('utf-8'))
-    except:
+    except BaseException:
         pass
 
 

@@ -96,7 +96,7 @@ def infoDialog(message, heading=addonInfo('name'), icon='', time=3000):
 
         dialog.notification(heading, message, icon, time, sound=False)
 
-    except:
+    except BaseException:
 
         execute("Notification(%s, %s, %s, %s)" % (heading, message, time, icon))
 
@@ -128,7 +128,7 @@ def openSettings(query=None, id=addonInfo('id')):
         execute('SetFocus(%i)' % (int(c) + 100))
         execute('SetFocus(%i)' % (int(f) + 200))
 
-    except:
+    except BaseException:
 
         return
 
@@ -139,7 +139,7 @@ def Settings(id=addonInfo('id')):
     try:
         idle()
         xbmcaddon.Addon(id).openSettings()
-    except:
+    except BaseException:
         return
 
 
@@ -223,7 +223,7 @@ def sortmethods(method='unsorted', mask='%D'):
     elif method == 'year':
         try:
             return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_YEAR)
-        except:
+        except BaseException:
             return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_YEAR)
     elif method == 'video_rating':
         return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_RATING)

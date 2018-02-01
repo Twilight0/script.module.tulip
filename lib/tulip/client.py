@@ -35,10 +35,10 @@ except ImportError:
 
 try:
     uni_code = unicode
-except:
+except BaseException:
     uni_code = str
 
-import re, sys, time, random
+import re, sys, time, random, platform
 from . import cache
 
 
@@ -61,26 +61,23 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
             opener = urllib2.build_opener(*handlers)
             urllib2.install_opener(opener)
 
-        try:
+        if (2, 7, 8) < sys.version_info < (2, 7, 12) or platform.uname()[1] == 'XboxOne':
 
-            if sys.version_info < (2, 7, 9):
-                raise Exception()
-
-            import ssl
-            from _ssl import CERT_NONE
-            ssl_context = ssl.create_default_context()
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = CERT_NONE
-            handlers += [urllib2.HTTPSHandler(context=ssl_context)]
-            opener = urllib2.build_opener(*handlers)
-            urllib2.install_opener(opener)
-
-        except:
-            pass
+            try:
+                import ssl
+                from _ssl import CERT_NONE
+                ssl_context = ssl.create_default_context()
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = CERT_NONE
+                handlers += [urllib2.HTTPSHandler(context=ssl_context)]
+                opener = urllib2.build_opener(*handlers)
+                urllib2.install_opener(opener)
+            except BaseException:
+                pass
 
         try:
             headers.update(headers)
-        except:
+        except BaseException:
             headers = {}
 
         if 'User-Agent' in headers:
@@ -118,7 +115,7 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
 
             try:
                 del headers['Referer']
-            except:
+            except BaseException:
                 pass
 
         req = urllib2.Request(url, data=post, headers=headers)
@@ -153,11 +150,11 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
 
             try:
                 result = '; '.join(['%s=%s' % (i.name, i.value) for i in cookies])
-            except:
+            except BaseException:
                 pass
             try:
                 result = cf
-            except:
+            except BaseException:
                 pass
 
         elif output == 'response':
@@ -173,7 +170,7 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
 
             try:
                 content = int(response.headers['Content-Length'])
-            except:
+            except BaseException:
                 content = (2049 * 1024)
 
             if content < (2048 * 1024):
@@ -184,11 +181,11 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
 
             try:
                 cookie = '; '.join(['%s=%s' % (i.name, i.value) for i in cookies])
-            except:
+            except BaseException:
                 pass
             try:
                 cookie = cf
-            except:
+            except BaseException:
                 pass
             content = response.headers
             result = response.read(5242880)
@@ -214,7 +211,7 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
 
         return result
 
-    except:
+    except BaseException:
         return
 
 
@@ -234,13 +231,13 @@ def parseDOM(html, name=u"", attrs=None, ret=False):
     if isinstance(name, str):  # Should be handled
         try:
             name = name  # .decode("utf-8")
-        except:
+        except BaseException:
             pass
 
     if isinstance(html, str):
         try:
             html = [html.decode("utf-8")]  # Replace with chardet thingy
-        except:
+        except BaseException:
             html = [html]
     elif isinstance(html, uni_code):
         html = [html]
@@ -371,29 +368,35 @@ def replaceHTMLCodes(txt):
     txt = txt.replace("&amp;", "&")
     txt = txt.replace("&#38;", "&")
     txt = txt.replace("&nbsp;", "")
+
     return txt
 
 
 def randomagent():
 
     BR_VERS = [
-        ['%s.0' % i for i in list(range(18, 43))], ['37.0.2062.103', '37.0.2062.120', '37.0.2062.124', '38.0.2125.101',
-                                                      '38.0.2125.104', '38.0.2125.111', '39.0.2171.71', '39.0.2171.95',
-                                                      '39.0.2171.99', '40.0.2214.93', '40.0.2214.111', '40.0.2214.115',
-                                                      '42.0.2311.90', '42.0.2311.135', '42.0.2311.152', '43.0.2357.81',
-                                                      '43.0.2357.124', '44.0.2403.155', '44.0.2403.157', '45.0.2454.101',
-                                                      '45.0.2454.85', '46.0.2490.71', '46.0.2490.80', '46.0.2490.86',
-                                                      '47.0.2526.73', '47.0.2526.80'], ['11.0']
+        ['%s.0' % i for i in xrange(18, 50)],
+        ['37.0.2062.103', '37.0.2062.120', '37.0.2062.124', '38.0.2125.101', '38.0.2125.104', '38.0.2125.111',
+         '39.0.2171.71', '39.0.2171.95', '39.0.2171.99', '40.0.2214.93', '40.0.2214.111', '40.0.2214.115',
+         '42.0.2311.90', '42.0.2311.135', '42.0.2311.152', '43.0.2357.81', '43.0.2357.124', '44.0.2403.155',
+         '44.0.2403.157', '45.0.2454.101', '45.0.2454.85', '46.0.2490.71', '46.0.2490.80', '46.0.2490.86',
+         '47.0.2526.73', '47.0.2526.80', '48.0.2564.116', '49.0.2623.112', '50.0.2661.86', '51.0.2704.103',
+         '52.0.2743.116', '53.0.2785.143', '54.0.2840.71', '61.0.3163.100'],
+        ['11.0'],
+        ['8.0', '9.0', '10.0', '10.6']
     ]
 
-    WIN_VERS = ['Windows NT 10.0', 'Windows NT 7.0', 'Windows NT 6.3', 'Windows NT 6.2', 'Windows NT 6.1', 'Windows NT 6.0',
-                'Windows NT 5.1', 'Windows NT 5.0']
+    WIN_VERS = [
+        'Windows NT 10.0', 'Windows NT 7.0', 'Windows NT 6.3', 'Windows NT 6.2', 'Windows NT 6.1', 'Windows NT 6.0',
+        'Windows NT 5.1', 'Windows NT 5.0'
+    ]
 
     FEATURES = ['; WOW64', '; Win64; IA64', '; Win64; x64', '']
 
     RAND_UAS = ['Mozilla/5.0 ({win_ver}{feature}; rv:{br_ver}) Gecko/20100101 Firefox/{br_ver}',
                 'Mozilla/5.0 ({win_ver}{feature}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{br_ver} Safari/537.36',
-                'Mozilla/5.0 ({win_ver}{feature}; Trident/7.0; rv:{br_ver}) like Gecko']
+                'Mozilla/5.0 ({win_ver}{feature}; Trident/7.0; rv:{br_ver}) like Gecko',
+                'Mozilla/5.0 (compatible; MSIE {br_ver}; {win_ver}{feature}; Trident/6.0)']
 
     index = random.randrange(len(RAND_UAS))
 
@@ -401,14 +404,17 @@ def randomagent():
 
 
 def agent():
+
     return 'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko'
 
 
 def mobile_agent():
+
     return 'Mozilla/5.0 (Android 4.4; Mobile; rv:18.0) Gecko/18.0 Firefox/18.0'
 
 
 def ios_agent():
+
     return 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25'
 
 
@@ -470,13 +476,13 @@ def cfcookie(netloc, ua, timeout):
         try:
             req = urllib2.Request(query, headers=headers)
             urllib2.urlopen(req, timeout=int(timeout))
-        except:
+        except BaseException:
             pass
 
         cookie = '; '.join(['%s=%s' % (i.name, i.value) for i in cookies])
 
         return cookie
-    except:
+    except BaseException:
         pass
 
 
@@ -485,5 +491,5 @@ def parseJSString(s):
         offset = 1 if s[0] == '+' else 0
         val = int(eval(s.replace('!+[]', '1').replace('!![]', '1').replace('[]','0').replace('(', 'str(')[offset:]))
         return val
-    except:
+    except BaseException:
         pass

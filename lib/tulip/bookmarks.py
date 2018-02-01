@@ -56,7 +56,7 @@ def add(url):
         dbcur.execute("INSERT INTO bookmark Values (?, ?)", (dbid, item))
         dbcon.commit()
 
-    except:
+    except BaseException:
 
         pass
 
@@ -86,7 +86,7 @@ def delete(url):
 
         control.refresh()
 
-    except:
+    except BaseException:
 
         pass
 
@@ -104,7 +104,7 @@ def get():
 
         return items
 
-    except:
+    except BaseException:
 
         pass
 

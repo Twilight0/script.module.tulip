@@ -48,7 +48,7 @@ def normalize(title):
     try:
         try:
             return title.decode('ascii').encode("utf-8")
-        except:
+        except BaseException:
             pass
 
         t = ''
@@ -60,7 +60,7 @@ def normalize(title):
 
         return t.encode("utf-8")
 
-    except:
+    except BaseException:
         return title
 
 
