@@ -20,7 +20,7 @@
 
 try:
     import cookielib
-    from urllib import URLopener, quote_plus
+    from urllib import URLopener, quote_plus, unquote
     import urllib2
     import urlparse
     from HTMLParser import HTMLParser
@@ -31,6 +31,7 @@ except ImportError:
     URLopener = urllib2.URLopener
     import urllib.parse as urlparse
     quote_plus = urlparse.quote_plus
+    unquote = urlparse.unquote
     from html import unescape as un_escape
 
 try:
@@ -39,7 +40,8 @@ except BaseException:
     uni_code = str
 
 import re, sys, time, random, platform
-from . import cache
+from . import cache, control
+from .log import log_debug
 
 
 def request(url, close=True, redirect=True, error=False, proxy=None, post=None, headers=None, mobile=False, limit=None,
@@ -221,6 +223,118 @@ def retriever(source, destination, *args):
         version = randomagent()
 
     Opener().retrieve(source, destination, *args)
+
+
+def url2name(url):
+
+    from os.path import basename
+
+    url = url.split('|')[0]
+    return basename(unquote(urlparse.urlsplit(url)[2]))
+
+
+def get_extension(url, response):
+
+    from os.path import splitext
+
+    filename = url2name(url)
+    if 'Content-Disposition' in response.info():
+        cd_list = response.info()['Content-Disposition'].split('filename=')
+        if len(cd_list) > 1:
+            filename = cd_list[-1]
+            if filename[0] == '"' or filename[0] == "'":
+                filename = filename[1:-1]
+    elif response.url != url:
+        filename = url2name(response.url)
+    ext = splitext(filename)[1][1:]
+    if not ext:
+        ext = 'mp4'
+    return ext
+
+
+def __enum(**enums):
+
+    return type('Enum', (), enums)
+
+
+PROGRESS = __enum(OFF=0, WINDOW=1, BACKGROUND=2)
+
+
+def download_media(url, path, file_name, progress=None):
+
+    try:
+        if progress is None:
+            progress = int(control.setting('progress_dialog'))
+
+        active = not progress == PROGRESS.OFF
+        background = progress == PROGRESS.BACKGROUND
+
+        with control.ProgressDialog(control.addonInfo('name'), control.lang(30500).format(file_name), background=background, active=active) as pd:
+
+            try:
+                headers = dict([item.split('=') for item in (url.split('|')[1]).split('&')])
+                for key in headers:
+                    headers[key] = unquote(headers[key])
+            except:
+                headers = {}
+
+            if 'User-Agent' not in headers:
+                headers['User-Agent'] = randomagent()
+
+            request = urllib2.Request(url.split('|')[0], headers=headers)
+            response = urllib2.urlopen(request)
+
+            if 'Content-Length' in response.info():
+                content_length = int(response.info()['Content-Length'])
+            else:
+                content_length = 0
+
+            file_name += '.' + get_extension(url, response)
+            full_path = control.join(path, file_name)
+            log_debug('Downloading: %s -> %s' % (url, full_path))
+
+            path = control.transPath(control.legalfilename(path))
+            try:
+                control.makeFiles(path)
+            except Exception as e:
+                log_debug('Path Create Failed: %s (%s)' % (e, path))
+
+            from os import sep
+
+            if not path.endswith(sep):
+                path += sep
+            if not control.exists(path):
+                raise Exception('Failed to create dir')
+
+            file_desc = control.openFile(full_path, 'w')
+            total_len = 0
+            cancel = False
+            while 1:
+                data = response.read(512 * 1024)
+                if not data:
+                    break
+
+                if pd.is_canceled():
+                    cancel = True
+                    break
+
+                total_len += len(data)
+                if not file_desc.write(data):
+                    raise Exception('Failed to write file')
+
+                percent_progress = total_len * 100 / content_length if content_length > 0 else 0
+                log_debug('Position : {0} / {1} = {2}%'.format(total_len, content_length, percent_progress))
+                pd.update(percent_progress)
+
+            file_desc.close()
+
+        if not cancel:
+            control.infoDialog(control.lang(30501).format(file_name))
+            log_debug('Download Complete: {0} -> {1}'.format(url, full_path))
+
+    except Exception as e:
+        log_debug('Error ({0}) during download: {1} -> {2}'.format(str(e), url, file_name))
+        control.infoDialog(control.lang(30502).format(str(e), file_name))
 
 
 def parseDOM(html, name=u"", attrs=None, ret=False):

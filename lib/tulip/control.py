@@ -20,7 +20,7 @@
 
 
 import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
-import os, json
+import os, json, time
 from .init import syshandle
 
 
@@ -55,6 +55,7 @@ aborted = monitor.abortRequested
 transPath = xbmc.translatePath
 skinPath = xbmc.translatePath('special://skin/')
 addonPath = xbmc.translatePath(addonInfo('path'))
+legalfilename = xbmc.makeLegalFilename
 
 try:
     dataPath = xbmc.translatePath(addonInfo('profile')).decode('utf-8')
@@ -75,6 +76,7 @@ item = xbmcgui.ListItem
 
 openFile = xbmcvfs.File
 makeFile = xbmcvfs.mkdir
+makeFiles = xbmcvfs.mkdirs
 deleteFile = xbmcvfs.delete
 deleteDir = xbmcvfs.rmdir
 listDir = xbmcvfs.listdir
@@ -114,6 +116,146 @@ def yesnoDialog(line1, line2='', line3='', heading=addonInfo('name'), nolabel=No
 def selectDialog(list, heading=addonInfo('name')):
 
     return dialog.select(heading, list)
+
+
+class WorkingDialog(object):
+    wd = None
+
+    def __init__(self):
+        try:
+            self.wd = xbmcgui.DialogBusy()
+            self.wd.create()
+            self.update(0)
+        except:
+            execute('ActivateWindow(busydialog)')
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        if self.wd is not None:
+            self.wd.close()
+        else:
+            execute('Dialog.Close(busydialog)')
+
+    def is_canceled(self):
+        if self.wd is not None:
+            return self.wd.iscanceled()
+        else:
+            return False
+
+    def update(self, percent):
+        if self.wd is not None:
+            self.wd.update(percent)
+
+
+class ProgressDialog(object):
+
+    pd = None
+
+    def __init__(self, heading, line1='', line2='', line3='', background=False, active=True, timer=0):
+        self.begin = time.time()
+        self.timer = timer
+        self.background = background
+        self.heading = heading
+        if active and not timer:
+            self.pd = self.__create_dialog(line1, line2, line3)
+            self.pd.update(0)
+
+    def __create_dialog(self, line1, line2, line3):
+        if self.background:
+            pd = xbmcgui.DialogProgressBG()
+            msg = line1 + line2 + line3
+            pd.create(self.heading, msg)
+        else:
+            pd = xbmcgui.DialogProgress()
+            pd.create(self.heading, line1, line2, line3)
+        return pd
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        if self.pd is not None:
+            self.pd.close()
+
+    def is_canceled(self):
+        if self.pd is not None and not self.background:
+            return self.pd.iscanceled()
+        else:
+            return False
+
+    def update(self, percent, line1='', line2='', line3=''):
+        if self.pd is None and self.timer and (time.time() - self.begin) >= self.timer:
+            self.pd = self.__create_dialog(line1, line2, line3)
+
+        if self.pd is not None:
+            if self.background:
+                msg = line1 + line2 + line3
+                self.pd.update(percent, self.heading, msg)
+            else:
+                self.pd.update(percent, line1, line2, line3)
+
+
+class CountdownDialog(object):
+    __INTERVALS = 5
+    pd = None
+
+    def __init__(self, heading, line1='', line2='', line3='', active=True, countdown=60, interval=5):
+        self.heading = heading
+        self.countdown = countdown
+        self.interval = interval
+        self.line3 = line3
+        if active:
+            pd = xbmcgui.DialogProgress()
+            if not self.line3: line3 = 'Expires in: %s seconds' % countdown
+            pd.create(self.heading, line1, line2, line3)
+            pd.update(100)
+            self.pd = pd
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        if self.pd is not None:
+            self.pd.close()
+
+    def start(self, func, args=None, kwargs=None):
+
+        if args is None: args = []
+        if kwargs is None: kwargs = {}
+        result = func(*args, **kwargs)
+        if result:
+            return result
+
+        start = time.time()
+        expires = time_left = int(self.countdown)
+        interval = self.interval
+
+        while time_left > 0:
+            for _ in range(CountdownDialog.__INTERVALS):
+                sleep(interval * 1000 / CountdownDialog.__INTERVALS)
+                if self.is_canceled(): return
+                time_left = expires - int(time.time() - start)
+                if time_left < 0: time_left = 0
+                progress = time_left * 100 / expires
+                line3 = 'Expires in: %s seconds' % (time_left) if not self.line3 else ''
+                self.update(progress, line3=line3)
+
+            result = func(*args, **kwargs)
+            if result:
+                return result
+
+    def is_canceled(self):
+        if self.pd is None:
+            return False
+        else:
+            return self.pd.iscanceled()
+
+    def update(self, percent, line1='', line2='', line3=''):
+        if self.pd is not None:
+            self.pd.update(percent, line1, line2, line3)
+
 
 
 def openSettings(query=None, id=addonInfo('id')):
