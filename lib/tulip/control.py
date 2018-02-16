@@ -25,11 +25,11 @@ from .init import syshandle
 
 
 integer = 1000
-lang = xbmcaddon.Addon().getLocalizedString
-setting = xbmcaddon.Addon().getSetting
-setSetting = xbmcaddon.Addon().setSetting
 addon = xbmcaddon.Addon
-addonInfo = xbmcaddon.Addon().getAddonInfo
+lang = addon().getLocalizedString
+setting = addon().getSetting
+setSetting = addon().setSetting
+addonInfo = addon().getAddonInfo
 
 addItem = xbmcplugin.addDirectoryItem
 addItems = xbmcplugin.addDirectoryItems
@@ -257,7 +257,6 @@ class CountdownDialog(object):
             self.pd.update(percent, line1, line2, line3)
 
 
-
 def openSettings(query=None, id=addonInfo('id')):
 
     try:
@@ -280,7 +279,7 @@ def Settings(id=addonInfo('id')):
 
     try:
         idle()
-        xbmcaddon.Addon(id).openSettings()
+        addon(id).openSettings()
     except BaseException:
         return
 
