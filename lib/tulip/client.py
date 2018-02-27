@@ -18,6 +18,8 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+### Python 2/3 compatibility block  try/except###
+
 try:
     import cookielib
     from urllib import URLopener, quote_plus, unquote
@@ -38,6 +40,8 @@ try:
     uni_code = unicode
 except BaseException:
     uni_code = str
+
+### End Python 2/3 compatibility block ###
 
 import re, sys, time, random, platform
 from . import cache, control
@@ -63,19 +67,28 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
             opener = urllib2.build_opener(*handlers)
             urllib2.install_opener(opener)
 
-        if (2, 7, 8) < sys.version_info < (2, 7, 12) or platform.uname()[1] == 'XboxOne':
+        try:
 
+            if (2, 7, 9) < sys.version_info or platform.uname()[1] == 'XboxOne':
+                raise BaseException
+
+            import ssl
             try:
-                import ssl
                 from _ssl import CERT_NONE
-                ssl_context = ssl.create_default_context()
-                ssl_context.check_hostname = False
-                ssl_context.verify_mode = CERT_NONE
-                handlers += [urllib2.HTTPSHandler(context=ssl_context)]
-                opener = urllib2.build_opener(*handlers)
-                urllib2.install_opener(opener)
-            except BaseException:
+            except ImportError:
                 pass
+            ssl_context = ssl.create_default_context()
+            ssl_context.check_hostname = False
+            try:
+                ssl_context.verify_mode = CERT_NONE
+            except BaseException:
+                ssl_context.verify_mode = ssl.CERT_NONE
+            handlers += [urllib2.HTTPSHandler(context=ssl_context)]
+            opener = urllib2.build_opener(*handlers)
+            urllib2.install_opener(opener)
+
+        except BaseException:
+            pass
 
         try:
             headers.update(headers)

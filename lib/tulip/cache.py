@@ -30,11 +30,11 @@ except BaseException:
 from . import control
 
 
-def get(definition, time_out, *args, **table):
+def get(function_, time_out, *args, **table):
     try:
         response = None
 
-        f = repr(definition)
+        f = repr(function_)
         f = re.sub('.+\smethod\s|.+function\s|\sat\s.+|\sof\s.+', '', f)
 
         a = hashlib.md5()
@@ -55,7 +55,10 @@ def get(definition, time_out, *args, **table):
         dbcur.execute("SELECT * FROM %s WHERE func = '%s' AND args = '%s'" % (table, f, a))
         match = dbcur.fetchone()
 
-        response = eval(match[2].encode('utf-8'))
+        try:
+            response = eval(match[2].encode('utf-8'))
+        except BaseException:
+            response = eval(match[2])
 
         t1 = int(match[3])
         t2 = int(time.time())
@@ -66,9 +69,10 @@ def get(definition, time_out, *args, **table):
         pass
 
     try:
-        r = definition(*args)
+        r = function_(*args)
         if (r is None or r == []) and response is not None:
             return response
+
         elif r is None or r == []:
             return r
     except BaseException:
@@ -87,15 +91,15 @@ def get(definition, time_out, *args, **table):
     try:
         return eval(r.encode('utf-8'))
     except BaseException:
-        pass
+        return eval(r)
 
 
-def timeout(definition, *args, **table):
+def timeout(function_, *args, **table):
 
     try:
         response = None
 
-        f = repr(definition)
+        f = repr(function_)
         f = re.sub('.+\smethod\s|.+function\s|\sat\s.+|\sof\s.+', '', f)
 
         a = hashlib.md5()
@@ -132,7 +136,10 @@ def clear(table=None, withyes=True):
 
         if withyes:
 
-            yes = control.yesnoDialog(control.lang(30401).encode('utf-8'), '', '')
+            try:
+                yes = control.yesnoDialog(control.lang(30401).encode('utf-8'), '', '')
+            except BaseException:
+                yes = control.yesnoDialog(control.lang(30401), '', '')
 
             if not yes:
                 return
@@ -173,5 +180,3 @@ def delete(dbfile=control.cacheFile, withyes=True):
     control.deleteFile(dbfile)
 
     control.infoDialog(control.lang(30402).encode('utf-8'))
-
-

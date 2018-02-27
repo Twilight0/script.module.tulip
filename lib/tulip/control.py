@@ -65,6 +65,7 @@ except AttributeError:
 window = xbmcgui.Window(10000)
 dialog = xbmcgui.Dialog()
 progressDialog = xbmcgui.DialogProgress()
+progressDialogGB = xbmcgui.DialogProgressBG()
 windowDialog = xbmcgui.WindowDialog()
 button = xbmcgui.ControlButton
 image = xbmcgui.ControlImage
@@ -87,6 +88,21 @@ join = os.path.join
 settingsFile = os.path.join(dataPath, 'settings.xml')
 bookmarksFile = os.path.join(dataPath, 'bookmarks.db')
 cacheFile = os.path.join(dataPath, 'cache.db')
+
+
+def name():
+
+    return addonInfo('name')
+
+
+def version():
+
+    return addonInfo('version')
+
+
+def fanart():
+
+    return addonInfo('fanart')
 
 
 def infoDialog(message, heading=addonInfo('name'), icon='', time=3000):
@@ -520,6 +536,32 @@ def set_skin_setting(setting_id, state='true'):
     return execute('Skin.SetBool({0},{1})'.format(setting_id, state))
 
 
+def set_skin_string_setting(setting_id, string):
+
+    return execute('Skin.SetString({0},{1})'.format(setting_id, string))
+
+
 def quit_kodi():
 
     execute('Quit')
+
+
+def android_activity(url, package=''):
+
+    if package:
+        package = '"' + package + '"'
+
+    return execute('StartAndroidActivity({0},"android.intent.action.VIEW","","{1}")'.format(package, url))
+
+
+def open_web_browser(url):
+
+    if condVisibility('system.platform.android'):
+
+        return android_activity(url)
+
+    else:
+
+        import webbrowser
+
+        return webbrowser.open(url)

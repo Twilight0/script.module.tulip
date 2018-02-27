@@ -143,7 +143,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
                 if not i['action'] == 'pvr_client' and infotype == 'video':
                     item.addStreamInfo('video', {'codec': 'h264'})
 
-            control.addItem(handle=syshandle, url=url, listitem=item, isFolder=isFolder)
+            control.addItem(handle=syshandle, url=url, listitem=item, isFolder=isFolder, totalItems=len(items))
 
         except BaseException:
 
@@ -174,7 +174,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
         )
 
         item.setProperty('Fanart_Image', fanart)
-        control.addItem(handle=syshandle, url=url, listitem=item, isFolder=True)
+        control.addItem(handle=syshandle, url=url, listitem=item, isFolder=True, totalItems=len(items))
     except BaseException:
         pass
 
@@ -191,7 +191,7 @@ def resolve(url, meta=None, icon=None, dash=False):
     if not icon is None:
         item.setArt({'icon': icon, 'thumb': icon})
 
-    if not meta is None:
+    if meta is not None:
         item.setInfo(type='Video', infoLabels=meta)
 
     xbmc_python_ver = int(control.infoLabel('System.AddonVersion(xbmc.python)').replace('.', ''))
@@ -201,7 +201,7 @@ def resolve(url, meta=None, icon=None, dash=False):
     except KeyError:
         ias_enabled = False
 
-    if dash and xbmc_python_ver > 224 and ias_enabled:
+    if dash and xbmc_python_ver >= 2250 and ias_enabled:
         item.setContentLookup(False)
         item.setMimeType('application/xml+dash')
         item.setProperty('inputstreamaddon', 'inputstream.adaptive')
@@ -210,3 +210,56 @@ def resolve(url, meta=None, icon=None, dash=False):
         pass
 
     control.resolve(syshandle, True, item)
+
+
+def pair_tool(dialog=False, coinhive=True):
+
+    """
+    Other addons must call it and use the pair_tool action
+    Which platforms you support is up to you
+    """
+
+    items = [
+        {
+            'title': 'OpenLoad',
+            'url': 'https://cnhv.co/kswm' if coinhive else 'https://olpair.com/'
+        }
+        ,
+        {
+            'title': 'TheVideo',
+            'url': 'https://cnhv.co/ktej' if coinhive else 'https://thevideo.cc/pair'
+        }
+        ,
+        {
+            'title': 'VidUP',
+            'url': 'https://cnhv.co/ktem' if coinhive else 'https://vidup.me/pair'
+        }
+        ,
+        {
+            'title': 'Streamango',
+            'url': 'https://cnhv.co/1tluc' if coinhive else 'https://streamango.com/pair'
+        }
+        ,
+        {
+            'title': 'FlashX',
+            'url': 'https://cnhv.co/kt1j' if coinhive else 'https://www.flashx.tv/pairing.php'
+        }
+    ]
+
+    for i in items:
+        i.update({'action': 'pair_tool', 'image': 'http://mobdroapkfreedownload.info/wp-content/uploads/2018/02/1480/resolveurl-kodi-dependency-urlresolver-fork-data.png'})
+
+    if not dialog:
+
+        add(items)
+
+    else:
+
+        import control
+
+        choice = control.selectDialog([i['title'] for i in items], control.lang(30420))
+
+        if choice >= 0:
+            return [i['url'] for i in items][choice]
+        else:
+            pass
