@@ -504,8 +504,8 @@ def enable_addon(addon_id, enable=True):
     json_rpc(command)
 
 
-def set_a_setting(_setting_, value):
-    
+def set_gui_setting(_setting_, value):
+
     """Change a gui setting via json-rpc"""
 
     json_cmd = {
@@ -526,12 +526,12 @@ def get_a_setting(_setting_):
     return json_rpc(json_cmd)
 
 
-def bool_skin_setting(setting_id):
+def get_skin_bool_setting(setting_id):
 
     return bool(condVisibility('Skin.HasSetting({0})'.format(setting_id)))
 
 
-def set_skin_setting(setting_id, state='true'):
+def set_skin_bool_setting(setting_id, state='true'):
 
     return execute('Skin.SetBool({0},{1})'.format(setting_id, state))
 
