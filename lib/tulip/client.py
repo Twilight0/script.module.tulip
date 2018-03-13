@@ -69,7 +69,7 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
 
         try:
 
-            if (2, 7, 9) < sys.version_info or platform.uname()[1] == 'XboxOne':
+            if (2, 7, 9) < sys.version_info:
                 raise BaseException
 
             import ssl
@@ -282,7 +282,9 @@ def download_media(url, path, file_name, progress=None):
         active = not progress == PROGRESS.OFF
         background = progress == PROGRESS.BACKGROUND
 
-        with control.ProgressDialog(control.addonInfo('name'), control.lang(30500).format(file_name), background=background, active=active) as pd:
+        with control.ProgressDialog(
+                control.addonInfo('name'), control.lang(30500).format(file_name), background=background, active=active
+        ) as pd:
 
             try:
                 headers = dict([item.split('=') for item in (url.split('|')[1]).split('&')])
@@ -307,6 +309,7 @@ def download_media(url, path, file_name, progress=None):
             log_debug('Downloading: %s -> %s' % (url, full_path))
 
             path = control.transPath(control.legalfilename(path))
+
             try:
                 control.makeFiles(path)
             except Exception as e:
