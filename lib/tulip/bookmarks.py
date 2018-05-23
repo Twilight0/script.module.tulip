@@ -30,7 +30,7 @@ except ImportError:
 from . import control
 
 
-def add(url):
+def add(url, table=control.bookmarksFile):
 
     try:
 
@@ -49,7 +49,7 @@ def add(url):
         item = repr(item)
 
         control.makeFile(control.dataPath)
-        dbcon = database.connect(control.bookmarksFile)
+        dbcon = database.connect(table)
         dbcur = dbcon.cursor()
         dbcur.execute("CREATE TABLE IF NOT EXISTS bookmark (""dbid TEXT, ""item TEXT, ""UNIQUE(dbid)"");")
         dbcur.execute("DELETE FROM bookmark WHERE dbid = '%s'" % dbid)
@@ -61,7 +61,7 @@ def add(url):
         pass
 
 
-def delete(url):
+def delete(url, table=control.bookmarksFile):
 
     try:
 
@@ -78,7 +78,7 @@ def delete(url):
         dbid = str(dbid.hexdigest())
 
         control.makeFile(control.dataPath)
-        dbcon = database.connect(control.bookmarksFile)
+        dbcon = database.connect(table)
         dbcur = dbcon.cursor()
         dbcur.execute("CREATE TABLE IF NOT EXISTS bookmark (""dbid TEXT, ""item TEXT, ""UNIQUE(dbid)"");")
         dbcur.execute("DELETE FROM bookmark WHERE dbid = '%s'" % dbid)
@@ -91,12 +91,12 @@ def delete(url):
         pass
 
 
-def get():
+def get(table=control.bookmarksFile):
 
     try:
 
         control.makeFile(control.dataPath)
-        dbcon = database.connect(control.bookmarksFile)
+        dbcon = database.connect(table)
         dbcur = dbcon.cursor()
         dbcur.execute("SELECT * FROM bookmark")
         items = dbcur.fetchall()
