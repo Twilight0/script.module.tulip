@@ -125,17 +125,17 @@ class youtube(object):
 
         for i in list(range(1, limit)):
 
-            # try:
-            if pagination is True:
-                raise BaseException()
-            # if not 'nextPageToken' in result:
-            #     raise BaseException()
-            page = url + '&pageToken=' + result['nextPageToken']
-            result = client.request(page)
-            result = json.loads(result)
-            items += result['items']
-            # except BaseException:
-            #     pass
+            try:
+                if pagination is True:
+                    raise BaseException()
+                if not 'nextPageToken' in result:
+                    raise BaseException()
+                page = url + '&pageToken=' + result['nextPageToken']
+                result = client.request(page)
+                result = json.loads(result)
+                items += result['items']
+            except BaseException:
+                pass
 
         try:
             if pagination is False:
