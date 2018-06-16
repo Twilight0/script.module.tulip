@@ -1,4 +1,4 @@
-[B]2.0.0[/B]
+[B]2.0.X[/B]
 - Significantly improved Python 3 compatibility:
   > Only absolute imports are used
   > Added compat module to allow several modules imports compatibility
