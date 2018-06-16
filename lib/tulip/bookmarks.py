@@ -20,14 +20,8 @@
 
 
 import hashlib, json
-
-try:
-    from sqlite3 import dbapi2 as database
-except ImportError:
-    # noinspection PyUnresolvedReferences
-    from pysqlite2 import dbapi2 as database
-
-from . import control
+from tulip import control
+from tulip.compat import database, str, iteritems
 
 
 def add(url, table=control.bookmarksFile):
@@ -45,14 +39,14 @@ def add(url, table=control.bookmarksFile):
 
         dbid = str(dbid.hexdigest())
 
-        item = dict((k,v) for k, v in data.iteritems() if not k == 'bookmark')
+        item = dict((k,v) for k, v in iteritems(data) if not k == 'bookmark')
         item = repr(item)
 
         control.makeFile(control.dataPath)
         dbcon = database.connect(table)
         dbcur = dbcon.cursor()
         dbcur.execute("CREATE TABLE IF NOT EXISTS bookmark (""dbid TEXT, ""item TEXT, ""UNIQUE(dbid)"");")
-        dbcur.execute("DELETE FROM bookmark WHERE dbid = '%s'" % dbid)
+        dbcur.execute("DELETE FROM bookmark WHERE dbid = '{}'".format(dbid))
         dbcur.execute("INSERT INTO bookmark Values (?, ?)", (dbid, item))
         dbcon.commit()
 
@@ -81,7 +75,7 @@ def delete(url, table=control.bookmarksFile):
         dbcon = database.connect(table)
         dbcur = dbcon.cursor()
         dbcur.execute("CREATE TABLE IF NOT EXISTS bookmark (""dbid TEXT, ""item TEXT, ""UNIQUE(dbid)"");")
-        dbcur.execute("DELETE FROM bookmark WHERE dbid = '%s'" % dbid)
+        dbcur.execute("DELETE FROM bookmark WHERE dbid = '{}'".format(dbid))
         dbcon.commit()
 
         control.refresh()
@@ -100,7 +94,10 @@ def get(table=control.bookmarksFile):
         dbcur = dbcon.cursor()
         dbcur.execute("SELECT * FROM bookmark")
         items = dbcur.fetchall()
-        items = [eval(i[1].encode('utf-8')) for i in items]
+        try:
+            items = [eval(i[1].encode('utf-8')) for i in items]
+        except AttributeError:
+            items = [eval(i[1]) for i in items]
 
         return items
 

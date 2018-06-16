@@ -25,15 +25,10 @@ from datetime import (
     tzinfo
 )
 from decimal import Decimal
-import sys
 import re
+from tulip.compat import basestring
 
 __all__ = ["parse_date", "ParseError", "UTC"]
-
-if sys.version_info >= (3, 0, 0):
-    _basestring = str
-else:
-    _basestring = basestring
 
 # Adapted from http://delete.me.uk/2005/03/iso8601.html
 ISO8601_REGEX = re.compile(
@@ -133,7 +128,7 @@ class FixedOffset(tzinfo):
         return False
 
     def __getinitargs__(self):
-        return (self.__offset_hours, self.__offset_minutes, self.__name)
+        return self.__offset_hours, self.__offset_minutes, self.__name
 
     def utcoffset(self, dt):
         return self.__offset
@@ -204,7 +199,7 @@ def parse_date(datestring, default_timezone=UTC):
              constructing the datetime instance.
 
     """
-    if not isinstance(datestring, _basestring):
+    if not isinstance(datestring, basestring):
         raise ParseError("Expecting a string %r" % datestring)
     m = ISO8601_REGEX.match(datestring)
     if not m:

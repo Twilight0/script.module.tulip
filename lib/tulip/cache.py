@@ -21,13 +21,8 @@
 
 import re, hashlib, time
 
-try:
-    from sqlite3 import dbapi2 as database
-except BaseException:
-    # noinspection PyUnresolvedReferences
-    from pysqlite2 import dbapi2 as database
-
-from . import control
+from tulip import control
+from tulip.compat import str, database
 
 
 def get(function_, time_out, *args, **table):
@@ -38,7 +33,8 @@ def get(function_, time_out, *args, **table):
         f = re.sub('.+\smethod\s|.+function\s|\sat\s.+|\sof\s.+', '', f)
 
         a = hashlib.md5()
-        for i in args: a.update(str(i))
+        for i in args:
+            a.update(str(i))
         a = str(a.hexdigest())
     except BaseException:
         pass
@@ -57,7 +53,7 @@ def get(function_, time_out, *args, **table):
 
         try:
             response = eval(match[2].encode('utf-8'))
-        except BaseException:
+        except AttributeError:
             response = eval(match[2])
 
         t1 = int(match[3])
@@ -81,9 +77,9 @@ def get(function_, time_out, *args, **table):
     try:
         r = repr(r)
         t = int(time.time())
-        dbcur.execute("CREATE TABLE IF NOT EXISTS %s (""func TEXT, ""args TEXT, ""response TEXT, ""added TEXT, ""UNIQUE(func, args)"");" % table)
-        dbcur.execute("DELETE FROM %s WHERE func = '%s' AND args = '%s'" % (table, f, a))
-        dbcur.execute("INSERT INTO %s Values (?, ?, ?, ?)" % table, (f, a, r, t))
+        dbcur.execute("CREATE TABLE IF NOT EXISTS {} (""func TEXT, ""args TEXT, ""response TEXT, ""added TEXT, ""UNIQUE(func, args)"");".format(table))
+        dbcur.execute("DELETE FROM {0} WHERE func = '{1}' AND args = '{2}'".format(table, f, a))
+        dbcur.execute("INSERT INTO {} Values (?, ?, ?, ?)".format(table, (f, a, r, t)))
         dbcon.commit()
     except BaseException:
         pass

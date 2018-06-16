@@ -18,26 +18,33 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-try:
-    from urllib import quote_plus
-    from urlparse import parse_qs, urlparse
-except ImportError:
-    from urllib.parse import quote_plus, parse_qs, urlparse
-
 import re, json
-from . import client, workers, control, directory
+from tulip.compat import urlparse, parse_qs, quote_plus, range
+from tulip import client, workers, control, directory
+
+def yt_resolve(setting='yt_resolve'):
+
+    resolve_bool = control.setting(setting) == 'true' and (
+        control.condVisibility(
+            'System.HasAddon({0})'.format('script.module.urlresolver')
+        ) or control.condVisibility(
+            'System.HasAddon({0})'.format('script.module.resolveurl')
+        )
+    )
+
+    return resolve_bool
 
 
 class youtube(object):
 
-    def __init__(self, key=''):
+    def __init__(self, key='', api_key_setting='yt_api_key', yt_resolve_setting='yt_resolve'):
 
         self.list = [];  self.data = []
 
         self.base_link = 'http://www.youtube.com/'
         self.google_base_link = 'https://www.googleapis.com/youtube/v3/'
 
-        self.key_link = '&key={0}'.format(control.setting('yt_api_key') or key)
+        self.key_link = '&key={0}'.format(control.setting(api_key_setting) or key)
 
         self.playlists_link = self.google_base_link + 'playlists?part=snippet&maxResults=50&channelId=%s'
         self.playlist_link = self.google_base_link + 'playlistItems?part=snippet&maxResults=50&playlistId=%s'
@@ -46,30 +53,29 @@ class youtube(object):
         self.search_link = self.google_base_link + 'search?part=snippet&type=video&maxResults=5&q=%s'
         self.youtube_search = self.google_base_link + 'search?q='
 
-        self.youtube_watch = self.base_link + 'watch?v=%s'
-
-        self.resolver = 'script.module.urlresolver'
-
-        if control.condVisibility('System.HasAddon({0})'.format(self.resolver)) and control.setting('yt_resolve') == 'true':
-            self.play_link = self.youtube_watch
+        if yt_resolve(yt_resolve_setting):
+            self.play_link = self.base_link + 'watch?v=%s'
         else:
             self.play_link = 'plugin://plugin.video.youtube/play/?video_id=%s'
 
-    def playlists(self, url):
-        url = self.playlists_link % url + self.key_link
-        return self.play_list(url)
+    def playlists(self, url, limit=5):
 
-    def playlist(self, url, pagination=False):
+        url = self.playlists_link % url + self.key_link
+        return self._playlist(url, limit)
+
+    def playlist(self, url, pagination=False, limit=5):
+
         cid = url.split('&')[0]
         url = self.playlist_link % url + self.key_link
-        return self.video_list(cid, url, pagination)
+        return self._video_list(cid, url, pagination, limit)
 
-    def videos(self, url, pagination=False):
+    def videos(self, url, pagination=False, limit=5):
+
         cid = url.split('&')[0]
         url = self.videos_link % url + self.key_link
-        return self.video_list(cid, url, pagination)
+        return self._video_list(cid, url, pagination, limit)
 
-    def play_list(self, url):
+    def _playlist(self, url, limit):
 
         try:
             result = client.request(url)
@@ -78,10 +84,10 @@ class youtube(object):
         except BaseException:
             pass
 
-        for i in range(1, 5):
+        for i in list(range(1, limit)):
             try:
                 if not 'nextPageToken' in result:
-                    raise Exception()
+                    raise BaseException()
                 next = url + '&pageToken=' + result['nextPageToken']
                 result = client.request(next)
                 result = json.loads(result)
@@ -99,7 +105,7 @@ class youtube(object):
 
                 image = item['snippet']['thumbnails']['high']['url']
                 if '/default.jpg' in image:
-                    raise Exception()
+                    raise BaseException()
                 image = image.encode('utf-8')
 
                 self.list.append({'title': title, 'url': url, 'image': image})
@@ -108,7 +114,7 @@ class youtube(object):
 
         return self.list
 
-    def video_list(self, cid, url, pagination):
+    def _video_list(self, cid, url, pagination, limit):
 
         try:
             result = client.request(url)
@@ -117,23 +123,23 @@ class youtube(object):
         except BaseException:
             pass
 
-        for i in range(1, 5):
+        for i in list(range(1, limit)):
 
-            try:
-                if pagination is True:
-                    raise Exception()
-                if not 'nextPageToken' in result:
-                    raise Exception()
-                page = url + '&pageToken=' + result['nextPageToken']
-                result = client.request(page)
-                result = json.loads(result)
-                items += result['items']
-            except BaseException:
-                pass
+            # try:
+            if pagination is True:
+                raise BaseException()
+            # if not 'nextPageToken' in result:
+            #     raise BaseException()
+            page = url + '&pageToken=' + result['nextPageToken']
+            result = client.request(page)
+            result = json.loads(result)
+            items += result['items']
+            # except BaseException:
+            #     pass
 
         try:
             if pagination is False:
-                raise Exception()
+                raise BaseException()
             next = cid + '&pageToken=' + result['nextPageToken']
         except BaseException:
             next = ''
@@ -141,18 +147,31 @@ class youtube(object):
         for item in items:
             try:
                 title = item['snippet']['title']
-                title = title.encode('utf-8')
+                try:
+                    title = title.encode('utf-8')
+                except AttributeError:
+                    pass
 
-                try: url = item['snippet']['resourceId']['videoId']
-                except BaseException: url = item['id']['videoId']
-                url = url.encode('utf-8')
+                try:
+                    url = item['id']['videoId']
+                except KeyError:
+                    url = item['snippet']['resourceId']['videoId']
+
+                try:
+                    url = url.encode('utf-8')
+                except AttributeError:
+                    pass
 
                 image = item['snippet']['thumbnails']['high']['url']
-                if '/default.jpg' in image: raise Exception()
-                image = image.encode('utf-8')
+                if '/default.jpg' in image:
+                    raise BaseException()
+                try:
+                    image = image.encode('utf-8')
+                except BaseException:
+                    pass
 
                 append = {'title': title, 'url': url, 'image': image}
-                if not next == '':
+                if next != '':
                     append['next'] = next
                 self.list.append(append)
             except BaseException:
@@ -164,18 +183,19 @@ class youtube(object):
             u = [self.content_link % i + self.key_link for i in u]
 
             threads = []
-            for i in range(0, len(u)):
+            for i in list(range(0, len(u))):
                 threads.append(workers.Thread(self.thread, u[i], i))
                 self.data.append('')
             [i.start() for i in threads]
             [i.join() for i in threads]
 
             items = []
-            for i in self.data: items += json.loads(i)['items']
+            for i in self.data:
+                items += json.loads(i)['items']
         except BaseException:
             pass
 
-        for item in range(0, len(self.list)):
+        for item in list(range(0, len(self.list))):
             try:
                 vid = self.list[item]['url']
 
@@ -252,16 +272,16 @@ class youtube(object):
             if url.startswith(self.base_link):
                 url = self.resolve(url)
                 if url is None:
-                    raise Exception()
+                    raise BaseException()
                 return url
             elif not url.startswith('http://'):
-                url = self.youtube_watch % url
+                url = self.play_link % url
                 url = self.resolve(url)
                 if url is None:
-                    raise Exception()
+                    raise BaseException()
                 return url
             else:
-                raise Exception()
+                raise BaseException()
 
         except BaseException:
 
@@ -306,9 +326,9 @@ class youtube(object):
             alert = client.parseDOM(result, 'div', attrs={'id': 'watch7-notification-area'})
 
             if len(alert) > 0:
-                raise Exception()
+                raise BaseException()
             if re.search('[a-zA-Z]', message):
-                raise Exception()
+                raise BaseException()
 
             url = 'plugin://plugin.video.youtube/play/?video_id=%s' % id
 

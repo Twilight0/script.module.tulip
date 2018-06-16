@@ -19,6 +19,7 @@
 '''
 
 import re, unicodedata
+from tulip.compat import unicode
 
 
 def get(title):
@@ -65,8 +66,6 @@ def normalize(title):
 
 
 def strip_accents(string):
-
-    import unicodedata
 
     result = ''.join(c for c in unicodedata.normalize('NFD', string) if unicodedata.category(c) != 'Mn')
 

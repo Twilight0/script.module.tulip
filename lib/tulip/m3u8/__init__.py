@@ -4,19 +4,15 @@
 # Use of this source code is governed by a MIT License
 # license that can be found in the LICENSE file.
 
+from __future__ import absolute_import
+
 import sys
 import os
 import posixpath
 
-from .model import M3U8, Playlist, IFramePlaylist, Media, Segment
-from .parser import parse, is_url, ParseError
-
-try:
-    from urllib2 import urlopen, Request
-    from urlparse import urlparse, urljoin
-except ImportError:
-    from urllib.request import urlopen, Request
-    from urllib.parse import urlparse, urljoin
+from tulip.m3u8.model import M3U8, Playlist, IFramePlaylist, Media, Segment
+from tulip.m3u8.parser import parse, is_url, ParseError
+from tulip.compat import urlopen, Request, urljoin, urlparse
 
 PYTHON_MAJOR_VERSION = sys.version_info
 
@@ -31,7 +27,7 @@ def loads(content):
     return M3U8(content)
 
 
-def load(uri, timeout=None, headers={}):
+def load(uri, timeout=None, headers=None):
 
     '''
     Retrieves the content from a given URI and returns a M3U8 object.
@@ -40,6 +36,8 @@ def load(uri, timeout=None, headers={}):
     timeout happens when loading from uri
     '''
 
+    if headers is None:
+        headers = {}
     if is_url(uri):
         return _load_from_uri(uri, timeout, headers)
     else:
@@ -48,7 +46,9 @@ def load(uri, timeout=None, headers={}):
 # Support for python3 inspired by https://github.com/szemtiv/m3u8/
 
 
-def _load_from_uri(uri, timeout=None, headers={}):
+def _load_from_uri(uri, timeout=None, headers=None):
+    if headers is None:
+        headers = {}
     request = Request(uri, headers=headers)
     resource = urlopen(request, timeout=timeout)
     base_uri = _parsed_url(_url_for(request))

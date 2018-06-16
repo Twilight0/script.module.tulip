@@ -18,45 +18,51 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-### Python 2/3 compatibility block  try/except###
+from random import choice, randrange
+import re, sys, time
+from tulip import cache, control
+from tulip.log import log_debug
 
-try:
-    import cookielib
-    from urllib import URLopener, quote_plus, unquote
-    import urllib2
-    import urlparse
-    from HTMLParser import HTMLParser
-    un_escape = HTMLParser().unescape
-except ImportError:
-    from http import cookiejar as cookielib
-    import urllib.request as urllib2
-    URLopener = urllib2.URLopener
-    import urllib.parse as urlparse
-    quote_plus = urlparse.quote_plus
-    unquote = urlparse.unquote
-    from html import unescape as un_escape
-
-try:
-    uni_code = unicode
-except BaseException:
-    uni_code = str
-
-### End Python 2/3 compatibility block ###
-
-import re, sys, time, random, platform
-from . import cache, control
-from .log import log_debug
+from tulip.compat import (
+    urllib2, cookielib, urlparse, URLopener, quote_plus, quote, unquote, unicode, unescape, range, basestring, str,
+    urlsplit, urlencode, bytes, is_py3, is_py2
+)
 
 
-def request(url, close=True, redirect=True, error=False, proxy=None, post=None, headers=None, mobile=False, limit=None,
-            referer=None, cookie=None, output='', timeout='30'):
+def request(
+        url, close=True, redirect=True, error=False, proxy=None, post=None, headers=None, mobile=False, limit=None,
+        referer=None, cookie=None, output='', timeout='30', username='', password=''
+):
+
+    if isinstance(post, dict):
+        if is_py2:
+            post = urlencode(post)
+        elif is_py3:
+            post = bytes(urlencode(post), encoding='utf-8')
+    elif isinstance(post, basestring) and is_py3:
+        post = bytes(post, encoding='utf-8')
 
     try:
         handlers = []
 
+        if username and password and not proxy:
+            passmgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            passmgr.add_password(None, uri=url, user=username, passwd=password)
+            handlers += [urllib2.HTTPBasicAuthHandler(passmgr)]
+            opener = urllib2.build_opener(*handlers)
+            urllib2.install_opener(opener)
+
         if proxy is not None:
 
-            handlers += [urllib2.ProxyHandler({'http':'{0}'.format(proxy)}), urllib2.HTTPHandler]
+            if username and password:
+                passmgr = urllib2.ProxyBasicAuthHandler()
+                passmgr.add_password(None, uri=url, user=username, passwd=password)
+                handlers += [
+                    urllib2.ProxyHandler({'http': '{0}'.format(proxy)}), urllib2.HTTPHandler,
+                    urllib2.ProxyBasicAuthHandler(passmgr)
+                ]
+            else:
+                handlers += [urllib2.ProxyHandler({'http':'{0}'.format(proxy)}), urllib2.HTTPHandler]
             opener = urllib2.build_opener(*handlers)
             urllib2.install_opener(opener)
 
@@ -64,6 +70,7 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
 
             cookies = cookielib.LWPCookieJar()
             handlers += [urllib2.HTTPHandler(), urllib2.HTTPSHandler(), urllib2.HTTPCookieProcessor(cookies)]
+
             opener = urllib2.build_opener(*handlers)
             urllib2.install_opener(opener)
 
@@ -74,15 +81,13 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
 
             import ssl
             try:
-                from _ssl import CERT_NONE
+                import _ssl
+                CERT_NONE = _ssl.CERT_NONE
             except ImportError:
-                pass
+                CERT_NONE = ssl.CERT_NONE
             ssl_context = ssl.create_default_context()
             ssl_context.check_hostname = False
-            try:
-                ssl_context.verify_mode = CERT_NONE
-            except BaseException:
-                ssl_context.verify_mode = ssl.CERT_NONE
+            ssl_context.verify_mode = CERT_NONE
             handlers += [urllib2.HTTPSHandler(context=ssl_context)]
             opener = urllib2.build_opener(*handlers)
             urllib2.install_opener(opener)
@@ -99,14 +104,14 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
             pass
         elif not mobile is True:
             #headers['User-Agent'] = agent()
-            headers['User-Agent'] = cache.get(randomagent, 1)
+            headers['User-Agent'] = cache.get(randomagent, 12)
         else:
             headers['User-Agent'] = 'Apple-iPhone/701.341'
 
         if 'Referer' in headers:
             pass
         elif referer is None:
-            headers['Referer'] = '%s://%s/' % (urlparse.urlparse(url).scheme, urlparse.urlparse(url).netloc)
+            headers['Referer'] = '%s://%s/' % (urlparse(url).scheme, urlparse(url).netloc)
         else:
             headers['Referer'] = referer
 
@@ -145,7 +150,7 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
 
                 if 'cf-browser-verification' in response.read(5242880):
 
-                    netloc = '%s://%s' % (urlparse.urlparse(url).scheme, urlparse.urlparse(url).netloc)
+                    netloc = '%s://%s' % (urlparse(url).scheme, urlparse(url).netloc)
 
                     cf = cache.get(cfcookie, 168, netloc, headers['User-Agent'], timeout)
 
@@ -243,7 +248,7 @@ def url2name(url):
     from os.path import basename
 
     url = url.split('|')[0]
-    return basename(unquote(urlparse.urlsplit(url)[2]))
+    return basename(unquote(urlsplit(url)[2]))
 
 
 def get_extension(url, response):
@@ -355,26 +360,53 @@ def download_media(url, path, file_name, progress=None):
 
 def parseDOM(html, name=u"", attrs=None, ret=False):
 
+    """
+    :param html:
+        String to parse, or list of strings to parse.
+    :type html:
+        string or list
+    :param name:
+        Element to match ( for instance "span" )
+    :type name:
+        string
+    :param attrs:
+        Dictionary with attributes you want matched in the elment (for
+        instance { "id": "span3", "class": "oneclass.*anotherclass",
+        "attribute": "a random tag" } )
+    :type attrs:
+        dict
+    :param ret:
+        Attribute in element to return value of. If not set(or False), returns
+        content of DOM element.
+    :type ret:
+        string
+    """
+
     if attrs is None:
         attrs = {}
 
-    if isinstance(name, str):  # Should be handled
+    log_debug("Name: " + repr(name) + " - Attrs:" + repr(attrs) + " - Ret: " + repr(ret) + " - HTML: " + str(type(html)))
+
+    if isinstance(name, basestring): # Should be handled
         try:
-            name = name  # .decode("utf-8")
+            name = name.decode("utf-8")
         except BaseException:
             pass
+            log_debug("Couldn't decode name binary string: " + repr(name))
 
-    if isinstance(html, str):
+    if isinstance(html, basestring):
         try:
             html = [html.decode("utf-8")]  # Replace with chardet thingy
         except BaseException:
             html = [html]
-    elif isinstance(html, uni_code):
+    elif isinstance(html, unicode):
         html = [html]
     elif not isinstance(html, list):
+        log_debug("Input isn't list or string/unicode.")
         return u""
 
     if not name.strip():
+        log_debug("Missing tag name")
         return u""
 
     ret_lst = []
@@ -385,24 +417,29 @@ def parseDOM(html, name=u"", attrs=None, ret=False):
 
         lst = _getDOMElements(item, name, attrs)
 
-        if isinstance(ret, str):
+        if isinstance(ret, basestring):
+            log_debug("Getting attribute %s content for %s matches " % (ret, len(lst) ))
             lst2 = []
             for match in lst:
                 lst2 += _getDOMAttributes(match, name, ret)
             lst = lst2
         else:
+            log_debug("Getting element content for %s matches " % len(lst))
             lst2 = []
             for match in lst:
+                log_debug("Getting element content for %s" % match)
                 temp = _getDOMContent(item, name, match, ret).strip()
                 item = item[item.find(temp, item.find(match)) + len(temp):]
                 lst2.append(temp)
             lst = lst2
         ret_lst += lst
 
+    log_debug("Done: " + repr(ret_lst))
     return ret_lst
 
 
 def _getDOMContent(html, name, match, ret):  # Cleanup
+    log_debug("match: " + match)
 
     endstr = u"</" + name  # + ">"
 
@@ -410,12 +447,16 @@ def _getDOMContent(html, name, match, ret):  # Cleanup
     end = html.find(endstr, start)
     pos = html.find("<" + name, start + 1 )
 
+    log_debug(str(start) + " < " + str(end) + ", pos = " + str(pos) + ", endpos: " + str(end))
+
     while pos < end and pos != -1:  # Ignore too early </endstr> return
         tend = html.find(endstr, end + len(endstr))
         if tend != -1:
             end = tend
         pos = html.find("<" + name, pos + 1)
+        log_debug("loop: " + str(start) + " < " + str(end) + " pos = " + str(pos))
 
+    log_debug("start: %s, len: %s, end: %s" % (start, len(match), end))
     if start == -1 and end == -1:
         result = u""
     elif start > -1 and end > -1:
@@ -429,6 +470,7 @@ def _getDOMContent(html, name, match, ret):  # Cleanup
         endstr = html[end:html.find(">", html.find(endstr)) + 1]
         result = match + result + endstr
 
+    log_debug("done result length: " + str(len(result)))
     return result
 
 
@@ -441,6 +483,7 @@ def _getDOMAttributes(match, name, ret):
     for tmp in lst:
         cont_char = tmp[0]
         if cont_char in "'\"":
+            log_debug("Using %s as quotation mark" % cont_char)
 
             # Limit down to next variable.
             if tmp.find('=' + cont_char, tmp.find(cont_char, 1)) > -1:
@@ -450,7 +493,7 @@ def _getDOMAttributes(match, name, ret):
             if tmp.rfind(cont_char, 1) > -1:
                 tmp = tmp[1:tmp.rfind(cont_char)]
         else:
-
+            log_debug("No quotation mark found")
             if tmp.find(" ") > 0:
                 tmp = tmp[:tmp.find(" ")]
             elif tmp.find("/") > 0:
@@ -460,6 +503,7 @@ def _getDOMAttributes(match, name, ret):
 
         ret.append(tmp.strip())
 
+    log_debug("Done: " + repr(ret))
     return ret
 
 
@@ -472,28 +516,44 @@ def _getDOMElements(item, name, attrs):
             lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=' + attrs[key] + '.*?>))', re.M | re.S).findall(item)
 
         if len(lst) == 0:
+            log_debug("Setting main list " + repr(lst2))
             lst = lst2
             lst2 = []
         else:
-
+            log_debug("Setting new list " + repr(lst2))
             test = list(range(len(lst)))
             test.reverse()
             for i in test:  # Delete anything missing from the next list.
                 if not lst[i] in lst2:
+                    log_debug("Purging mismatch " + str(len(lst)) + " - " + repr(lst[i]))
                     del(lst[i])
 
     if len(lst) == 0 and attrs == {}:
+        log_debug("No list found, trying to match on name only")
         lst = re.compile('(<' + name + '>)', re.M | re.S).findall(item)
         if len(lst) == 0:
             lst = re.compile('(<' + name + ' .*?>)', re.M | re.S).findall(item)
 
+    log_debug("Done: " + str(type(lst)))
     return lst
+
+
+def stripTags(html):
+
+    sub_start = html.find("<")
+    sub_end = html.find(">")
+    while sub_start < sub_end and sub_start > -1:
+        html = html.replace(html[sub_start:sub_end + 1], "").strip()
+        sub_start = html.find("<")
+        sub_end = html.find(">")
+
+    return html
 
 
 def replaceHTMLCodes(txt):
 
     txt = re.sub("(&#[0-9]+)([^;^0-9]+)", "\\1;\\2", txt)
-    txt = un_escape(txt)
+    txt = unescape(txt)
     txt = txt.replace("&quot;", "\"")
     txt = txt.replace("&amp;", "&")
     txt = txt.replace("&#38;", "&")
@@ -505,7 +565,7 @@ def replaceHTMLCodes(txt):
 def randomagent():
 
     BR_VERS = [
-        ['%s.0' % i for i in xrange(18, 50)],
+        ['%s.0' % i for i in range(18, 50)],
         ['37.0.2062.103', '37.0.2062.120', '37.0.2062.124', '38.0.2125.101', '38.0.2125.104', '38.0.2125.111',
          '39.0.2171.71', '39.0.2171.95', '39.0.2171.99', '40.0.2214.93', '40.0.2214.111', '40.0.2214.115',
          '42.0.2311.90', '42.0.2311.135', '42.0.2311.152', '43.0.2357.81', '43.0.2357.124', '44.0.2403.155',
@@ -528,9 +588,9 @@ def randomagent():
                 'Mozilla/5.0 ({win_ver}{feature}; Trident/7.0; rv:{br_ver}) like Gecko',
                 'Mozilla/5.0 (compatible; MSIE {br_ver}; {win_ver}{feature}; Trident/6.0)']
 
-    index = random.randrange(len(RAND_UAS))
+    index = randrange(len(RAND_UAS))
 
-    return RAND_UAS[index].format(win_ver=random.choice(WIN_VERS), feature=random.choice(FEATURES), br_ver=random.choice(BR_VERS[index]))
+    return RAND_UAS[index].format(win_ver=choice(WIN_VERS), feature=choice(FEATURES), br_ver=choice(BR_VERS[index]))
 
 
 def agent():
@@ -551,11 +611,11 @@ def ios_agent():
 def spoofer(_agent=True, age_str=randomagent(), referer=False, ref_str=''):
 
     if _agent and referer:
-        return '|User-Agent=' + quote_plus(age_str) + '&Referer=' + quote_plus(ref_str)
+        return '|User-Agent=' + quote(age_str) + '&Referer=' + quote(ref_str)
     elif _agent:
-        return '|User-Agent=' + quote_plus(age_str)
+        return '|User-Agent=' + quote(age_str)
     elif referer:
-        return '|Referer=' + quote_plus(ref_str)
+        return '|Referer=' + quote(ref_str)
 
 
 def cfcookie(netloc, ua, timeout):
@@ -587,7 +647,7 @@ def cfcookie(netloc, ua, timeout):
                 line_val = parseJSString(sections[1])
                 decryptVal = int(eval(str(decryptVal) + str(sections[0][-1]) + str(line_val)))
 
-        answer = decryptVal + len(urlparse.urlparse(netloc).netloc)
+        answer = decryptVal + len(urlparse(netloc).netloc)
 
         query = '%s/cdn-cgi/l/chk_jschl?jschl_vc=%s&jschl_answer=%s' % (netloc, jschl, answer)
 

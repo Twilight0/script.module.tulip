@@ -18,12 +18,9 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-try:
-    from urllib import quote_plus, urlencode
-except ImportError:
-    from urllib.parse import quote_plus, urlencode
-from . import control
-from .init import sysaddon, syshandle
+from tulip.compat import urlencode, quote_plus, iteritems
+from tulip import control
+from tulip.init import sysaddon, syshandle
 
 
 def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video'):
@@ -116,7 +113,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
                 except BaseException:
                     pass
 
-            meta = dict((k, v) for k, v in i.iteritems() if not k == 'cm' and not v == '0')
+            meta = dict((k, v) for k, v in iteritems(i) if not k == 'cm' and not v == '0')
 
             if mediatype is not None:
                 meta['mediatype'] = mediatype
@@ -175,7 +172,9 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
 
         item.setProperty('Fanart_Image', fanart)
         control.addItem(handle=syshandle, url=url, listitem=item, isFolder=True, totalItems=len(items))
+
     except BaseException:
+
         pass
 
     if content is not None:
@@ -184,7 +183,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
     control.directory(syshandle, cacheToDisc=cacheToDisc)
 
 
-def resolve(url, meta=None, icon=None, dash=False):
+def resolve(url, meta=None, icon=None, dash=False, manifest_type='mpd'):
 
     item = control.item(path=url)
 
@@ -205,7 +204,7 @@ def resolve(url, meta=None, icon=None, dash=False):
         item.setContentLookup(False)
         item.setMimeType('application/xml+dash')
         item.setProperty('inputstreamaddon', 'inputstream.adaptive')
-        item.setProperty('inputstream.adaptive.manifest_type', 'mpd')
+        item.setProperty('inputstream.adaptive.manifest_type', manifest_type)
     else:
         pass
 

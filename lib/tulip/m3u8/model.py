@@ -9,9 +9,9 @@ import os
 import errno
 import math
 
-from .protocol import ext_x_start
-from .parser import parse, format_date_time
-from .mixins import BasePathMixin, GroupedBasePathMixin
+from tulip.m3u8.protocol import ext_x_start
+from tulip.m3u8.parser import parse, format_date_time
+from tulip.m3u8.mixins import BasePathMixin, GroupedBasePathMixin
 
 
 class M3U8(object):

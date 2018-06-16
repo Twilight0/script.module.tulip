@@ -1,3 +1,12 @@
+[B]2.0.0[/B]
+- Significantly improved Python 3 compatibility:
+  > Only absolute imports are used
+  > Added compat module to allow several modules imports compatibility
+  > Several other related tweaks
+- Improved youtube module to allow more results from video lists and playlists
+- Added support for resolveurl into youtube module
+- Added login support for client.request module
+
 [B]1.4.1[/B]
 - Added parameters with default arguments (table) into bookmarks module
 

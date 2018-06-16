@@ -21,7 +21,7 @@
 __all__ = ['log_notice', 'log_debug', 'log_info', 'log_warning', 'log_error']
 
 import xbmc
-from . import control
+from tulip import control
 
 LOGDEBUG = xbmc.LOGDEBUG
 LOGERROR = xbmc.LOGERROR
@@ -57,9 +57,9 @@ def log_severe(msg):
     log(msg, level=LOGSEVERE)
 
 
-def log(msg, level=LOGDEBUG):
+def log(msg, level=LOGDEBUG, setting='debug'):
     # override message level to force logging when addon logging turned on
-    if control.setting('debug') == 'true' and level == LOGDEBUG:
+    if control.setting(setting) == 'true' and level == LOGDEBUG:
         level = LOGNOTICE
 
     try:

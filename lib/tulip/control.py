@@ -21,7 +21,8 @@
 
 import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
 import os, json, time
-from .init import syshandle
+from tulip.init import syshandle
+from tulip.compat import basestring
 
 
 integer = 1000
@@ -249,13 +250,13 @@ class CountdownDialog(object):
         interval = self.interval
 
         while time_left > 0:
-            for _ in range(CountdownDialog.__INTERVALS):
+            for _ in list(range(CountdownDialog.__INTERVALS)):
                 sleep(interval * 1000 / CountdownDialog.__INTERVALS)
                 if self.is_canceled(): return
                 time_left = expires - int(time.time() - start)
                 if time_left < 0: time_left = 0
                 progress = time_left * 100 / expires
-                line3 = 'Expires in: %s seconds' % (time_left) if not self.line3 else ''
+                line3 = 'Expires in: %s seconds' % time_left if not self.line3 else ''
                 self.update(progress, line3=line3)
 
             result = func(*args, **kwargs)
@@ -442,12 +443,7 @@ def json_rpc(command):
 
     # This function was taken from tknorris's kodi.py
 
-    try:
-        base_string = basestring
-    except BaseException:
-        base_string = str
-
-    if not isinstance(command, base_string):
+    if not isinstance(command, basestring):
         command = json.dumps(command)
     response = jsonrpc(command)
 
