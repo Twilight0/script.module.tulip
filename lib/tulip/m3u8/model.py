@@ -4,6 +4,8 @@
 # Use of this source code is governed by a MIT License
 # license that can be found in the LICENSE file.
 
+from __future__ import absolute_import, division, unicode_literals
+
 from collections import namedtuple
 import os
 import errno
@@ -123,17 +125,17 @@ class M3U8(object):
     '''
 
     simple_attributes = (
-        # obj attribute      # parser attribute
-        ('is_variant',       'is_variant'),
-        ('is_endlist',       'is_endlist'),
-        ('is_i_frames_only', 'is_i_frames_only'),
-        ('target_duration',  'targetduration'),
-        ('media_sequence',   'media_sequence'),
-        ('program_date_time',   'program_date_time'),
+        # obj attribute             # parser attribute
+        ('is_variant',              'is_variant'),
+        ('is_endlist',              'is_endlist'),
+        ('is_i_frames_only',        'is_i_frames_only'),
+        ('target_duration',         'targetduration'),
+        ('media_sequence',          'media_sequence'),
+        ('program_date_time',       'program_date_time'),
         ('is_independent_segments', 'is_independent_segments'),
-        ('version',          'version'),
-        ('allow_cache',      'allow_cache'),
-        ('playlist_type',    'playlist_type')
+        ('version',                 'version'),
+        ('allow_cache',             'allow_cache'),
+        ('playlist_type',           'playlist_type')
     )
 
     def __init__(self, content=None, base_path=None, base_uri=None, strict=False):
@@ -150,11 +152,12 @@ class M3U8(object):
         self.base_path = base_path
 
     def _initialize_attributes(self):
-        self.keys = [ Key(base_uri=self.base_uri, **params) if params else None
-                      for params in self.data.get('keys', []) ]
-        self.segments = SegmentList([ Segment(base_uri=self.base_uri, keyobject=find_key(segment.get('key', {}), self.keys), **segment)
-                                      for segment in self.data.get('segments', []) ])
-        #self.keys = get_uniques([ segment.key for segment in self.segments ])
+        self.keys = [Key(base_uri=self.base_uri, **params) if params else None
+                     for params in self.data.get('keys', [])]
+        self.segments = SegmentList(
+            [Segment(base_uri=self.base_uri, keyobject=find_key(segment.get('key', {}), self.keys), **segment)
+             for segment in self.data.get('segments', [])])
+        # self.keys = get_uniques([ segment.key for segment in self.segments ])
         for attr, param in self.simple_attributes:
             setattr(self, attr, self.data.get(param))
 
@@ -165,18 +168,18 @@ class M3U8(object):
                 self.files.append(key.uri)
         self.files.extend(self.segments.uri)
 
-        self.media = MediaList([ Media(base_uri=self.base_uri, **media)
-                                 for media in self.data.get('media', []) ])
+        self.media = MediaList([Media(base_uri=self.base_uri, **media)
+                                for media in self.data.get('media', [])])
 
-        self.playlists = PlaylistList([ Playlist(base_uri=self.base_uri, media=self.media, **playlist)
-                                        for playlist in self.data.get('playlists', []) ])
+        self.playlists = PlaylistList([Playlist(base_uri=self.base_uri, media=self.media, **playlist)
+                                       for playlist in self.data.get('playlists', [])])
 
         self.iframe_playlists = PlaylistList()
         for ifr_pl in self.data.get('iframe_playlists', []):
             self.iframe_playlists.append(IFramePlaylist(base_uri=self.base_uri,
-                                         uri=ifr_pl['uri'],
-                                         iframe_stream_info=ifr_pl['iframe_stream_info'])
-                                        )
+                                                        uri=ifr_pl['uri'],
+                                                        iframe_stream_info=ifr_pl['iframe_stream_info'])
+                                         )
         self.segment_map = self.data.get('segment_map')
 
         start = self.data.get('start', None)
@@ -217,7 +220,6 @@ class M3U8(object):
         self.media.base_path = self._base_path
         self.segments.base_path = self._base_path
         self.playlists.base_path = self._base_path
-
 
     def add_playlist(self, playlist):
         self.is_variant = True
@@ -383,7 +385,6 @@ class Segment(BasePathMixin):
 
 
 class SegmentList(list, GroupedBasePathMixin):
-
     def __str__(self):
         output = []
         last_segment = None
@@ -396,10 +397,8 @@ class SegmentList(list, GroupedBasePathMixin):
     def uri(self):
         return [seg.uri for seg in self]
 
-
     def by_key(self, key):
-        return [ segment for segment in self if segment.key == key ]
-
+        return [segment for segment in self if segment.key == key]
 
 
 class Key(BasePathMixin):
@@ -447,11 +446,11 @@ class Key(BasePathMixin):
         if not other:
             return False
         return self.method == other.method and \
-            self.uri == other.uri and \
-            self.iv == other.iv and \
-            self.base_uri == other.base_uri and \
-            self.keyformat == other.keyformat and \
-            self.keyformatversions == other.keyformatversions
+               self.uri == other.uri and \
+               self.iv == other.iv and \
+               self.base_uri == other.base_uri and \
+               self.keyformat == other.keyformat and \
+               self.keyformatversions == other.keyformatversions
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -513,7 +512,7 @@ class Playlist(BasePathMixin):
                               self.stream_info.average_bandwidth)
         if self.stream_info.resolution:
             res = str(self.stream_info.resolution[
-                      0]) + 'x' + str(self.stream_info.resolution[1])
+                          0]) + 'x' + str(self.stream_info.resolution[1])
             stream_inf.append('RESOLUTION=' + res)
         if self.stream_info.codecs:
             stream_inf.append('CODECS=' + quoted(self.stream_info.codecs))
@@ -583,6 +582,7 @@ class IFramePlaylist(BasePathMixin):
             iframe_stream_inf.append('URI=' + quoted(self.uri))
 
         return '#EXT-X-I-FRAME-STREAM-INF:' + ','.join(iframe_stream_inf)
+
 
 StreamInfo = namedtuple(
     'StreamInfo',
@@ -665,7 +665,6 @@ class Media(BasePathMixin):
 
 
 class MediaList(list, GroupedBasePathMixin):
-
     def __str__(self):
         output = [str(playlist) for playlist in self]
         return '\n'.join(output)
@@ -676,14 +675,12 @@ class MediaList(list, GroupedBasePathMixin):
 
 
 class PlaylistList(list, GroupedBasePathMixin):
-
     def __str__(self):
         output = [str(playlist) for playlist in self]
         return '\n'.join(output)
 
 
 class Start(object):
-
     def __init__(self, time_offset, precise=None):
         self.time_offset = float(time_offset)
         self.precise = precise
@@ -705,8 +702,8 @@ def find_key(keydata, keylist):
         if key:
             # Check the intersection of keys and values
             if keydata.get('uri', None) == key.uri and \
-               keydata.get('method', 'NONE') == key.method and \
-               keydata.get('iv', None) == key.iv:
+                            keydata.get('method', 'NONE') == key.method and \
+                            keydata.get('iv', None) == key.iv:
                 return key
     raise KeyError("No key found for key data")
 

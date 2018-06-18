@@ -18,13 +18,17 @@
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-
+from __future__ import absolute_import, division, unicode_literals
 
 import sys
 
 is_py2 = (sys.version_info[0] == 2)
 is_py3 = (sys.version_info[0] == 3)
 
+if sys.version_info < (2, 7, 0):
+    from tulip.ordereddict import OrderedDict
+else:
+    from collections import OrderedDict
 
 if is_py2:
 
@@ -85,5 +89,5 @@ Request = urllib2.Request
 __all__ = [
     "is_py2", "is_py3", "str", "bytes", "urlparse", "urlunparse", "urljoin", "parse_qsl", "quote", "unquote", "queue",
     "range", "urlencode", "izip", "urlsplit", "urlunsplit", "cookielib", "URLopener", "quote_plus", "unescape",
-    "parse_qs", "unquote_plus", "urllib2", "unicode", "database", "basestring", "urlopen", "Request"
+    "parse_qs", "unquote_plus", "urllib2", "unicode", "database", "basestring", "urlopen", "Request", "OrderedDict"
 ]

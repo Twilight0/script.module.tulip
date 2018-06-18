@@ -4,8 +4,12 @@
   > Added compat module to allow several modules imports compatibility
   > Several other related tweaks
 - Improved youtube module to allow more results from video lists and playlists
+  > Tweaks and cosmetics added as well
+- Improved directory module by having utf-8 encoding optional via exception
 - Added support for resolveurl into youtube module
 - Added login support for client.request module
+- Added orderdict conditional into compat module
+- Added multiprocess support along with multithreading into workers module
 
 [B]1.4.1[/B]
 - Added parameters with default arguments (table) into bookmarks module

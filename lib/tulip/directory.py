@@ -17,6 +17,7 @@
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+from __future__ import absolute_import, division, unicode_literals
 
 from tulip.compat import urlencode, quote_plus, iteritems
 from tulip import control
@@ -71,23 +72,53 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
             except BaseException:
                 pass
             try:
+                url += '&title=%s' % quote_plus(i['title'])
+            except KeyError:
+                try:
+                    url += '&title=%s' % quote_plus(i['title'].encode('utf-8'))
+                except KeyError:
+                    pass
+            except BaseException:
+                pass
+
+            try:
                 url += '&image=%s' % quote_plus(i['image'])
+            except KeyError:
+                try:
+                    url += '&image=%s' % quote_plus(i['image'].encode('utf-8'))
+                except KeyError:
+                    pass
             except BaseException:
                 pass
             try:
-                url += '&title=%s' % quote_plus(i['title'].encode('utf-8'))
+                url += '&name=%s' % quote_plus(i['name'])
+            except KeyError:
+                try:
+                    url += '&name=%s' % quote_plus(i['name'].encode('utf-8'))
+                except KeyError:
+                    pass
             except BaseException:
                 pass
             try:
-                url += '&name=%s' % quote_plus(i['name'].encode('utf-8'))
+                url += '&year=%s' % quote_plus(i['year'])
             except BaseException:
                 pass
             try:
-                url += '&plot=%s' % quote_plus(i['plot'].encode('utf-8'))
+                url += '&plot=%s' % quote_plus(i['plot'])
+            except KeyError:
+                try:
+                    url += '&plot=%s' % quote_plus(i['plot'].encode('utf-8'))
+                except KeyError:
+                    pass
             except BaseException:
                 pass
             try:
                 url += '&genre=%s' % quote_plus(i['genre'])
+            except KeyError:
+                try:
+                    url += '&genre=%s' % quote_plus(i['genre'].encode('utf-8'))
+                except KeyError:
+                    pass
             except BaseException:
                 pass
             try:
@@ -187,7 +218,7 @@ def resolve(url, meta=None, icon=None, dash=False, manifest_type='mpd'):
 
     item = control.item(path=url)
 
-    if not icon is None:
+    if icon is not None:
         item.setArt({'icon': icon, 'thumb': icon})
 
     if meta is not None:
@@ -209,3 +240,6 @@ def resolve(url, meta=None, icon=None, dash=False, manifest_type='mpd'):
         pass
 
     control.resolve(syshandle, True, item)
+
+
+__all__ = ["add", "resolve"]

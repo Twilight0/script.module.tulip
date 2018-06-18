@@ -19,11 +19,7 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from datetime import (
-    datetime,
-    timedelta,
-    tzinfo
-)
+from datetime import datetime, timedelta, tzinfo
 from decimal import Decimal
 import re
 from tulip.compat import basestring

@@ -17,6 +17,7 @@
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+from __future__ import absolute_import, division, unicode_literals
 
 from random import choice, randrange
 import re, sys, time
@@ -272,7 +273,7 @@ def get_extension(url, response):
 
 def __enum(**enums):
 
-    return type('Enum', (), enums)
+    return type(b'Enum', (), enums)
 
 
 PROGRESS = __enum(OFF=0, WINDOW=1, BACKGROUND=2)

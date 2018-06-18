@@ -17,6 +17,7 @@
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+from __future__ import absolute_import, division, unicode_literals
 
 import re, json
 from tulip.compat import urlparse, parse_qs, quote_plus, range
@@ -24,12 +25,11 @@ from tulip import client, workers, control, directory
 
 def yt_resolve(setting='yt_resolve'):
 
-    resolve_bool = control.setting(setting) == 'true' and (
-        control.condVisibility(
-            'System.HasAddon({0})'.format('script.module.urlresolver')
-        ) or control.condVisibility(
-            'System.HasAddon({0})'.format('script.module.resolveurl')
-        )
+    resolve_bool = control.setting(setting) == 'true' and any(
+        [
+            control.condVisibility('System.HasAddon(script.module.{0})'.format('urlresolver')),
+            control.condVisibility('System.HasAddon(script.module.{0})'.format('resolveurl'))
+        ]
     )
 
     return resolve_bool
@@ -42,6 +42,7 @@ class youtube(object):
         self.list = [];  self.data = []
 
         self.base_link = 'http://www.youtube.com/'
+        self.base_addon = 'plugin://plugin.video.youtube/'
         self.google_base_link = 'https://www.googleapis.com/youtube/v3/'
 
         self.key_link = '&key={0}'.format(control.setting(api_key_setting) or key)
@@ -54,9 +55,9 @@ class youtube(object):
         self.youtube_search = self.google_base_link + 'search?q='
 
         if yt_resolve(yt_resolve_setting):
-            self.play_link = self.base_link + 'watch?v=%s'
+            self.play_link = self.base_link + 'watch?v={}'
         else:
-            self.play_link = 'plugin://plugin.video.youtube/play/?video_id=%s'
+            self.play_link = self.base_addon + 'play/?video_id={}'
 
     def playlists(self, url, limit=5):
 
@@ -98,15 +99,24 @@ class youtube(object):
         for item in items:
             try:
                 title = item['snippet']['title']
-                title = title.encode('utf-8')
+                try:
+                    title = title.encode('utf-8')
+                except AttributeError:
+                    pass
 
                 url = item['id']
-                url = url.encode('utf-8')
+                try:
+                    url = url.encode('utf-8')
+                except AttributeError:
+                    pass
 
                 image = item['snippet']['thumbnails']['high']['url']
                 if '/default.jpg' in image:
                     raise BaseException()
-                image = image.encode('utf-8')
+                try:
+                    image = image.encode('utf-8')
+                except AttributeError:
+                    pass
 
                 self.list.append({'title': title, 'url': url, 'image': image})
             except BaseException:
@@ -167,7 +177,7 @@ class youtube(object):
                     raise BaseException()
                 try:
                     image = image.encode('utf-8')
-                except BaseException:
+                except AttributeError:
                     pass
 
                 append = {'title': title, 'url': url, 'image': image}
@@ -184,7 +194,7 @@ class youtube(object):
 
             threads = []
             for i in list(range(0, len(u))):
-                threads.append(workers.Thread(self.thread, u[i], i))
+                threads.append(workers.Process(self.thread, u[i], i))
                 self.data.append('')
             [i.start() for i in threads]
             [i.join() for i in threads]
@@ -199,7 +209,7 @@ class youtube(object):
             try:
                 vid = self.list[item]['url']
 
-                self.list[item]['url'] = self.play_link % vid
+                self.list[item]['url'] = self.play_link.format(vid)
 
                 d = [(i['id'], i['contentDetails']) for i in items]
                 d = [i for i in d if i[0] == vid]
@@ -275,7 +285,7 @@ class youtube(object):
                     raise BaseException()
                 return url
             elif not url.startswith('http://'):
-                url = self.play_link % url
+                url = self.play_link.format(url)
                 url = self.resolve(url)
                 if url is None:
                     raise BaseException()
@@ -343,7 +353,7 @@ class youtube(object):
         for item in items_list[:-1]:
 
             title = item['snippet']['title']
-            url = self.play_link % item['id']['videoId']
+            url = self.play_link.format(item['id']['videoId'])
             image = item['snippet']['thumbnails'][thumb_quality]['url']
             plot = item['snippet']['description']
 

@@ -68,7 +68,6 @@ def get(function_, time_out, *args, **table):
         r = function_(*args)
         if (r is None or r == []) and response is not None:
             return response
-
         elif r is None or r == []:
             return r
     except BaseException:
@@ -79,7 +78,7 @@ def get(function_, time_out, *args, **table):
         t = int(time.time())
         dbcur.execute("CREATE TABLE IF NOT EXISTS {} (""func TEXT, ""args TEXT, ""response TEXT, ""added TEXT, ""UNIQUE(func, args)"");".format(table))
         dbcur.execute("DELETE FROM {0} WHERE func = '{1}' AND args = '{2}'".format(table, f, a))
-        dbcur.execute("INSERT INTO {} Values (?, ?, ?, ?)".format(table, (f, a, r, t)))
+        dbcur.execute("INSERT INTO {} Values (?, ?, ?, ?)".format(table), (f, a, r, t))
         dbcon.commit()
     except BaseException:
         pass
@@ -121,7 +120,6 @@ def timeout(function_, *args, **table):
 
 
 def clear(table=None, withyes=True):
-
     try:
         control.idle()
 

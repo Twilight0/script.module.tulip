@@ -4,11 +4,14 @@
 # Use of this source code is governed by a MIT License
 # license that can be found in the LICENSE file.
 
+from __future__ import absolute_import, division, unicode_literals
+
 from tulip.iso8601 import parse_date
 import datetime
 import itertools
 import re
-from . import protocol
+from tulip.m3u8 import protocol
+from tulip.compat import izip
 
 '''
 http://tools.ietf.org/html/draft-pantos-http-live-streaming-08#section-3.2
@@ -328,7 +331,7 @@ def string_to_lines(string):
 
 
 def remove_quotes_parser(*attrs):
-    return dict(zip(attrs, itertools.repeat(remove_quotes)))
+    return dict(list(izip(attrs, itertools.repeat(remove_quotes))))
 
 
 def remove_quotes(string):

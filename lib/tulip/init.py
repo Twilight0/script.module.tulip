@@ -17,10 +17,18 @@
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+from __future__ import absolute_import, division, unicode_literals
 
 from sys import argv
 from tulip.compat import parse_qsl
 
 syshandle = int(argv[1])
 sysaddon = argv[0]
-params = dict(parse_qsl(argv[2].replace('?','')))
+params_tuple = parse_qsl(argv[2].replace('?',''))
+params = dict(params_tuple)
+try:
+    params_unicode = dict((k, v.decode('utf-8')) for k, v in params_tuple)
+except AttributeError:
+    params_unicode = params
+
+__all__ = ["syshandle", "sysaddon", "params", "params_unicode"]
