@@ -18,8 +18,7 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import threading, multiprocessing
-
+import threading
 
 class Thread(threading.Thread):
 
@@ -32,12 +31,21 @@ class Thread(threading.Thread):
         self._target(*self._args)
 
 
-class Process(multiprocessing.Process):
+try:
 
-    def __init__(self, target, *args):
-        self._target = target
-        self._args = args
-        multiprocessing.Process.__init__(self)
+    import multiprocessing
 
-    def run(self):
-        self._target(*self._args)
+
+    class Process(multiprocessing.Process):
+
+        def __init__(self, target, *args):
+            self._target = target
+            self._args = args
+            multiprocessing.Process.__init__(self)
+
+        def run(self):
+            self._target(*self._args)
+
+except ImportError:
+
+    Process = Thread
