@@ -26,9 +26,5 @@ syshandle = int(argv[1])
 sysaddon = argv[0]
 params_tuple = parse_qsl(argv[2].replace('?',''))
 params = dict(params_tuple)
-try:
-    params_unicode = dict((k, v.decode('utf-8')) for k, v in params_tuple)
-except AttributeError:
-    params_unicode = params
 
-__all__ = ["syshandle", "sysaddon", "params", "params_unicode"]
+__all__ = ["syshandle", "sysaddon", "params"]
