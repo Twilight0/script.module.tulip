@@ -54,6 +54,7 @@ elif is_py3:
     izip = zip
 
     def iteritems(d, **kw):
+
         return iter(d.items(**kw))
 
 try:
@@ -81,9 +82,9 @@ except ImportError:
         quote_plus
     )
     import queue
-
-urlopen = urllib2.urlopen
-Request = urllib2.Request
+finally:
+    urlopen = urllib2.urlopen
+    Request = urllib2.Request
 
 
 __all__ = [

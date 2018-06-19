@@ -386,7 +386,7 @@ def parseDOM(html, name=u"", attrs=None, ret=False):
     if attrs is None:
         attrs = {}
 
-    log_debug("Name: " + repr(name) + " - Attrs:" + repr(attrs) + " - Ret: " + repr(ret) + " - HTML: " + str(type(html)))
+    # log_debug("Name: " + repr(name) + " - Attrs:" + repr(attrs) + " - Ret: " + repr(ret) + " - HTML: " + str(type(html)))
 
     if isinstance(name, basestring): # Should be handled
         try:
@@ -419,28 +419,28 @@ def parseDOM(html, name=u"", attrs=None, ret=False):
         lst = _getDOMElements(item, name, attrs)
 
         if isinstance(ret, basestring):
-            log_debug("Getting attribute %s content for %s matches " % (ret, len(lst) ))
+            # log_debug("Getting attribute %s content for %s matches " % (ret, len(lst) ))
             lst2 = []
             for match in lst:
                 lst2 += _getDOMAttributes(match, name, ret)
             lst = lst2
         else:
-            log_debug("Getting element content for %s matches " % len(lst))
+            # log_debug("Getting element content for %s matches " % len(lst))
             lst2 = []
             for match in lst:
-                log_debug("Getting element content for %s" % match)
+                # log_debug("Getting element content for %s" % match)
                 temp = _getDOMContent(item, name, match, ret).strip()
                 item = item[item.find(temp, item.find(match)) + len(temp):]
                 lst2.append(temp)
             lst = lst2
         ret_lst += lst
 
-    log_debug("Done: " + repr(ret_lst))
+    # log_debug("Done: " + repr(ret_lst))
     return ret_lst
 
 
 def _getDOMContent(html, name, match, ret):  # Cleanup
-    log_debug("match: " + match)
+    # log_debug("match: " + match)
 
     endstr = u"</" + name  # + ">"
 
@@ -448,16 +448,16 @@ def _getDOMContent(html, name, match, ret):  # Cleanup
     end = html.find(endstr, start)
     pos = html.find("<" + name, start + 1 )
 
-    log_debug(str(start) + " < " + str(end) + ", pos = " + str(pos) + ", endpos: " + str(end))
+    # log_debug(str(start) + " < " + str(end) + ", pos = " + str(pos) + ", endpos: " + str(end))
 
     while pos < end and pos != -1:  # Ignore too early </endstr> return
         tend = html.find(endstr, end + len(endstr))
         if tend != -1:
             end = tend
         pos = html.find("<" + name, pos + 1)
-        log_debug("loop: " + str(start) + " < " + str(end) + " pos = " + str(pos))
+        # log_debug("loop: " + str(start) + " < " + str(end) + " pos = " + str(pos))
 
-    log_debug("start: %s, len: %s, end: %s" % (start, len(match), end))
+    # log_debug("start: %s, len: %s, end: %s" % (start, len(match), end))
     if start == -1 and end == -1:
         result = u""
     elif start > -1 and end > -1:
@@ -471,7 +471,7 @@ def _getDOMContent(html, name, match, ret):  # Cleanup
         endstr = html[end:html.find(">", html.find(endstr)) + 1]
         result = match + result + endstr
 
-    log_debug("done result length: " + str(len(result)))
+    # log_debug("done result length: " + str(len(result)))
     return result
 
 
@@ -484,7 +484,7 @@ def _getDOMAttributes(match, name, ret):
     for tmp in lst:
         cont_char = tmp[0]
         if cont_char in "'\"":
-            log_debug("Using %s as quotation mark" % cont_char)
+            # log_debug("Using %s as quotation mark" % cont_char)
 
             # Limit down to next variable.
             if tmp.find('=' + cont_char, tmp.find(cont_char, 1)) > -1:
@@ -494,7 +494,7 @@ def _getDOMAttributes(match, name, ret):
             if tmp.rfind(cont_char, 1) > -1:
                 tmp = tmp[1:tmp.rfind(cont_char)]
         else:
-            log_debug("No quotation mark found")
+            # log_debug("No quotation mark found")
             if tmp.find(" ") > 0:
                 tmp = tmp[:tmp.find(" ")]
             elif tmp.find("/") > 0:
@@ -504,7 +504,7 @@ def _getDOMAttributes(match, name, ret):
 
         ret.append(tmp.strip())
 
-    log_debug("Done: " + repr(ret))
+    # log_debug("Done: " + repr(ret))
     return ret
 
 
@@ -517,25 +517,25 @@ def _getDOMElements(item, name, attrs):
             lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=' + attrs[key] + '.*?>))', re.M | re.S).findall(item)
 
         if len(lst) == 0:
-            log_debug("Setting main list " + repr(lst2))
+            # log_debug("Setting main list " + repr(lst2))
             lst = lst2
             lst2 = []
         else:
-            log_debug("Setting new list " + repr(lst2))
+            # log_debug("Setting new list " + repr(lst2))
             test = list(range(len(lst)))
             test.reverse()
             for i in test:  # Delete anything missing from the next list.
                 if not lst[i] in lst2:
-                    log_debug("Purging mismatch " + str(len(lst)) + " - " + repr(lst[i]))
+                    # log_debug("Purging mismatch " + str(len(lst)) + " - " + repr(lst[i]))
                     del(lst[i])
 
     if len(lst) == 0 and attrs == {}:
-        log_debug("No list found, trying to match on name only")
+        # log_debug("No list found, trying to match on name only")
         lst = re.compile('(<' + name + '>)', re.M | re.S).findall(item)
         if len(lst) == 0:
             lst = re.compile('(<' + name + ' .*?>)', re.M | re.S).findall(item)
 
-    log_debug("Done: " + str(type(lst)))
+    # log_debug("Done: " + str(type(lst)))
     return lst
 
 
@@ -543,7 +543,7 @@ def stripTags(html):
 
     sub_start = html.find("<")
     sub_end = html.find(">")
-    while sub_start < sub_end and sub_start > -1:
+    while sub_end > sub_start > -1:
         html = html.replace(html[sub_start:sub_end + 1], "").strip()
         sub_start = html.find("<")
         sub_end = html.find(">")
