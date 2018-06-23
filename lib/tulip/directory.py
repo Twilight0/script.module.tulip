@@ -214,7 +214,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
     control.directory(syshandle, cacheToDisc=cacheToDisc)
 
 
-def resolve(url, meta=None, icon=None, dash=False, manifest_type='mpd'):
+def resolve(url, meta=None, icon=None, dash=False, manifest_type='mpd', inputstream_type='adaptive'):
 
     item = control.item(path=url)
 
@@ -234,8 +234,8 @@ def resolve(url, meta=None, icon=None, dash=False, manifest_type='mpd'):
     if dash and xbmc_python_ver >= 2250 and ias_enabled:
         item.setContentLookup(False)
         item.setMimeType('application/xml+dash')
-        item.setProperty('inputstreamaddon', 'inputstream.adaptive')
-        item.setProperty('inputstream.adaptive.manifest_type', manifest_type)
+        item.setProperty('inputstreamaddon', 'inputstream.{}'.format(inputstream_type))
+        item.setProperty('inputstream.{}.manifest_type'.format(inputstream_type), manifest_type)
     else:
         pass
 

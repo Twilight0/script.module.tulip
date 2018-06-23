@@ -6,6 +6,7 @@
 - Improved youtube module to allow more results from video lists and playlists
   > Tweaks and cosmetics added as well
 - Improved directory module by having utf-8 encoding optional via exception
+- Added parameters for more manifest types and adaptive types
 - Added support for resolveurl into youtube module
 - Added login support for client.request module
 - Added orderdict conditional into compat module
