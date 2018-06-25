@@ -36,7 +36,7 @@ addItem = xbmcplugin.addDirectoryItem
 addItems = xbmcplugin.addDirectoryItems
 directory = xbmcplugin.endOfDirectory
 content = xbmcplugin.setContent
-property = xbmcplugin.setProperty
+setproperty = xbmcplugin.setProperty
 resolve = xbmcplugin.setResolvedUrl
 sortmethod = xbmcplugin.addSortMethod
 
@@ -313,7 +313,10 @@ def refresh():
 
 def idle():
 
-    return execute('Dialog.Close(busydialog)')
+    if float(addon('xbmc.addon').getAddonInfo('version')[:-2]) > 17.6:
+        return execute('Dialog.Close(busydialognocancel)')
+    else:
+        return execute('Dialog.Close(busydialog)')
 
 
 def set_view_mode(vmid):

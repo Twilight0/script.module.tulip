@@ -11,6 +11,8 @@
 - Added login support for client.request module
 - Added orderdict conditional into compat module
 - Added multiprocess support along with multithreading into workers module
+  > Will not work on Android so fallback to threading has been added
+- Various other efficiency tweaks
 
 [B]1.4.1[/B]
 - Added parameters with default arguments (table) into bookmarks module

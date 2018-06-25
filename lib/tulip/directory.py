@@ -149,16 +149,14 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
             if mediatype is not None:
                 meta['mediatype'] = mediatype
 
-            item = control.item(label=label, iconImage=image, thumbnailImage=image)
+            item = control.item(label=label)
 
             item.setArt(
                 {
                     'icon': image, 'thumb': image, 'poster': image, 'tvshow.poster': image, 'season.poster': image,
-                    'banner': banner, 'tvshow.banner': banner, 'season.banner': banner
+                    'banner': banner, 'tvshow.banner': banner, 'season.banner': banner, 'fanart': fanart
                 }
             )
-
-            item.setProperty('Fanart_Image', fanart)
 
             item.addContextMenuItems(cm)
             item.setInfo(type=infotype, infoLabels=meta)
@@ -192,16 +190,15 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
         except BaseException:
             label = 'next'
 
-        item = control.item(label=label, iconImage=icon, thumbnailImage=icon)
+        item = control.item(label=label)
 
         item.setArt(
             {
                 'icon': icon, 'thumb': icon, 'poster': icon, 'tvshow.poster': icon, 'season.poster': icon,
-                'banner': icon, 'tvshow.banner': icon, 'season.banner': icon
+                'banner': icon, 'tvshow.banner': icon, 'season.banner': icon, 'fanart': fanart
             }
         )
 
-        item.setProperty('Fanart_Image', fanart)
         control.addItem(handle=syshandle, url=url, listitem=item, isFolder=True, totalItems=len(items))
 
     except BaseException:

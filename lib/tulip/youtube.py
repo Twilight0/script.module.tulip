@@ -244,11 +244,11 @@ class youtube(object):
         except BaseException:
             return
 
-    def play(self, name, url=None, as_script=True):
+    def play(self, name, url=None, as_script=True, append_string=''):
 
         try:
 
-            url = self.worker(name, url)
+            url = self.worker(name, url, append_string)
             if url is None:
                 return
 
@@ -275,7 +275,7 @@ class youtube(object):
 
             pass
 
-    def worker(self, name, url):
+    def worker(self, name, url, append_string=''):
 
         try:
 
@@ -295,7 +295,7 @@ class youtube(object):
 
         except BaseException:
 
-            query = name + ' trailer'
+            query = name + append_string
             query = self.youtube_search + query
             url = self.search(query)
 
@@ -340,7 +340,7 @@ class youtube(object):
             if re.search('[a-zA-Z]', message):
                 raise BaseException()
 
-            url = 'plugin://plugin.video.youtube/play/?video_id=%s' % id
+            url = self.play_link.format(id)
 
             return url
 
