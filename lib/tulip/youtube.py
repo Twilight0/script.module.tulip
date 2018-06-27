@@ -163,9 +163,9 @@ class youtube(object):
                     pass
 
                 try:
-                    url = item['id']['videoId']
-                except KeyError:
                     url = item['snippet']['resourceId']['videoId']
+                except (KeyError, ValueError):
+                    url = item['id']['videoId']
 
                 try:
                     url = url.encode('utf-8')
