@@ -314,9 +314,17 @@ def refresh():
 def idle():
 
     if float(addon('xbmc.addon').getAddonInfo('version')[:4]) > 17.6:
-        return execute('Dialog.Close(busydialognocancel)')
+        execute('Dialog.Close(busydialognocancel)')
     else:
-        return execute('Dialog.Close(busydialog)')
+        execute('Dialog.Close(busydialog)')
+
+
+def busy():
+
+    if float(addon('xbmc.addon').getAddonInfo('version')[:4]) > 17.6:
+        execute('ActivateWindow(busydialognocancel)')
+    else:
+        execute('ActivateWindow(busydialog)')
 
 
 def set_view_mode(vmid):

@@ -211,6 +211,77 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
     control.directory(syshandle, cacheToDisc=cacheToDisc)
 
 
+def m3u_maker(items=None):
+
+    """
+    Converts a list into an m3u playlist in string form, use builtin open method to save it somewhere
+    :param items: list
+    :return: str
+    """
+
+    if items is None:
+        return
+
+    m3u_list = []
+
+    for i in items:
+
+        try:
+            url = '%s?action=%s' % (sysaddon, i['action'])
+        except KeyError:
+            return
+        try:
+            url += '&url=%s' % quote_plus(i['url'])
+        except BaseException:
+            pass
+        try:
+            url += '&title=%s' % quote_plus(i['title'])
+        except KeyError:
+            try:
+                url += '&title=%s' % quote_plus(i['title'].encode('utf-8'))
+            except KeyError:
+                pass
+        except BaseException:
+            pass
+        try:
+            url += '&image=%s' % quote_plus(i['image'])
+        except KeyError:
+            try:
+                url += '&image=%s' % quote_plus(i['image'].encode('utf-8'))
+            except KeyError:
+                pass
+        except BaseException:
+            pass
+        try:
+            url += '&name=%s' % quote_plus(i['name'])
+        except KeyError:
+            try:
+                url += '&name=%s' % quote_plus(i['name'].encode('utf-8'))
+            except KeyError:
+                pass
+        except BaseException:
+            pass
+        try:
+            url += '&year=%s' % quote_plus(i['year'])
+        except BaseException:
+            pass
+        try:
+            url += '&plot=%s' % quote_plus(i['plot'])
+        except KeyError:
+            try:
+                url += '&plot=%s' % quote_plus(i['plot'].encode('utf-8'))
+            except KeyError:
+                pass
+        except BaseException:
+            pass
+
+        m3u_list.append(u'#EXTINF:0,{0}\n'.format(i['title']) + url + '\n')
+
+    m3u = [u'#EXTM3U\n'] + m3u_list
+
+    return ''.join(m3u)
+
+
 def resolve(url, meta=None, icon=None, dash=False, manifest_type='mpd', inputstream_type='adaptive'):
 
     item = control.item(path=url)
@@ -239,4 +310,4 @@ def resolve(url, meta=None, icon=None, dash=False, manifest_type='mpd', inputstr
     control.resolve(syshandle, True, item)
 
 
-__all__ = ["add", "resolve"]
+__all__ = ["add", "resolve", "m3u_maker"]
