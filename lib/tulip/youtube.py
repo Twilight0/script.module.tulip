@@ -23,21 +23,10 @@ import re, json
 from tulip.compat import urlparse, parse_qs, quote_plus, range
 from tulip import client, workers, control, directory
 
-def yt_resolve(setting='yt_resolve'):
-
-    resolve_bool = control.setting(setting) == 'true' and any(
-        [
-            control.condVisibility('System.HasAddon(script.module.{0})'.format('urlresolver')),
-            control.condVisibility('System.HasAddon(script.module.{0})'.format('resolveurl'))
-        ]
-    )
-
-    return resolve_bool
-
 
 class youtube(object):
 
-    def __init__(self, key='', api_key_setting='yt_api_key', yt_resolve_setting='yt_resolve'):
+    def __init__(self, key='', api_key_setting='yt_api_key', replace_url=True):
 
         self.list = [];  self.data = []
 
@@ -54,7 +43,7 @@ class youtube(object):
         self.search_link = self.google_base_link + 'search?part=snippet&type=video&maxResults=5&q=%s'
         self.youtube_search = self.google_base_link + 'search?q='
 
-        if yt_resolve(yt_resolve_setting):
+        if not replace_url:
             self.play_link = self.base_link + 'watch?v={}'
         else:
             self.play_link = self.base_addon + 'play/?video_id={}'

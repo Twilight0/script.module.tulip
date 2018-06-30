@@ -13,6 +13,9 @@
 - Added multiprocess support along with multithreading into workers module
   > Will not work on Android so fallback to threading has been added
 - Various other efficiency tweaks
+- New m3u playlist maker function
+- Added busy function to activate busydialog
+- Removed conditional and accompanying function for optional resolvers
 
 [B]1.4.1[/B]
 - Added parameters with default arguments (table) into bookmarks module
