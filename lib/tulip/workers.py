@@ -29,23 +29,3 @@ class Thread(threading.Thread):
 
     def run(self):
         self._target(*self._args)
-
-
-try:
-
-    import multiprocessing
-
-
-    class Process(multiprocessing.Process):
-
-        def __init__(self, target, *args):
-            self._target = target
-            self._args = args
-            multiprocessing.Process.__init__(self)
-
-        def run(self):
-            self._target(*self._args)
-
-except ImportError:
-
-    Process = Thread

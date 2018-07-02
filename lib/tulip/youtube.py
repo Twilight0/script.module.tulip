@@ -183,7 +183,7 @@ class youtube(object):
 
             threads = []
             for i in list(range(0, len(u))):
-                threads.append(workers.Process(self.thread, u[i], i))
+                threads.append(workers.Thread(self.thread, u[i], i))
                 self.data.append('')
             [i.start() for i in threads]
             [i.join() for i in threads]

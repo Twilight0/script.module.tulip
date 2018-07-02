@@ -609,14 +609,25 @@ def ios_agent():
     return 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25'
 
 
-def spoofer(_agent=True, age_str=randomagent(), referer=False, ref_str=''):
+def spoofer(headers=None, _agent=True, age_str=randomagent(), referer=False, ref_str=''):
 
-    if _agent and referer:
-        return '|User-Agent=' + quote(age_str) + '&Referer=' + quote(ref_str)
-    elif _agent:
-        return '|User-Agent=' + quote(age_str)
-    elif referer:
-        return '|Referer=' + quote(ref_str)
+    append = '|'
+
+    if not headers:
+        headers = {}
+
+    if _agent and age_str and not headers:
+        headers.update({'User-Agent': age_str})
+
+    if referer and ref_str:
+        headers.update({'Referer': ref_str})
+
+    if headers:
+        append += urlencode(headers)
+    else:
+        append = ''
+
+    return append
 
 
 def cfcookie(netloc, ua, timeout):
