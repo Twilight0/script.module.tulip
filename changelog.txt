@@ -15,6 +15,7 @@
 - Added busy function to activate busydialog
 - Removed conditional and accompanying function for optional resolvers
 - Added headers parameter into spoofer function and improved it
+- Several enhancements into resolve function
 
 [B]1.4.1[/B]
 - Added parameters with default arguments (table) into bookmarks module

@@ -19,12 +19,23 @@
 '''
 from __future__ import absolute_import, division, unicode_literals
 
-from tulip.compat import urlencode, quote_plus, iteritems
+from tulip.compat import urlencode, quote_plus, iteritems, basestring
 from tulip import control
 from tulip.init import sysaddon, syshandle
 
 
 def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video'):
+
+    """
+    Creates a directory of items
+
+    :param items: A list of dictionaries of items, each item must have at least two keys, action and title
+    :param cacheToDisc: Deprecated in Krypton, no effect there
+    :param content: String
+    :param mediatype: String
+    :param infotype: String
+    :return: None
+    """
 
     if items is None or len(items) == 0:
         return
@@ -282,7 +293,37 @@ def m3u_maker(items=None):
     return ''.join(m3u)
 
 
-def resolve(url, meta=None, icon=None, dash=False, manifest_type='mpd', inputstream_type='adaptive'):
+def resolve(
+        url, meta=None, icon=None, dash=False, manifest_type=None, inputstream_type='adaptive', headers=None,
+        mimetype=None
+):
+
+    """
+    Prepares a resolved url into a listitem for playback
+
+    :param url: Requires a string or unicode, append required urlencoded headers with pipe |
+    :param meta: a dictionary with listitem keys: values
+    :param icon: String
+    :param dash: Boolean
+    :param manifest_type: String
+    :param inputstream_type: String 99.9% of the time it is adaptive
+    :param headers: dictionary or urlencoded string
+    :param mimetype: String
+    :return: None
+    """
+
+    if not headers and '|' in url:
+        url = url.rpartition('|')[2]
+        headers = url.rpartition('|')[0]
+    elif headers:
+        if isinstance(headers, basestring):
+            if headers.startswith('|'):
+                headers = headers[1:]
+        elif isinstance(headers, dict):
+            headers = urlencode(headers)
+
+    if not dash and headers:
+        url = '|'.join([url, headers])
 
     item = control.item(path=url)
 
@@ -292,20 +333,27 @@ def resolve(url, meta=None, icon=None, dash=False, manifest_type='mpd', inputstr
     if meta is not None:
         item.setInfo(type='Video', infoLabels=meta)
 
-    xbmc_python_ver = int(control.infoLabel('System.AddonVersion(xbmc.python)').replace('.', ''))
+    krypton_plus = int(control.infoLabel('System.AddonVersion(xbmc.python)').replace('.', '')) >= 2250
 
     try:
-        ias_enabled = control.addon_details('inputstream.adaptive').get('enabled')
+        isa_enabled = control.addon_details('inputstream.adaptive').get('enabled')
     except KeyError:
-        ias_enabled = False
+        isa_enabled = False
 
-    if dash and xbmc_python_ver >= 2250 and ias_enabled:
+    if dash and krypton_plus and isa_enabled:
+        if not manifest_type:
+            manifest_type = 'mpd'
+        if not mimetype:
+            mimetype = 'application/xml+dash'
         item.setContentLookup(False)
-        item.setMimeType('application/xml+dash')
+        item.setMimeType('{0}'.format(mimetype))
         item.setProperty('inputstreamaddon', 'inputstream.{}'.format(inputstream_type))
         item.setProperty('inputstream.{}.manifest_type'.format(inputstream_type), manifest_type)
-    else:
-        pass
+        if headers:
+            item.setProperty("inputstream.{}.stream_headers".format(inputstream_type), headers)
+    elif mimetype:
+        item.setContentLookup(False)
+        item.setMimeType('{0}'.format(mimetype))
 
     control.resolve(syshandle, True, item)
 
