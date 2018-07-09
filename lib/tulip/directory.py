@@ -313,8 +313,8 @@ def resolve(
     """
 
     if not headers and '|' in url:
-        url = url.rpartition('|')[2]
-        headers = url.rpartition('|')[0]
+        url = url.rpartition('|')[0]
+        headers = url.rpartition('|')[2]
     elif headers:
         if isinstance(headers, basestring):
             if headers.startswith('|'):
