@@ -32,7 +32,7 @@ from tulip.compat import (
 
 def request(
         url, close=True, redirect=True, error=False, proxy=None, post=None, headers=None, mobile=False, limit=None,
-        referer=None, cookie=None, output='', timeout='30', username='', password=''
+        referer=None, cookie=None, output='', timeout='30', username=None, password=None
 ):
 
     if isinstance(post, dict):
@@ -46,7 +46,7 @@ def request(
     try:
         handlers = []
 
-        if username and password and not proxy:
+        if username is not None and password is not None and not proxy:
             passmgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
             passmgr.add_password(None, uri=url, user=username, passwd=password)
             handlers += [urllib2.HTTPBasicAuthHandler(passmgr)]
@@ -55,7 +55,7 @@ def request(
 
         if proxy is not None:
 
-            if username and password:
+            if username is not None and password is not None:
                 passmgr = urllib2.ProxyBasicAuthHandler()
                 passmgr.add_password(None, uri=url, user=username, passwd=password)
                 handlers += [
