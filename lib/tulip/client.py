@@ -25,7 +25,7 @@ from tulip import cache, control
 from tulip.log import log_debug
 
 from tulip.compat import (
-    urllib2, cookielib, urlparse, URLopener, quote_plus, quote, unquote, unicode, unescape, range, basestring, str,
+    urllib2, cookielib, urlparse, URLopener, quote_plus, unquote, unicode, unescape, range, basestring, str,
     urlsplit, urlencode, bytes, is_py3, is_py2
 )
 
