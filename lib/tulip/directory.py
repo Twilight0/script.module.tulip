@@ -150,7 +150,10 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
                         tmenu = control.lang(menu['title']).encode('utf-8')
                     except BaseException:
                         tmenu = menu['title']
-                    qmenu = urlencode(menu['query'])
+                    try:
+                        qmenu = urlencode(menu['query'])
+                    except Exception:
+                        qmenu = urlencode(dict((k, v.encode('utf-8')) for k, v in menu['query'].items()))
                     cm.append((tmenu, 'RunPlugin(%s?%s)' % (sysaddon, qmenu)))
                 except BaseException:
                     pass

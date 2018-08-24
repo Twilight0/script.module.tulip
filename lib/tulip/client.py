@@ -47,6 +47,7 @@ def request(
         handlers = []
 
         if username is not None and password is not None and not proxy:
+
             passmgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
             passmgr.add_password(None, uri=url, user=username, passwd=password)
             handlers += [urllib2.HTTPBasicAuthHandler(passmgr)]
