@@ -315,6 +315,12 @@ def resolve(
     :return: None
     """
 
+    # Fail gracefully instead of make Kodi complain.
+    if url is None:
+        from xbmc import log, LOGDEBUG
+        log('URL was not provided, failure to resolve stream', LOGDEBUG)
+        return
+
     if not headers and '|' in url:
         url = url.rpartition('|')[0]
         headers = url.rpartition('|')[2]
