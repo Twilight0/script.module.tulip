@@ -19,7 +19,7 @@
 '''
 from __future__ import absolute_import, division, unicode_literals
 
-from random import choice, randrange
+from random import choice
 import re, sys, time
 from tulip import cache, control
 from tulip.log import log_debug
@@ -77,25 +77,30 @@ def request(
             urllib2.install_opener(opener)
 
         try:
+            import platform
+            is_XBOX = platform.uname()[1] == 'XboxOne'
+        except Exception:
+            is_XBOX = False
 
-            if (2, 7, 9) < sys.version_info:
-                raise BaseException
+        if (2, 7, 8) < sys.version_info < (2, 7, 12) or is_XBOX:
 
-            import ssl
             try:
-                import _ssl
-                CERT_NONE = _ssl.CERT_NONE
-            except ImportError:
-                CERT_NONE = ssl.CERT_NONE
-            ssl_context = ssl.create_default_context()
-            ssl_context.check_hostname = False
-            ssl_context.verify_mode = CERT_NONE
-            handlers += [urllib2.HTTPSHandler(context=ssl_context)]
-            opener = urllib2.build_opener(*handlers)
-            urllib2.install_opener(opener)
 
-        except BaseException:
-            pass
+                import ssl
+                try:
+                    import _ssl
+                    CERT_NONE = _ssl.CERT_NONE
+                except ImportError:
+                    CERT_NONE = ssl.CERT_NONE
+                ssl_context = ssl.create_default_context()
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = CERT_NONE
+                handlers += [urllib2.HTTPSHandler(context=ssl_context)]
+                opener = urllib2.build_opener(*handlers)
+                urllib2.install_opener(opener)
+
+            except BaseException:
+                pass
 
         try:
             headers.update(headers)
@@ -104,11 +109,11 @@ def request(
 
         if 'User-Agent' in headers:
             pass
-        elif not mobile is True:
+        elif mobile is not True:
             #headers['User-Agent'] = agent()
             headers['User-Agent'] = cache.get(randomagent, 12)
         else:
-            headers['User-Agent'] = 'Apple-iPhone/701.341'
+            headers['User-Agent'] = cache.get(random_mobile_agent(), 12)
 
         if 'Referer' in headers:
             pass
@@ -240,7 +245,7 @@ def request(
 def retriever(source, destination, *args):
 
     class Opener(URLopener):
-        version = randomagent()
+        version = cache.get(randomagent, 12)
 
     Opener().retrieve(source, destination, *args)
 
@@ -301,7 +306,7 @@ def download_media(url, path, file_name, progress=None):
                 headers = {}
 
             if 'User-Agent' not in headers:
-                headers['User-Agent'] = randomagent()
+                headers['User-Agent'] = cache.get(randomagent, 12)
 
             request = urllib2.Request(url.split('|')[0], headers=headers)
             response = urllib2.urlopen(request)
@@ -566,33 +571,20 @@ def replaceHTMLCodes(txt):
 
 def randomagent():
 
-    BR_VERS = [
-        ['%s.0' % i for i in range(18, 50)],
-        ['37.0.2062.103', '37.0.2062.120', '37.0.2062.124', '38.0.2125.101', '38.0.2125.104', '38.0.2125.111',
-         '39.0.2171.71', '39.0.2171.95', '39.0.2171.99', '40.0.2214.93', '40.0.2214.111', '40.0.2214.115',
-         '42.0.2311.90', '42.0.2311.135', '42.0.2311.152', '43.0.2357.81', '43.0.2357.124', '44.0.2403.155',
-         '44.0.2403.157', '45.0.2454.101', '45.0.2454.85', '46.0.2490.71', '46.0.2490.80', '46.0.2490.86',
-         '47.0.2526.73', '47.0.2526.80', '48.0.2564.116', '49.0.2623.112', '50.0.2661.86', '51.0.2704.103',
-         '52.0.2743.116', '53.0.2785.143', '54.0.2840.71', '61.0.3163.100'],
-        ['11.0'],
-        ['8.0', '9.0', '10.0', '10.6']
+    choices = [
+        'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063',
+        'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:56.0) Gecko/20100101 Firefox/56.0',
+        'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36 OPR/43.0.2442.991',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/604.4.7 (KHTML, like Gecko) Version/11.0.2 Safari/604.4.7',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0',
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36',
+        'Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0'
     ]
 
-    WIN_VERS = [
-        'Windows NT 10.0', 'Windows NT 7.0', 'Windows NT 6.3', 'Windows NT 6.2', 'Windows NT 6.1', 'Windows NT 6.0',
-        'Windows NT 5.1', 'Windows NT 5.0'
-    ]
-
-    FEATURES = ['; WOW64', '; Win64; IA64', '; Win64; x64', '']
-
-    RAND_UAS = ['Mozilla/5.0 ({win_ver}{feature}; rv:{br_ver}) Gecko/20100101 Firefox/{br_ver}',
-                'Mozilla/5.0 ({win_ver}{feature}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{br_ver} Safari/537.36',
-                'Mozilla/5.0 ({win_ver}{feature}; Trident/7.0; rv:{br_ver}) like Gecko',
-                'Mozilla/5.0 (compatible; MSIE {br_ver}; {win_ver}{feature}; Trident/6.0)']
-
-    index = randrange(len(RAND_UAS))
-
-    return RAND_UAS[index].format(win_ver=choice(WIN_VERS), feature=choice(FEATURES), br_ver=choice(BR_VERS[index]))
+    return choice(choices)
 
 
 def agent():
@@ -605,12 +597,25 @@ def mobile_agent():
     return 'Mozilla/5.0 (Android 4.4; Mobile; rv:18.0) Gecko/18.0 Firefox/18.0'
 
 
+def random_mobile_agent():
+
+    choices = [
+        'Mozilla/5.0 (Linux; Android 7.1; vivo 1716 Build/N2G47H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.98 Mobile Safari/537.36',
+        'Mozilla/5.0 (Linux; U; Android 6.0.1; zh-CN; F5121 Build/34.0.A.1.247) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/40.0.2214.89 UCBrowser/11.5.1.944 Mobile Safari/537.36',
+        'Mozilla/5.0 (Linux; Android 7.0; SAMSUNG SM-N920C Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/6.2 Chrome/56.0.2924.87 Mobile Safari/537.36',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 11_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.0 Mobile/15E148 Safari/604.1',
+        'Mozilla/5.0 (iPad; CPU OS 10_2_1 like Mac OS X) AppleWebKit/602.4.6 (KHTML, like Gecko) Version/10.0 Mobile/14D27 Safari/602.1'
+    ]
+
+    return choice(choices)
+
+
 def ios_agent():
 
     return 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25'
 
 
-def spoofer(headers=None, _agent=True, age_str=randomagent(), referer=False, ref_str=''):
+def spoofer(headers=None, _agent=True, age_str=cache.get(randomagent, 12), referer=False, ref_str=''):
 
     append = '|'
 

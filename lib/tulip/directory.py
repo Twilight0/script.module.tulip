@@ -76,6 +76,17 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
 
             isFolder = False if 'isFolder' in i and not i['isFolder'] == '0' else True
 
+            try:
+                is_play_boolean = i.get('isPlayable') in ['True', 'true', '1', 'yes', 'Yes']
+            except Exception:
+                is_play_boolean = False
+
+            isPlayable = True if not isFolder and 'isPlayable' not in i else is_play_boolean
+
+            if isPlayable:
+
+                isFolder = False
+
             url = '%s?action=%s' % (sysaddon, i['action'])
 
             try:
@@ -175,7 +186,8 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
             item.addContextMenuItems(cm)
             item.setInfo(type=infotype, infoLabels=meta)
 
-            if isFolder is False:
+            if isPlayable:
+
                 if not i['action'] == 'pvr_client':
                     item.setProperty('IsPlayable', 'true')
                 else:
@@ -185,9 +197,9 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
 
             control.addItem(handle=syshandle, url=url, listitem=item, isFolder=isFolder, totalItems=len(items))
 
-        except BaseException:
-
-            pass
+        except BaseException as reason:
+            from xbmc import log
+            log('The reason of failure: ' + repr(reason))
 
     try:
 
@@ -201,8 +213,8 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
 
         try:
             label = control.lang(i['nextlabel']).encode('utf-8')
-        except BaseException:
-            label = 'next'
+        except Exception:
+            label = 'Next'
 
         item = control.item(label=label)
 
@@ -215,7 +227,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
 
         control.addItem(handle=syshandle, url=url, listitem=item, isFolder=True, totalItems=len(items))
 
-    except BaseException:
+    except Exception:
 
         pass
 
