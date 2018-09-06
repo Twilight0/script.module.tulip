@@ -32,7 +32,7 @@ from tulip.compat import (
 
 def request(
         url, close=True, redirect=True, error=False, proxy=None, post=None, headers=None, mobile=False, limit=None,
-        referer=None, cookie=None, output='', timeout='30', username=None, password=None
+        referer=None, cookie=None, output='', timeout='30', username=None, password=None, verify=True
 ):
 
     if isinstance(post, dict):
@@ -82,7 +82,21 @@ def request(
         except Exception:
             is_XBOX = False
 
-        if (2, 7, 8) < sys.version_info < (2, 7, 12) or is_XBOX:
+        if not verify and sys.version_info >= (2, 7, 12):
+
+            try:
+
+                import ssl
+                ssl_context = ssl._create_unverified_context()
+                handlers += [urllib2.HTTPSHandler(context=ssl_context)]
+                opener = urllib2.build_opener(*handlers)
+                urllib2.install_opener(opener)
+
+            except Exception:
+
+                pass
+
+        elif verify and ((2, 7, 8) < sys.version_info < (2, 7, 12) or is_XBOX):
 
             try:
 
@@ -90,7 +104,7 @@ def request(
                 try:
                     import _ssl
                     CERT_NONE = _ssl.CERT_NONE
-                except ImportError:
+                except Exception:
                     CERT_NONE = ssl.CERT_NONE
                 ssl_context = ssl.create_default_context()
                 ssl_context.check_hostname = False
@@ -100,6 +114,7 @@ def request(
                 urllib2.install_opener(opener)
 
             except BaseException:
+
                 pass
 
         try:
@@ -277,15 +292,14 @@ def get_extension(url, response):
     return ext
 
 
-def __enum(**enums):
+def enum(**enums):
 
     return type(b'Enum', (), enums)
 
 
-PROGRESS = __enum(OFF=0, WINDOW=1, BACKGROUND=2)
+def download_media(url, path, file_name, initiate_int=30500, completion_int=30501, exception_int=30502, progress=None):
 
-
-def download_media(url, path, file_name, progress=None):
+    PROGRESS = enum(OFF=0, WINDOW=1, BACKGROUND=2)
 
     try:
         if progress is None:
@@ -295,7 +309,8 @@ def download_media(url, path, file_name, progress=None):
         background = progress == PROGRESS.BACKGROUND
 
         with control.ProgressDialog(
-                control.addonInfo('name'), control.lang(30500).format(file_name), background=background, active=active
+                control.addonInfo('name'), control.lang(initiate_int).format(file_name), background=background,
+                active=active
         ) as pd:
 
             try:
@@ -357,12 +372,13 @@ def download_media(url, path, file_name, progress=None):
             file_desc.close()
 
         if not cancel:
-            control.infoDialog(control.lang(30501).format(file_name))
+            control.infoDialog(control.lang(completion_int).format(file_name))
             log_debug('Download Complete: {0} -> {1}'.format(url, full_path))
 
     except Exception as e:
+
         log_debug('Error ({0}) during download: {1} -> {2}'.format(str(e), url, file_name))
-        control.infoDialog(control.lang(30502).format(str(e), file_name))
+        control.infoDialog(control.lang(exception_int).format(str(e), file_name))
 
 
 def parseDOM(html, name=u"", attrs=None, ret=False):

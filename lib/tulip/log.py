@@ -65,8 +65,8 @@ def log(msg, level=LOGDEBUG, setting='debug'):
 
     try:
         xbmc.log('{0}, {1}:: {2}'.format(control.addonInfo('name'), control.addonInfo('version'), msg), level)
-    except Exception as e:
+    except Exception:
         try:
-            xbmc.log('Logging Failure: %s' % e, level)
-        except BaseException:
-            pass  # just give up
+            xbmc.log('{0}'.format(msg), level)
+        except BaseException as reason:
+            xbmc.log('Logging Failure: {0}' % reason, level)

@@ -49,6 +49,7 @@ execute = xbmc.executebuiltin
 skin = xbmc.getSkinDir()
 player = xbmc.Player()
 playlist = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+playlist_music = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
 monitor = xbmc.Monitor()
 wait = monitor.waitForAbort
 aborted = monitor.abortRequested
@@ -105,6 +106,10 @@ def fanart():
 
     return addonInfo('fanart')
 
+def icon():
+
+    return addonInfo('icon')
+
 
 def infoDialog(message, heading=addonInfo('name'), icon='', time=3000):
 
@@ -135,6 +140,11 @@ def selectDialog(list, heading=addonInfo('name')):
     return dialog.select(heading, list)
 
 
+def inputDialog(heading=name(), default='', type=alphanum_input, option=0, autoclose=0):
+
+    return dialog.input(heading=heading, default=default, type=type, option=option, autoclose=autoclose)
+
+
 class WorkingDialog(object):
     wd = None
 
@@ -144,7 +154,7 @@ class WorkingDialog(object):
             self.wd.create()
             self.update(0)
         except:
-            execute('ActivateWindow(busydialog)')
+            busy()
 
     def __enter__(self):
         return self
@@ -153,7 +163,7 @@ class WorkingDialog(object):
         if self.wd is not None:
             self.wd.close()
         else:
-            execute('Dialog.Close(busydialog)')
+            idle()
 
     def is_canceled(self):
         if self.wd is not None:
@@ -215,7 +225,7 @@ class ProgressDialog(object):
 
 
 class CountdownDialog(object):
-    __INTERVALS = 5
+    INTERVALS = 5
     pd = None
 
     def __init__(self, heading, line1='', line2='', line3='', active=True, countdown=60, interval=5):
@@ -225,7 +235,8 @@ class CountdownDialog(object):
         self.line3 = line3
         if active:
             pd = xbmcgui.DialogProgress()
-            if not self.line3: line3 = 'Expires in: %s seconds' % countdown
+            if not self.line3:
+                line3 = 'Expires in: %s seconds' % countdown
             pd.create(self.heading, line1, line2, line3)
             pd.update(100)
             self.pd = pd
@@ -250,8 +261,8 @@ class CountdownDialog(object):
         interval = self.interval
 
         while time_left > 0:
-            for _ in list(range(CountdownDialog.__INTERVALS)):
-                sleep(interval * 1000 / CountdownDialog.__INTERVALS)
+            for _ in list(range(CountdownDialog.INTERVALS)):
+                sleep(interval * 1000 / CountdownDialog.INTERVALS)
                 if self.is_canceled(): return
                 time_left = expires - int(time.time() - start)
                 if time_left < 0: time_left = 0
