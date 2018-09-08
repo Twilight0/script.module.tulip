@@ -23,7 +23,7 @@ import re, unicodedata
 from tulip.compat import unicode
 
 
-def get(title):
+def get(title, lower=True):
 
     if title is None:
         return
@@ -31,7 +31,11 @@ def get(title):
     title = re.sub('&#(\d+);', '', title)
     title = re.sub('(&#[0-9]+)([^;^0-9]+)', '\\1;\\2', title)
     title = title.replace('&quot;', '\"').replace('&amp;', '&')
-    title = re.sub('\n|([[].+?[]])|([(].+?[)])|\s(vs|v[.])\s|(:|;|-|"|,|\'|\_|\.|\?)|\s', '', title).lower()
+    title = re.sub('\n|([[].+?[]])|([(].+?[)])|\s(vs|v[.])\s|(:|;|-|"|,|\'|\_|\.|\?)|\s', '', title)
+
+    if lower:
+
+        title = title.lower()
 
     return title
 

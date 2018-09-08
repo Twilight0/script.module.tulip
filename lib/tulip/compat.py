@@ -65,7 +65,7 @@ except ImportError:
 # Python 2
 try:
     from urlparse import urlparse, urlunparse, urljoin, parse_qsl, urlsplit, urlunsplit, parse_qs
-    from urllib import quote, unquote, urlencode, URLopener, quote_plus, unquote_plus
+    from urllib import quote, unquote, urlencode, URLopener, quote_plus, unquote_plus, addinfourl
     import Queue as queue
     import cookielib
     import urllib2
@@ -85,6 +85,7 @@ except ImportError:
         urlparse, urlunparse, urljoin, quote, unquote, parse_qsl, parse_qs, urlencode, urlsplit, urlunsplit,
         unquote_plus, quote_plus
     )
+    from urllib.response import addinfourl
     import queue
 finally:
     urlopen = urllib2.urlopen
@@ -95,5 +96,5 @@ __all__ = [
     "is_py2", "is_py3", "str", "bytes", "urlparse", "urlunparse", "urljoin", "parse_qsl", "quote", "unquote", "queue",
     "range", "urlencode", "izip", "urlsplit", "urlunsplit", "cookielib", "URLopener", "quote_plus", "unescape",
     "parse_qs", "unquote_plus", "urllib2", "unicode", "database", "basestring", "urlopen", "Request", "OrderedDict",
-    "iteritems", "BaseHTTPServer", "ThreadingMixIn"
+    "iteritems", "BaseHTTPServer", "ThreadingMixIn", "addinfourl"
 ]
