@@ -310,7 +310,7 @@ def m3u_maker(items=None):
 
 def resolve(
         url, meta=None, icon=None, dash=False, manifest_type=None, inputstream_type='adaptive', headers=None,
-        mimetype=None
+        mimetype=None, resolved_mode=True, live=False
 ):
 
     """
@@ -327,7 +327,7 @@ def resolve(
     :return: None
     """
 
-    # Fail gracefully instead of make Kodi complain.
+    # Fail gracefully instead of making Kodi complain.
     if url is None:
         from xbmc import log, LOGDEBUG
         log('URL was not provided, failure to resolve stream', LOGDEBUG)
@@ -376,7 +376,13 @@ def resolve(
         item.setContentLookup(False)
         item.setMimeType('{0}'.format(mimetype))
 
-    control.resolve(syshandle, True, item)
+    if dash and live:
+        item.setProperty('inputstream.{}.manifest_update_parameter'.format(inputstream_type), '&start_seq=$START_NUMBER$')
+
+    if resolved_mode:
+        control.resolve(syshandle, True, item)
+    else:
+        control.player.play(url, item)
 
 
 __all__ = ["add", "resolve", "m3u_maker"]
