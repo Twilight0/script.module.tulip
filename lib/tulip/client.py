@@ -610,7 +610,7 @@ def replaceHTMLCodes(txt):
 
 def randomagent():
 
-    choices = [
+    agents = [
         'Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko',
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36',
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063',
@@ -623,7 +623,7 @@ def randomagent():
         'Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0'
     ]
 
-    return choice(choices)
+    return choice(agents)
 
 
 def agent():
@@ -638,7 +638,7 @@ def mobile_agent():
 
 def random_mobile_agent():
 
-    choices = [
+    agents = [
         'Mozilla/5.0 (Linux; Android 7.1; vivo 1716 Build/N2G47H) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.98 Mobile Safari/537.36',
         'Mozilla/5.0 (Linux; U; Android 6.0.1; zh-CN; F5121 Build/34.0.A.1.247) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/40.0.2214.89 UCBrowser/11.5.1.944 Mobile Safari/537.36',
         'Mozilla/5.0 (Linux; Android 7.0; SAMSUNG SM-N920C Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/6.2 Chrome/56.0.2924.87 Mobile Safari/537.36',
@@ -646,7 +646,7 @@ def random_mobile_agent():
         'Mozilla/5.0 (iPad; CPU OS 10_2_1 like Mac OS X) AppleWebKit/602.4.6 (KHTML, like Gecko) Version/10.0 Mobile/14D27 Safari/602.1'
     ]
 
-    return choice(choices)
+    return choice(agents)
 
 
 def ios_agent():
@@ -654,9 +654,9 @@ def ios_agent():
     return 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25'
 
 
-def spoofer(headers=None, _agent=True, age_str=cache.get(randomagent, 12), referer=False, ref_str=''):
+def spoofer(headers=None, _agent=True, age_str=cache.get(randomagent, 12), referer=False, ref_str='', url=None):
 
-    append = '|'
+    pipe = '|'
 
     if not headers:
         headers = {}
@@ -668,11 +668,14 @@ def spoofer(headers=None, _agent=True, age_str=cache.get(randomagent, 12), refer
         headers.update({'Referer': ref_str})
 
     if headers:
-        append += urlencode(headers)
+        string = pipe + urlencode(headers)
+        if url:
+            url += string
+            return url
+        else:
+            return string
     else:
-        append = ''
-
-    return append
+        return ''
 
 
 def cfcookie(netloc, ua, timeout):

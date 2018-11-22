@@ -25,7 +25,7 @@ from tulip import control
 from tulip.compat import str, database
 
 
-def get(function_, time_out, *args, **table):
+def get(function_, time_out, cache_file=control.cacheFile, *args, **table):
     try:
         response = None
 
@@ -46,7 +46,7 @@ def get(function_, time_out, *args, **table):
 
     try:
         control.makeFile(control.dataPath)
-        dbcon = database.connect(control.cacheFile)
+        dbcon = database.connect(cache_file)
         dbcur = dbcon.cursor()
         dbcur.execute("SELECT * FROM %s WHERE func = '%s' AND args = '%s'" % (table, f, a))
         match = dbcur.fetchone()
@@ -89,7 +89,7 @@ def get(function_, time_out, *args, **table):
         return eval(r)
 
 
-def timeout(function_, *args, **table):
+def timeout(function_, cache_file=control.cacheFile, *args, **table):
 
     try:
         response = None
@@ -110,7 +110,7 @@ def timeout(function_, *args, **table):
 
     try:
         control.makeFile(control.dataPath)
-        dbcon = database.connect(control.cacheFile)
+        dbcon = database.connect(cache_file)
         dbcur = dbcon.cursor()
         dbcur.execute("SELECT * FROM %s WHERE func = '%s' AND args = '%s'" % (table, f, a))
         match = dbcur.fetchone()
@@ -119,7 +119,7 @@ def timeout(function_, *args, **table):
         return
 
 
-def clear(table=None, withyes=True):
+def clear(table=None, withyes=True, cache_file=control.cacheFile):
     try:
         control.idle()
 
@@ -142,7 +142,7 @@ def clear(table=None, withyes=True):
 
             pass
 
-        dbcon = database.connect(control.cacheFile)
+        dbcon = database.connect(cache_file)
         dbcur = dbcon.cursor()
 
         for t in table:
@@ -158,7 +158,7 @@ def clear(table=None, withyes=True):
         pass
 
 
-def delete(dbfile=control.cacheFile, withyes=True):
+def delete(cache_file=control.cacheFile, withyes=True):
 
     if withyes:
 
@@ -171,6 +171,6 @@ def delete(dbfile=control.cacheFile, withyes=True):
 
         pass
 
-    control.deleteFile(dbfile)
+    control.deleteFile(cache_file)
 
     control.infoDialog(control.lang(30402).encode('utf-8'))
