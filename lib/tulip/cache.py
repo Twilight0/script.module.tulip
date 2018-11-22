@@ -25,7 +25,7 @@ from tulip import control
 from tulip.compat import str, database
 
 
-def get(function_, time_out, cache_file=control.cacheFile, *args, **table):
+def get(function_, time_out, *args, **table):
     try:
         response = None
 
@@ -46,7 +46,7 @@ def get(function_, time_out, cache_file=control.cacheFile, *args, **table):
 
     try:
         control.makeFile(control.dataPath)
-        dbcon = database.connect(cache_file)
+        dbcon = database.connect(control.cacheFile)
         dbcur = dbcon.cursor()
         dbcur.execute("SELECT * FROM %s WHERE func = '%s' AND args = '%s'" % (table, f, a))
         match = dbcur.fetchone()
@@ -89,7 +89,7 @@ def get(function_, time_out, cache_file=control.cacheFile, *args, **table):
         return eval(r)
 
 
-def timeout(function_, cache_file=control.cacheFile, *args, **table):
+def timeout(function_, *args, **table):
 
     try:
         response = None
@@ -110,7 +110,7 @@ def timeout(function_, cache_file=control.cacheFile, *args, **table):
 
     try:
         control.makeFile(control.dataPath)
-        dbcon = database.connect(cache_file)
+        dbcon = database.connect(control.cacheFile)
         dbcur = dbcon.cursor()
         dbcur.execute("SELECT * FROM %s WHERE func = '%s' AND args = '%s'" % (table, f, a))
         match = dbcur.fetchone()
@@ -119,7 +119,7 @@ def timeout(function_, cache_file=control.cacheFile, *args, **table):
         return
 
 
-def clear(table=None, withyes=True, cache_file=control.cacheFile):
+def clear(table=None, withyes=True):
     try:
         control.idle()
 
@@ -142,7 +142,7 @@ def clear(table=None, withyes=True, cache_file=control.cacheFile):
 
             pass
 
-        dbcon = database.connect(cache_file)
+        dbcon = database.connect(control.cacheFile)
         dbcur = dbcon.cursor()
 
         for t in table:
@@ -158,7 +158,7 @@ def clear(table=None, withyes=True, cache_file=control.cacheFile):
         pass
 
 
-def delete(cache_file=control.cacheFile, withyes=True):
+def delete(withyes=True):
 
     if withyes:
 
@@ -171,6 +171,6 @@ def delete(cache_file=control.cacheFile, withyes=True):
 
         pass
 
-    control.deleteFile(cache_file)
+    control.deleteFile(control.cacheFile)
 
     control.infoDialog(control.lang(30402).encode('utf-8'))
