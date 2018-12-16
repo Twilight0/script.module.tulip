@@ -1,3 +1,9 @@
+[B]2.1.0[/B]
+- Utilize kodi-six to improve further Python 2/3 compatibility
+- Added "builtin" function into directory module, which can execute various builtin commands with arguments
+- Added various supplementary fuctions into control module
+- Various other tweaks
+
 [B]2.0.X[/B]
 - Significantly improved Python 3 compatibility:
   > Only absolute imports are used

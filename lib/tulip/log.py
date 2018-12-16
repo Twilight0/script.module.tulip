@@ -17,11 +17,11 @@
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-from __future__ import absolute_import, division, unicode_literals
+from __future__ import absolute_import
 
 __all__ = ['log_notice', 'log_debug', 'log_info', 'log_warning', 'log_error']
 
-import xbmc
+from kodi_six import xbmc
 from tulip import control
 
 LOGDEBUG = xbmc.LOGDEBUG

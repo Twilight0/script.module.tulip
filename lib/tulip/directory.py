@@ -17,9 +17,9 @@
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-from __future__ import absolute_import, division, unicode_literals
+from __future__ import absolute_import, division
 
-from tulip.compat import urlencode, quote_plus, iteritems, basestring
+from tulip.compat import urlencode, quote_plus, iteritems, basestring, parse_qsl
 from tulip import control
 from tulip.init import sysaddon, syshandle
 
@@ -385,4 +385,77 @@ def resolve(
         control.player.play(url, item)
 
 
-__all__ = ["add", "resolve", "m3u_maker"]
+def run_builtin(addon_id=control.addonInfo('id'), action=None, mode=None, content_type=None, url=None, query=None, path_history='', get_url=False, command=('ActivateWindow', 'Container.Update')):
+
+    """
+    This function will construct a url starting with plugin:// attached to the addon_id, then passed into either
+    the ActivateWindow built-in command or Container.Update for listing/container manipulation. You have to either pass action,
+    mode, content_type or query, otherwise TypeError will be raised. Can also apply the "PlayMedia".
+    Query will override action, mode, url and content_type arguments if passed as dictionary
+    path_history can also be either ",return" or ",replace"
+    """
+
+    if not query and not action and not mode and not content_type:
+
+        raise TypeError('Cannot manipulate container without arguments')
+
+    if isinstance(query, dict):
+
+        query_string = urlencode(query)
+
+    else:
+
+        query_string = ''
+
+        if content_type:
+            query_string += 'content_type={0}{1}'.format(content_type, '&' if action is not None or mode is not None or query is not None else '')
+
+        if action and not mode:
+            query_string += 'action={0}'.format(action)
+        elif mode and not action:
+            query_string += 'mode={0}'.format(mode)
+
+        if url:
+            query_string += '&url={0}'.format(quote_plus(url))
+
+        if query:
+            query_string += '&{0}'.format(query)
+
+    if 'content_type=video' in query_string:
+        window_id = 'videos'
+    elif 'content_type=audio' in query_string:
+        window_id = 'music'
+    elif 'content_type=image' in query_string:
+        window_id = 'pictures'
+    elif 'content_type=executable' in query_string:
+        window_id = 'programs'
+    elif 'content_type' in query_string and dict(parse_qsl(query_string))['content_type'] not in ['video', 'audio', 'image', 'executable']:
+        raise AttributeError('Incorrect content_type specified')
+
+    addon_id = 'plugin://' + addon_id + '/'
+
+    if 'content_type' in query_string and isinstance(command, tuple):
+
+        # noinspection PyUnboundLocalVariable
+        executable = '{0}({1},"{2}?{3}"{4})'.format(command[0], window_id, addon_id, query_string, ',return' if not path_history else path_history)
+
+    else:
+
+        if isinstance(command, tuple):
+
+            executable = '{0}({1}?{2}{3})'.format(command[1], addon_id, query_string, ',return' if not path_history else path_history)
+
+        else:
+
+            executable = '{0}({1}?{2}{3})'.format(command, addon_id, query_string, ',return' if not path_history else path_history)
+
+    if get_url:
+
+        return executable
+
+    else:
+
+        control.execute(executable)
+
+
+__all__ = ["add", "resolve", "m3u_maker", "run_builtin"]

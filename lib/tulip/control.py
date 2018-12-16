@@ -17,10 +17,10 @@
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-from __future__ import absolute_import, division, unicode_literals
+from __future__ import absolute_import
 
-import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
-import os, json, time
+from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
+import os, json, time, re
 from tulip.init import syshandle
 from tulip.compat import basestring
 
@@ -55,14 +55,11 @@ wait = monitor.waitForAbort
 aborted = monitor.abortRequested
 
 transPath = xbmc.translatePath
-skinPath = xbmc.translatePath('special://skin/')
-addonPath = xbmc.translatePath(addonInfo('path'))
+skinPath = transPath('special://skin/')
+addonPath = transPath(addonInfo('path'))
 legalfilename = xbmc.makeLegalFilename
 
-try:
-    dataPath = xbmc.translatePath(addonInfo('profile')).decode('utf-8')
-except AttributeError:
-    dataPath = xbmc.translatePath(addonInfo('profile'))
+dataPath = transPath(addonInfo('profile'))
 
 window = xbmcgui.Window(10000)
 dialog = xbmcgui.Dialog()
@@ -106,6 +103,7 @@ def fanart():
 
     return addonInfo('fanart')
 
+
 def icon():
 
     return addonInfo('icon')
@@ -122,7 +120,7 @@ def infoDialog(message, heading=addonInfo('name'), icon='', time=3000):
 
     except BaseException:
 
-        execute("Notification(%s, %s, %s, %s)" % (heading, message, time, icon))
+        execute("Notification({0}, {1}, {2}, {3})".format(heading, message, time, icon))
 
 
 def okDialog(heading, line1):
@@ -142,10 +140,14 @@ def selectDialog(list, heading=addonInfo('name')):
 
 def inputDialog(heading=name(), default='', type=alphanum_input, option=0, autoclose=0):
 
-    return dialog.input(heading=heading, default=default, type=type, option=option, autoclose=autoclose)
+    try:
+        return dialog.input(heading=heading, default=default, type=type, option=option, autoclose=autoclose)
+    except Exception:
+        return dialog.input(heading=heading, defaultt=default, type=type, option=option, autoclose=autoclose)
 
 
 class WorkingDialog(object):
+
     wd = None
 
     def __init__(self):
@@ -225,7 +227,9 @@ class ProgressDialog(object):
 
 
 class CountdownDialog(object):
+
     INTERVALS = 5
+
     pd = None
 
     def __init__(self, heading, line1='', line2='', line3='', active=True, countdown=60, interval=5):
@@ -338,9 +342,12 @@ def busy():
         execute('ActivateWindow(busydialog)')
 
 
-def set_view_mode(vmid):
+def set_view_mode(view_mode):
 
-    return execute('Container.SetViewMode({0})'.format(vmid))
+    if isinstance(view_mode, int):
+        view_mode = str(view_mode)
+
+    return execute('Container.SetViewMode({0})'.format(view_mode))
 
 
 # for compartmentalized theme addons
@@ -534,7 +541,7 @@ def set_gui_setting(_setting_, value):
 
 
 def get_a_setting(_setting_):
-    
+
     """Return the state of a gui setting as dictionary"""
 
     json_cmd = {
@@ -557,6 +564,60 @@ def set_skin_bool_setting(setting_id, state='true'):
 def set_skin_string_setting(setting_id, string):
 
     return execute('Skin.SetString({0},{1})'.format(setting_id, string))
+
+
+def set_default_addon(extensionpoint):
+
+    """
+    This function is able to set a default addon for an extension point for example "xbmc.gui.skin"
+    :param extensionpoint: An extension point in the form of string
+    :return: None
+    """
+
+    execute('Addon.Default.Set({0})'.format(extensionpoint))
+
+
+def activate_screensaver():
+
+    execute('ActivateScreensaver')
+
+
+def get_info_label(infolabel):
+
+    return infoLabel("{0}".format(infolabel))
+
+
+def conditional_visibility(boolean_condition):
+
+    """
+    List of Kodi boolean conditions here: https://kodi.wiki/view/List_of_boolean_conditions
+    :param boolean_condition: str
+    :return: bool
+    """
+
+    return bool(condVisibility('{0}'.format(boolean_condition)))
+
+
+def active_mode():
+
+    def visible_window(window_id):
+
+        boolean = bool(condVisibility('Window.IsVisible({0})'.format(window_id)))
+
+        return boolean
+
+    if visible_window('videos'):
+        window_ = 'videos'
+    elif visible_window('music'):
+        window_ = 'music'
+    elif visible_window('pictures'):
+        window_ = 'pictures'
+    elif visible_window('programs'):
+        window_ = 'programs'
+    else:
+        window_ = 'other'
+
+    return window_
 
 
 def quit_kodi():

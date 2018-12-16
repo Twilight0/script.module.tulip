@@ -17,7 +17,7 @@
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-from __future__ import absolute_import, division, unicode_literals
+from __future__ import absolute_import, division
 
 from random import choice
 import re, sys, time
@@ -307,7 +307,7 @@ def enum(**enums):
     return type(b'Enum', (), enums)
 
 
-def download_media(url, path, file_name, initiate_int=30500, completion_int=30501, exception_int=30502, progress=None):
+def download_media(url, path, file_name, initiate_int='', completion_int='', exception_int='', progress=None):
 
     PROGRESS = enum(OFF=0, WINDOW=1, BACKGROUND=2)
 
@@ -318,10 +318,12 @@ def download_media(url, path, file_name, initiate_int=30500, completion_int=3050
         active = not progress == PROGRESS.OFF
         background = progress == PROGRESS.BACKGROUND
 
-        with control.ProgressDialog(
-                control.addonInfo('name'), control.lang(initiate_int).format(file_name), background=background,
-                active=active
-        ) as pd:
+        if isinstance(initiate_int, int):
+            line1 = control.lang(initiate_int).format(file_name)
+        else:
+            line1 = 'Downloading {0}'.format(file_name)
+
+        with control.ProgressDialog(control.addonInfo('name'), line1, background=background, active=active) as pd:
 
             try:
                 headers = dict([item.split('=') for item in (url.split('|')[1]).split('&')])
@@ -382,13 +384,21 @@ def download_media(url, path, file_name, initiate_int=30500, completion_int=3050
             file_desc.close()
 
         if not cancel:
-            control.infoDialog(control.lang(completion_int).format(file_name))
+
+            if isinstance(completion_int, int):
+                control.infoDialog(control.lang(completion_int).format(file_name))
+            else:
+                control.infoDialog('Download_complete for file name {0}'.format(file_name))
+
             log_debug('Download Complete: {0} -> {1}'.format(url, full_path))
 
     except Exception as e:
 
         log_debug('Error ({0}) during download: {1} -> {2}'.format(str(e), url, file_name))
-        control.infoDialog(control.lang(exception_int).format(str(e), file_name))
+        if isinstance(exception_int, int):
+            control.infoDialog(control.lang(exception_int).format(str(e), file_name))
+        else:
+            control.infoDialog('Download_complete for file name {0}'.format(file_name))
 
 
 def parseDOM(html, name=u"", attrs=None, ret=False):
