@@ -17,14 +17,13 @@
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-from __future__ import absolute_import, division
+from __future__ import absolute_import
 
 from tulip.compat import urlencode, quote_plus, iteritems, basestring, parse_qsl
 from tulip import control
-from tulip.init import sysaddon, syshandle
 
 
-def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video'):
+def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video', argv=None):
 
     """
     Creates a directory of items
@@ -34,8 +33,18 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
     :param content: String
     :param mediatype: String
     :param infotype: String
+    :param argv: List of sys.argv
     :return: None
     """
+
+    if argv is None:
+
+        from tulip.init import sysaddon, syshandle
+
+    else:
+
+        sysaddon = argv[0]
+        syshandle = int(argv[1])
 
     if items is None or len(items) == 0:
         return
@@ -237,7 +246,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video')
     control.directory(syshandle, cacheToDisc=cacheToDisc)
 
 
-def m3u_maker(items=None):
+def m3u_maker(items=None, argv=None):
 
     """
     Converts a list into an m3u playlist in string form, use builtin open method to save it somewhere
@@ -247,6 +256,14 @@ def m3u_maker(items=None):
 
     if items is None:
         return
+
+    if argv is None:
+
+        from lib.tulip.init import sysaddon, syshandle
+
+    else:
+
+        sysaddon = argv[0]
 
     m3u_list = []
 
@@ -326,6 +343,8 @@ def resolve(
     :param mimetype: String
     :return: None
     """
+
+    from tulip.init import syshandle
 
     # Fail gracefully instead of making Kodi complain.
     if url is None:

@@ -19,9 +19,10 @@
 '''
 from __future__ import absolute_import
 
-from sys import argv
+import sys
 from tulip.compat import parse_qsl
 
+argv = sys.argv
 syshandle = int(argv[1])
 sysaddon = argv[0]
 params_tuple = parse_qsl(argv[2].replace('?',''))
