@@ -291,29 +291,33 @@ class CountdownDialog(object):
 
 def openSettings(query=None, id=addonInfo('id')):
 
-    try:
+    idle()
+    execute('Addon.OpenSettings({0})'.format(id))
 
-        idle()
-        execute('Addon.OpenSettings({0})'.format(id))
-        if query is None:
-            raise Exception()
-        c, f = query.split('.')
-        execute('SetFocus(%i)' % (int(c) + 100))
-        execute('SetFocus(%i)' % (int(f) + 200))
+    if query is not None:
 
-    except BaseException:
+        try:
 
-        return
+            c, f = query.split('.')
+            if float(addon('xbmc.addon').getAddonInfo('version')[:4]) > 17.6:
+                execute('SetFocus(-{0})'.format(100 - int(c)))
+                if int(f):
+                    execute('SetFocus(-{0})'.format(80 - int(f)))
+            else:
+                execute('SetFocus({0})'.format(100 + int(c)))
+                if int(f):
+                    execute('SetFocus({0})'.format(200 + int(f)))
+
+        except Exception:
+
+            pass
 
 
 # Alternative method
 def Settings(id=addonInfo('id')):
 
-    try:
-        idle()
-        addon(id).openSettings()
-    except BaseException:
-        return
+    idle()
+    addon(id).openSettings()
 
 
 def openPlaylist():
