@@ -259,7 +259,7 @@ def m3u_maker(items=None, argv=None):
 
     if argv is None:
 
-        from lib.tulip.init import sysaddon, syshandle
+        from tulip.init import sysaddon, syshandle
 
     else:
 
