@@ -17,6 +17,7 @@
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+
 from __future__ import absolute_import
 
 from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
@@ -50,9 +51,9 @@ skin = xbmc.getSkinDir()
 player = xbmc.Player()
 playlist = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
 playlist_music = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
-monitor = xbmc.Monitor()
-wait = monitor.waitForAbort
-aborted = monitor.abortRequested
+monitor = xbmc.Monitor
+wait = monitor().waitForAbort
+aborted = monitor().abortRequested
 
 transPath = xbmc.translatePath
 skinPath = transPath('special://skin/')
@@ -627,6 +628,11 @@ def active_mode():
 def quit_kodi():
 
     execute('Quit')
+
+
+def reload_skin():
+
+    execute('ReloadSkin()')
 
 
 def android_activity(url, package=''):

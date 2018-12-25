@@ -1,3 +1,7 @@
+[B]2.2.X[/B]
+- Reincluded url_dispatcher module for addons that may use it in the future
+- New reload skin function
+
 [B]2.1.X[/B]
 - Utilize kodi-six to further improve Python 2/3 compatibility
 - Added "builtin" function into directory module, which can execute various builtin commands with arguments

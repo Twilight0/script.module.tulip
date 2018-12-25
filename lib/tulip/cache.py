@@ -149,7 +149,7 @@ def clear(table=None, withyes=True):
 
         for t in table:
             try:
-                dbcur.execute("DROP TABLE IF EXISTS %s" % t)
+                dbcur.execute("DROP TABLE IF EXISTS {0}".format(t))
                 dbcur.execute("VACUUM")
                 dbcon.commit()
             except BaseException:

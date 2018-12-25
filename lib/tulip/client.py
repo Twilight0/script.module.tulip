@@ -182,7 +182,7 @@ def request(
 
                 if 'cf-browser-verification' in response.read(5242880):
 
-                    netloc = '%s://%s' % (urlparse(url).scheme, urlparse(url).netloc)
+                    netloc = '{0}://{1}'.format(urlparse(url).scheme, urlparse(url).netloc)
 
                     cf = cache.get(cfcookie, 168, netloc, headers['User-Agent'], timeout)
 
