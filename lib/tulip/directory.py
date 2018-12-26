@@ -21,6 +21,7 @@ from __future__ import absolute_import
 
 from tulip.compat import urlencode, quote_plus, iteritems, basestring, parse_qsl
 from tulip import control
+from kodi_six.xbmc import log
 
 
 def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video', argv=None):
@@ -207,8 +208,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video',
             control.addItem(handle=syshandle, url=url, listitem=item, isFolder=isFolder, totalItems=len(items))
 
         except BaseException as reason:
-            from xbmc import log
-            log('The reason of failure: ' + repr(reason))
+            log('Directory not added, reason of failure: ' + repr(reason))
 
     try:
 
@@ -259,7 +259,7 @@ def m3u_maker(items=None, argv=None):
 
     if argv is None:
 
-        from tulip.init import sysaddon, syshandle
+        from tulip.init import sysaddon
 
     else:
 
@@ -348,8 +348,8 @@ def resolve(
 
     # Fail gracefully instead of making Kodi complain.
     if url is None:
-        from xbmc import log, LOGDEBUG
-        log('URL was not provided, failure to resolve stream', LOGDEBUG)
+        from kodi_six.xbmc import log
+        log('URL was not provided, failure to resolve stream')
         return
 
     if not headers and '|' in url:

@@ -1,6 +1,7 @@
 [B]2.2.X[/B]
 - Reincluded url_dispatcher module for addons that may use it in the future
 - New reload skin function
+- Log exception on client function upon failure
 
 [B]2.1.X[/B]
 - Utilize kodi-six to further improve Python 2/3 compatibility

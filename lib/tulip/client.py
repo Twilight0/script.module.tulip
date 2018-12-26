@@ -23,6 +23,7 @@ from random import choice
 import re, sys, time
 from tulip import cache, control
 from tulip.log import log_debug
+from kodi_six.xbmc import log
 
 from tulip.compat import (
     urllib2, cookielib, urlparse, URLopener, quote_plus, unquote, unicode, unescape, range, basestring, str,
@@ -263,7 +264,8 @@ def request(
 
         return result
 
-    except BaseException:
+    except BaseException as reason:
+        log('Client module failed, reason of failure: ' + repr(reason))
         return
 
 
