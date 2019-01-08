@@ -26,18 +26,6 @@ from kodi_six.xbmc import log
 
 def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video', argv=None):
 
-    """
-    Creates a directory of items
-
-    :param items: A list of dictionaries of items, each item must have at least two keys, action and title
-    :param cacheToDisc: Deprecated in Krypton, no effect there
-    :param content: String
-    :param mediatype: String
-    :param infotype: String
-    :param argv: List of sys.argv
-    :return: None
-    """
-
     if argv is None:
 
         from tulip.init import sysaddon, syshandle
@@ -179,7 +167,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video',
                 except BaseException:
                     pass
 
-            meta = dict((k, v) for k, v in iteritems(i) if not k == 'cm' and not v == '0')
+            meta = dict((k, v) for k, v in i.iteritems() if not (k == 'cm' or k == 'streaminfo') and not v == '0')
 
             if mediatype is not None:
                 meta['mediatype'] = mediatype
@@ -202,8 +190,12 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video',
                     item.setProperty('IsPlayable', 'true')
                 else:
                     item.setProperty('IsPlayable', 'false')
-                if not i['action'] == 'pvr_client' and infotype == 'video':
-                    item.addStreamInfo('video', {'codec': 'h264'})
+
+                if not i['action'] == 'pvr_client':
+                    if 'streaminfo' not in i and infotype == 'video':
+                        item.addStreamInfo(infotype, {'codec': 'h264'})
+                    else:
+                        item.addStreamInfo(infotype, i.get('streaminfo'))
 
             control.addItem(handle=syshandle, url=url, listitem=item, isFolder=isFolder, totalItems=len(items))
 

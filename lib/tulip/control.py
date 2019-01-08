@@ -21,7 +21,7 @@
 from __future__ import absolute_import
 
 from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
-import os, json, time, re
+import os, json, time
 from tulip.init import syshandle
 from tulip.compat import basestring
 
@@ -49,8 +49,7 @@ sleep = xbmc.sleep
 execute = xbmc.executebuiltin
 skin = xbmc.getSkinDir()
 player = xbmc.Player()
-playlist = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-playlist_music = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
+playlist = lambda mode=1: xbmc.PlayList(mode) # mode=1 for video and mode=0 for music/audio
 monitor = xbmc.Monitor
 wait = monitor().waitForAbort
 aborted = monitor().abortRequested

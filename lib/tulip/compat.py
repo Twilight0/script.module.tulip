@@ -70,6 +70,7 @@ try:
     import cookielib
     import urllib2
     import BaseHTTPServer
+    from StringIO import StringIO
     from SocketServer import ThreadingMixIn
     from HTMLParser import HTMLParser
     unescape = HTMLParser().unescape
@@ -81,6 +82,7 @@ except ImportError:
     URLopener = urllib2.URLopener
     import http.server as BaseHTTPServer
     from socketserver import ThreadingMixIn
+    from io import StringIO
     from urllib.parse import (
         urlparse, urlunparse, urljoin, quote, unquote, parse_qsl, parse_qs, urlencode, urlsplit, urlunsplit,
         unquote_plus, quote_plus
@@ -96,5 +98,5 @@ __all__ = [
     "is_py2", "is_py3", "str", "bytes", "urlparse", "urlunparse", "urljoin", "parse_qsl", "quote", "unquote", "queue",
     "range", "urlencode", "izip", "urlsplit", "urlunsplit", "cookielib", "URLopener", "quote_plus", "unescape",
     "parse_qs", "unquote_plus", "urllib2", "unicode", "database", "basestring", "urlopen", "Request", "OrderedDict",
-    "iteritems", "BaseHTTPServer", "ThreadingMixIn", "addinfourl"
+    "iteritems", "BaseHTTPServer", "ThreadingMixIn", "addinfourl", "StringIO"
 ]
