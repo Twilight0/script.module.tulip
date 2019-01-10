@@ -85,70 +85,78 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video',
 
                 isFolder = False
 
-            url = '%s?action=%s' % (sysaddon, i['action'])
+            try:
+                action = '{0}?action={1}'.format(sysaddon, i['action'])
+            except KeyError:
+                return
 
             try:
-                url += '&url=%s' % quote_plus(i['url'])
+                url = 'url={0}'.format(quote_plus(i['url']))
             except BaseException:
-                pass
-            try:
-                url += '&title=%s' % quote_plus(i['title'])
-            except KeyError:
-                try:
-                    url += '&title=%s' % quote_plus(i['title'].encode('utf-8'))
-                except KeyError:
-                    pass
-            except BaseException:
-                pass
+                url = None
 
             try:
-                url += '&image=%s' % quote_plus(i['image'])
+                title = 'title={0}'.format(quote_plus(i['title']))
             except KeyError:
                 try:
-                    url += '&image=%s' % quote_plus(i['image'].encode('utf-8'))
+                    title = 'title={0}'.format(quote_plus(i['title'].encode('utf-8')))
                 except KeyError:
-                    pass
+                    title = None
             except BaseException:
-                pass
+                title = None
+
             try:
-                url += '&name=%s' % quote_plus(i['name'])
+                icon = 'image={0}'.format(quote_plus(i['image']))
             except KeyError:
                 try:
-                    url += '&name=%s' % quote_plus(i['name'].encode('utf-8'))
+                    icon = 'image={0}'.format(quote_plus(i['image'].encode('utf-8')))
                 except KeyError:
-                    pass
+                    icon = None
             except BaseException:
-                pass
+                icon = None
             try:
-                url += '&year=%s' % quote_plus(i['year'])
-            except BaseException:
-                pass
-            try:
-                url += '&plot=%s' % quote_plus(i['plot'])
+                name = 'name={0}'.format(quote_plus(i['name']))
             except KeyError:
                 try:
-                    url += '&plot=%s' % quote_plus(i['plot'].encode('utf-8'))
+                    name = 'name={0}'.format(quote_plus(i['name'].encode('utf-8')))
                 except KeyError:
-                    pass
+                    name = None
             except BaseException:
-                pass
+                name = None
             try:
-                url += '&genre=%s' % quote_plus(i['genre'])
+                year = 'year={0}'.format(quote_plus(i['year']))
+            except BaseException:
+                year = None
+            try:
+                plot = 'plot={0}'.format(quote_plus(i['plot']))
             except KeyError:
                 try:
-                    url += '&genre=%s' % quote_plus(i['genre'].encode('utf-8'))
+                    plot = 'plot={0}'.format(quote_plus(i['plot'].encode('utf-8')))
                 except KeyError:
-                    pass
+                    plot = None
             except BaseException:
-                pass
+                plot = None
             try:
-                url += '&dash=%s' % quote_plus(i['dash'])
+                genre = 'genre={0}'.format(quote_plus(i['genre']))
+            except KeyError:
+                try:
+                    genre = 'genre={0}'.format(quote_plus(i['genre'].encode('utf-8')))
+                except KeyError:
+                    genre = None
             except BaseException:
-                pass
+                genre = None
             try:
-                url += '&query=%s' % quote_plus(i['query'])
+                dash = 'dash={0}'.format(quote_plus(i['dash']))
             except BaseException:
-                pass
+                dash = None
+            try:
+                query = 'query={0}'.format(quote_plus(i['query']))
+            except BaseException:
+                query = None
+
+            parts = [foo for foo in [action, url, title, icon, name, year, plot, genre, dash, query] if foo]
+
+            uri = '&'.join(parts)
 
             cm = []
             menus = i['cm'] if 'cm' in i else []
@@ -163,11 +171,11 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video',
                         qmenu = urlencode(menu['query'])
                     except Exception:
                         qmenu = urlencode(dict((k, v.encode('utf-8')) for k, v in menu['query'].items()))
-                    cm.append((tmenu, 'RunPlugin(%s?%s)' % (sysaddon, qmenu)))
+                    cm.append((tmenu, 'RunPlugin({0}?{1})'.format(sysaddon, qmenu)))
                 except BaseException:
                     pass
 
-            meta = dict((k, v) for k, v in i.iteritems() if not (k == 'cm' or k == 'streaminfo') and not v == '0')
+            meta = dict((k, v) for k, v in iteritems(i) if not (k == 'cm' or k == 'streaminfo') and not v == '0')
 
             if mediatype is not None:
                 meta['mediatype'] = mediatype
@@ -197,7 +205,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video',
                     else:
                         item.addStreamInfo(infotype, i.get('streaminfo'))
 
-            control.addItem(handle=syshandle, url=url, listitem=item, isFolder=isFolder, totalItems=len(items))
+            control.addItem(handle=syshandle, url=uri, listitem=item, isFolder=isFolder, totalItems=len(items))
 
         except BaseException as reason:
             log('Directory not added, reason of failure: ' + repr(reason))
@@ -208,7 +216,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video',
         if i['next'] == '':
             raise Exception()
 
-        url = '%s?action=%s&url=%s' % (sysaddon, i['nextaction'], quote_plus(i['next']))
+        url = '{0}?action={1}&url={2}'.format(sysaddon, i['nextaction'], quote_plus(i['next']))
         icon = i['nexticon'] if 'nexticon' in i else control.addonmedia('next.png')
         fanart = i['nextfanart'] if 'nextfanart' in i else sysfanart
 
@@ -262,55 +270,59 @@ def m3u_maker(items=None, argv=None):
     for i in items:
 
         try:
-            url = '%s?action=%s' % (sysaddon, i['action'])
+            action = '{0}?action={1}'.format(sysaddon, i['action'])
         except KeyError:
             return
         try:
-            url += '&url=%s' % quote_plus(i['url'])
+            url = '&url={0}'.format(quote_plus(i['url']))
         except BaseException:
-            pass
+            url = None
         try:
-            url += '&title=%s' % quote_plus(i['title'])
+            title = '&title={0}'.format(quote_plus(i['title']))
         except KeyError:
             try:
-                url += '&title=%s' % quote_plus(i['title'].encode('utf-8'))
+                title = '&title={}'.format(quote_plus(i['title'].encode('utf-8')))
             except KeyError:
-                pass
+                title = None
         except BaseException:
-            pass
+            title = None
         try:
-            url += '&image=%s' % quote_plus(i['image'])
+            image = '&image={0}'.format(quote_plus(i['image']))
         except KeyError:
             try:
-                url += '&image=%s' % quote_plus(i['image'].encode('utf-8'))
+                image = '&image={0}'.format(quote_plus(i['image'].encode('utf-8')))
             except KeyError:
-                pass
+                image = None
         except BaseException:
-            pass
+            image = None
         try:
-            url += '&name=%s' % quote_plus(i['name'])
+            name = '&name={0}'.format(quote_plus(i['name']))
         except KeyError:
             try:
-                url += '&name=%s' % quote_plus(i['name'].encode('utf-8'))
+                name = '&name={0}'.format(quote_plus(i['name'].encode('utf-8')))
             except KeyError:
-                pass
+                name = None
         except BaseException:
-            pass
+            name = None
         try:
-            url += '&year=%s' % quote_plus(i['year'])
+            year = '&year={0}'.format(quote_plus(i['year']))
         except BaseException:
-            pass
+            year = None
         try:
-            url += '&plot=%s' % quote_plus(i['plot'])
+            plot = '&plot={0}'.format(quote_plus(i['plot']))
         except KeyError:
             try:
-                url += '&plot=%s' % quote_plus(i['plot'].encode('utf-8'))
+                plot = '&plot={0}'.format(quote_plus(i['plot'].encode('utf-8')))
             except KeyError:
-                pass
+                plot = None
         except BaseException:
-            pass
+            plot = None
 
-        m3u_list.append(u'#EXTINF:0,{0}\n'.format(i['title']) + url + '\n')
+        parts = [foo for foo in [action, url, title, image, name, year, plot] if foo]
+
+        uri = '&'.join(parts)
+
+        m3u_list.append(u'#EXTINF:0,{0}\n'.format(i['title']) + uri + '\n')
 
     m3u = [u'#EXTM3U\n'] + m3u_list
 
@@ -396,7 +408,10 @@ def resolve(
         control.player.play(url, item)
 
 
-def run_builtin(addon_id=control.addonInfo('id'), action=None, mode=None, content_type=None, url=None, query=None, path_history='', get_url=False, command=('ActivateWindow', 'Container.Update')):
+def run_builtin(
+        addon_id=control.addonInfo('id'), action=None, mode=None, content_type=None, url=None, query=None,
+        path_history='', get_url=False, command=('ActivateWindow', 'Container.Update')
+):
 
     """
     This function will construct a url starting with plugin:// attached to the addon_id, then passed into either

@@ -70,7 +70,7 @@ try:
     import cookielib
     import urllib2
     import BaseHTTPServer
-    from StringIO import StringIO
+    from cStringIO import StringIO
     from SocketServer import ThreadingMixIn
     from HTMLParser import HTMLParser
     unescape = HTMLParser().unescape

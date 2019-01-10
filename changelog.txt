@@ -5,6 +5,7 @@
 - xbmc.Playlist is now callable via lambda function. Mode 1 for video (default), Mode 0 for audio
 - Add function in directory module now accepts streaminfo data (as dictionary)
 - Added StringIO in compat module
+- Plugin url optimization with join string method on directory module
 
 [B]2.1.X[/B]
 - Utilize kodi-six to further improve Python 2/3 compatibility
