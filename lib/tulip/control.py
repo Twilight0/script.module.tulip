@@ -18,7 +18,7 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
 import os, json, time
@@ -87,6 +87,8 @@ join = os.path.join
 settingsFile = os.path.join(dataPath, 'settings.xml')
 bookmarksFile = os.path.join(dataPath, 'bookmarks.db')
 cacheFile = os.path.join(dataPath, 'cache.db')
+
+percent = lambda count, total: min(int(round(count * 100 / total)), 100)
 
 
 def name():
@@ -266,11 +268,11 @@ class CountdownDialog(object):
 
         while time_left > 0:
             for _ in list(range(CountdownDialog.INTERVALS)):
-                sleep(interval * 1000 / CountdownDialog.INTERVALS)
+                sleep(int(round(interval * 1000 / CountdownDialog.INTERVALS)))
                 if self.is_canceled(): return
                 time_left = expires - int(time.time() - start)
                 if time_left < 0: time_left = 0
-                progress = time_left * 100 / expires
+                progress = int(round(time_left * 100 / expires))
                 line3 = 'Expires in: %s seconds' % time_left if not self.line3 else ''
                 self.update(progress, line3=line3)
 
@@ -523,7 +525,7 @@ def addon_details(addon_id, fields=None):
 
 
 def enable_addon(addon_id, enable=True):
-    
+
     """Enable/Disable an addon via json-rpc"""
 
     command = {

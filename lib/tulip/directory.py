@@ -24,7 +24,10 @@ from tulip import control
 from kodi_six.xbmc import log
 
 
-def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video', argv=None):
+def add(
+    items, cacheToDisc=True, content=None, mediatype=None, infotype='video', argv=None, as_playlist=False,
+    clear_first=True, progress=False
+):
 
     if argv is None:
 
@@ -42,9 +45,27 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video',
     sysimage = control.addonInfo('icon')
     sysfanart = control.addonInfo('fanart')
 
-    for i in items:
+    if progress:
+
+        pd = control.progressDialogGB
+        pd.create(control.name())
+
+    else:
+
+        pd = None
+
+    if as_playlist and clear_first:
+
+        control.playlist(1 if infotype == 'video' else 0).clear()
+
+    for c, i in list(enumerate(items)):
 
         try:
+
+            if progress:
+
+                p = control.percent(c, len(items))
+                pd.update(p)
 
             try:
                 label = control.lang(i['title']).encode('utf-8')
@@ -162,7 +183,9 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video',
             menus = i['cm'] if 'cm' in i else []
 
             for menu in menus:
+
                 try:
+
                     try:
                         tmenu = control.lang(menu['title']).encode('utf-8')
                     except BaseException:
@@ -172,7 +195,9 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video',
                     except Exception:
                         qmenu = urlencode(dict((k, v.encode('utf-8')) for k, v in menu['query'].items()))
                     cm.append((tmenu, 'RunPlugin({0}?{1})'.format(sysaddon, qmenu)))
+
                 except BaseException:
+
                     pass
 
             meta = dict((k, v) for k, v in iteritems(i) if not (k == 'cm' or k == 'streaminfo') and not v == '0')
@@ -205,10 +230,21 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video',
                     else:
                         item.addStreamInfo(infotype, i.get('streaminfo'))
 
-            control.addItem(handle=syshandle, url=uri, listitem=item, isFolder=isFolder, totalItems=len(items))
+            if as_playlist and isPlayable:
+                control.playlist(1 if infotype == 'video' else 0).add(url=uri, listitem=item, index=c)
+            else:
+                control.addItem(handle=syshandle, url=uri, listitem=item, isFolder=isFolder, totalItems=len(items))
 
         except BaseException as reason:
             log('Directory not added, reason of failure: ' + repr(reason))
+
+    if progress:
+        pd.update(100)
+        pd.close()
+
+    if as_playlist:
+        control.openPlaylist()
+        return
 
     try:
 
@@ -246,13 +282,7 @@ def add(items, cacheToDisc=True, content=None, mediatype=None, infotype='video',
     control.directory(syshandle, cacheToDisc=cacheToDisc)
 
 
-def m3u_maker(items=None, argv=None):
-
-    """
-    Converts a list into an m3u playlist in string form, use builtin open method to save it somewhere
-    :param items: list
-    :return: str
-    """
+def playlist_maker(items=None, argv=None):
 
     if items is None:
         return
@@ -265,7 +295,7 @@ def m3u_maker(items=None, argv=None):
 
         sysaddon = argv[0]
 
-    m3u_list = []
+    m3u_list = [u'#EXTM3U\n']
 
     for i in items:
 
@@ -286,15 +316,17 @@ def m3u_maker(items=None, argv=None):
                 title = None
         except BaseException:
             title = None
+
         try:
-            image = '&image={0}'.format(quote_plus(i['image']))
+            icon = '&image={0}'.format(quote_plus(i['image']))
         except KeyError:
             try:
-                image = '&image={0}'.format(quote_plus(i['image'].encode('utf-8')))
+                icon = '&image={0}'.format(quote_plus(i['image'].encode('utf-8')))
             except KeyError:
-                image = None
+                icon = None
         except BaseException:
-            image = None
+            icon = None
+
         try:
             name = '&name={0}'.format(quote_plus(i['name']))
         except KeyError:
@@ -318,15 +350,17 @@ def m3u_maker(items=None, argv=None):
         except BaseException:
             plot = None
 
-        parts = [foo for foo in [action, url, title, image, name, year, plot] if foo]
+        parts = [foo for foo in [action, url, title, icon, name, year, plot] if foo]
 
         uri = '&'.join(parts)
 
-        m3u_list.append(u'#EXTINF:0,{0}\n'.format(i['title']) + uri + '\n')
+        if icon:
+            tvg_logo = icon.replace(' ', '%20')
+            m3u_list.append(u'#EXTINF:0 tvg-logo="{0}",{1}\n'.format(tvg_logo, i['title']) + uri + '\n')
+        else:
+            m3u_list.append(u'#EXTINF:0,{0}\n'.format(i['title']) + uri + '\n')
 
-    m3u = [u'#EXTM3U\n'] + m3u_list
-
-    return ''.join(m3u)
+    return ''.join(m3u_list)
 
 
 def resolve(
@@ -484,4 +518,4 @@ def run_builtin(
         control.execute(executable)
 
 
-__all__ = ["add", "resolve", "m3u_maker", "run_builtin"]
+__all__ = ["add", "resolve", "playlist_maker", "run_builtin"]
