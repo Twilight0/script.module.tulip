@@ -114,13 +114,13 @@ def request(
                 opener = urllib2.build_opener(*handlers)
                 urllib2.install_opener(opener)
 
-            except BaseException:
+            except Exception:
 
                 pass
 
         try:
             headers.update(headers)
-        except BaseException:
+        except Exception:
             headers = {}
 
         if 'User-Agent' in headers:
@@ -129,7 +129,7 @@ def request(
             #headers['User-Agent'] = agent()
             headers['User-Agent'] = cache.get(randomagent, 12)
         else:
-            headers['User-Agent'] = cache.get(random_mobile_agent(), 12)
+            headers['User-Agent'] = cache.get(random_mobile_agent, 12)
 
         if 'Referer' in headers:
             pass
@@ -203,11 +203,11 @@ def request(
 
             try:
                 result = '; '.join(['%s=%s' % (i.name, i.value) for i in cookies])
-            except BaseException:
+            except Exception:
                 pass
             try:
                 result = cf
-            except BaseException:
+            except Exception:
                 pass
 
         elif output == 'response':
@@ -223,7 +223,7 @@ def request(
 
             try:
                 content = int(response.headers['Content-Length'])
-            except BaseException:
+            except Exception:
                 content = (2049 * 1024)
 
             if content < (2048 * 1024):
@@ -234,11 +234,11 @@ def request(
 
             try:
                 cookie = '; '.join(['%s=%s' % (i.name, i.value) for i in cookies])
-            except BaseException:
+            except Exception:
                 pass
             try:
                 cookie = cf
-            except BaseException:
+            except Exception:
                 pass
             content = response.headers
             result = response.read(5242880)
@@ -264,7 +264,7 @@ def request(
 
         return result
 
-    except BaseException as reason:
+    except Exception as reason:
         log('Client module failed, reason of failure: ' + repr(reason))
         return
 
@@ -435,14 +435,14 @@ def parseDOM(html, name=u"", attrs=None, ret=False):
     if isinstance(name, basestring): # Should be handled
         try:
             name = name.decode("utf-8")
-        except BaseException:
+        except Exception:
             pass
             log_debug("Couldn't decode name binary string: " + repr(name))
 
     if isinstance(html, basestring):
         try:
             html = [html.decode("utf-8")]  # Replace with chardet thingy
-        except BaseException:
+        except Exception:
             html = [html]
     elif isinstance(html, unicode):
         html = [html]
@@ -738,13 +738,13 @@ def cfcookie(netloc, ua, timeout):
         try:
             req = urllib2.Request(query, headers=headers)
             urllib2.urlopen(req, timeout=int(timeout))
-        except BaseException:
+        except Exception:
             pass
 
         cookie = '; '.join(['%s=%s' % (i.name, i.value) for i in cookies])
 
         return cookie
-    except BaseException:
+    except Exception:
         pass
 
 
@@ -753,5 +753,5 @@ def parseJSString(s):
         offset = 1 if s[0] == '+' else 0
         val = int(eval(s.replace('!+[]', '1').replace('!![]', '1').replace('[]','0').replace('(', 'str(')[offset:]))
         return val
-    except BaseException:
+    except Exception:
         pass

@@ -31,7 +31,7 @@ def get(title, lower=True):
     title = re.sub('&#(\d+);', '', title)
     title = re.sub('(&#[0-9]+)([^;^0-9]+)', '\\1;\\2', title)
     title = title.replace('&quot;', '\"').replace('&amp;', '&')
-    title = re.sub('\n|([[].+?[]])|([(].+?[)])|\s(vs|v[.])\s|(:|;|-|"|,|\'|\_|\.|\?)|\s', '', title)
+    title = re.sub(r'\n|([[].+?[]])|([(].+?[)])|\s(vs|v[.])\s|(:|;|-|"|,|\'|\_|\.|\?)|\s', '', title)
 
     if lower:
 
@@ -54,7 +54,7 @@ def normalize(title):
     try:
         try:
             return title.decode('ascii').encode("utf-8")
-        except BaseException:
+        except Exception:
             pass
 
         t = ''
@@ -66,7 +66,7 @@ def normalize(title):
 
         return t.encode("utf-8")
 
-    except BaseException:
+    except Exception:
         return title
 
 

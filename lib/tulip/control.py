@@ -38,6 +38,7 @@ addItems = xbmcplugin.addDirectoryItems
 directory = xbmcplugin.endOfDirectory
 content = xbmcplugin.setContent
 setproperty = xbmcplugin.setProperty
+setcategory = xbmcplugin.setPluginCategory
 resolve = xbmcplugin.setResolvedUrl
 sortmethod = xbmcplugin.addSortMethod
 
@@ -48,11 +49,11 @@ keyboard = xbmc.Keyboard
 sleep = xbmc.sleep
 execute = xbmc.executebuiltin
 skin = xbmc.getSkinDir()
-player = xbmc.Player()
-playlist = lambda mode=1: xbmc.PlayList(mode) # mode=1 for video and mode=0 for music/audio
+player = xbmc.Player
 monitor = xbmc.Monitor
 wait = monitor().waitForAbort
 aborted = monitor().abortRequested
+cleanmovietitle = xbmc.getCleanMovieTitle
 
 transPath = xbmc.translatePath
 skinPath = transPath('special://skin/')
@@ -75,6 +76,8 @@ verify = xbmcgui.PASSWORD_VERIFY
 item = xbmcgui.ListItem
 
 openFile = xbmcvfs.File
+read = openFile.read
+readbytes = openFile.readBytes
 makeFile = xbmcvfs.mkdir
 makeFiles = xbmcvfs.mkdirs
 deleteFile = xbmcvfs.delete
@@ -82,13 +85,12 @@ deleteDir = xbmcvfs.rmdir
 listDir = xbmcvfs.listdir
 exists = xbmcvfs.exists
 copy = xbmcvfs.copy
+rename = xbmcvfs.rename
 
 join = os.path.join
 settingsFile = os.path.join(dataPath, 'settings.xml')
 bookmarksFile = os.path.join(dataPath, 'bookmarks.db')
 cacheFile = os.path.join(dataPath, 'cache.db')
-
-percent = lambda count, total: min(int(round(count * 100 / total)), 100)
 
 
 def name():
@@ -111,16 +113,16 @@ def icon():
     return addonInfo('icon')
 
 
-def infoDialog(message, heading=addonInfo('name'), icon='', time=3000):
+def infoDialog(message, heading=addonInfo('name'), icon='', time=3000, sound=False):
 
     if icon == '':
         icon = addonInfo('icon')
 
     try:
 
-        dialog.notification(heading, message, icon, time, sound=False)
+        dialog.notification(heading, message, icon, time, sound=sound)
 
-    except BaseException:
+    except Exception:
 
         execute("Notification({0}, {1}, {2}, {3})".format(heading, message, time, icon))
 
@@ -130,7 +132,7 @@ def okDialog(heading, line1):
     return dialog.ok(heading, line1)
 
 
-def yesnoDialog(line1, line2='', line3='', heading=addonInfo('name'), nolabel=None, yeslabel=None):
+def yesnoDialog(line1, line2='', line3='', heading=addonInfo('name'), nolabel='', yeslabel=''):
 
     return dialog.yesno(heading, line1, line2, line3, nolabel, yeslabel)
 
@@ -291,6 +293,70 @@ class CountdownDialog(object):
             self.pd.update(percent, line1, line2, line3)
 
 
+class Player(player):
+
+    def __init__(self):
+
+        player.__init__(self)
+
+    def play(self, item='', listitem=None, windowed=False, startpos=-1):
+
+        return self
+
+    def onPlayBackStarted(self):
+
+        pass
+
+    def onPlayBackEnded(self):
+
+        pass
+
+    def onPlayBackStopped(self):
+
+        pass
+
+    def onPlayBackError(self):
+
+        pass
+
+    def isPlaying(self):
+
+        pass
+
+
+class Monitor(monitor):
+
+    def __init__(self):
+
+        monitor.__init__(self)
+
+    def onSettingsChanged(self):
+
+        pass
+
+    def onAbortRequested(self):
+
+        pass
+
+    def onNotification(self, sender, method, data):
+
+        pass
+
+    def waitForAbort(self, timeout=-1):
+
+        pass
+        # return self
+
+    def abortRequested(self):
+
+        pass
+        # return self
+
+def percent(count, total):
+
+    return min(int(round(count * 100 / total)), 100)
+
+
 def openSettings(query=None, id=addonInfo('id')):
 
     idle()
@@ -322,9 +388,29 @@ def Settings(id=addonInfo('id')):
     addon(id).openSettings()
 
 
-def openPlaylist():
+def playlist(mode=1):
 
-    return execute('ActivateWindow(VideoPlaylist)')
+    """
+    # mode=1 for video and mode=0 for music/audio
+    """
+
+    return xbmc.PlayList(mode)
+
+
+def openPlaylist(playlist_type=None):
+
+    if not playlist_type or playlist_type == 1:
+        playlist_type = 'videoplaylist'
+    elif playlist_type == 0:
+        playlist_type = 'musicplaylist'
+
+    return execute('ActivateWindow({0})'.format(playlist_type))
+
+
+def move(source, destination):
+
+    copy(source, destination)
+    deleteFile(source)
 
 
 def refresh():
@@ -416,7 +502,7 @@ def sortmethods(method='unsorted', mask='%D'):
     elif method == 'year':
         try:
             return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_YEAR)
-        except BaseException:
+        except Exception:
             return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_YEAR)
     elif method == 'video_rating':
         return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_RATING)

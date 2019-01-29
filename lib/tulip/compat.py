@@ -66,7 +66,7 @@ except ImportError:
 try:
     from urlparse import urlparse, urlunparse, urljoin, parse_qsl, urlsplit, urlunsplit, parse_qs
     from urllib import quote, unquote, urlencode, URLopener, quote_plus, unquote_plus, addinfourl
-    import Queue as queue
+    import Queue
     import cookielib
     import urllib2
     import BaseHTTPServer
@@ -88,14 +88,14 @@ except ImportError:
         unquote_plus, quote_plus
     )
     from urllib.response import addinfourl
-    import queue
+    import queue as Queue
 finally:
     urlopen = urllib2.urlopen
     Request = urllib2.Request
 
 
 __all__ = [
-    "is_py2", "is_py3", "str", "bytes", "urlparse", "urlunparse", "urljoin", "parse_qsl", "quote", "unquote", "queue",
+    "is_py2", "is_py3", "str", "bytes", "urlparse", "urlunparse", "urljoin", "parse_qsl", "quote", "unquote", "Queue",
     "range", "urlencode", "izip", "urlsplit", "urlunsplit", "cookielib", "URLopener", "quote_plus", "unescape",
     "parse_qs", "unquote_plus", "urllib2", "unicode", "database", "basestring", "urlopen", "Request", "OrderedDict",
     "iteritems", "BaseHTTPServer", "ThreadingMixIn", "addinfourl", "StringIO"

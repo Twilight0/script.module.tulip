@@ -20,6 +20,7 @@
 from __future__ import absolute_import
 
 import hashlib, json
+from ast import literal_eval as evaluate
 from tulip import control
 from tulip.compat import database, str, iteritems
 
@@ -50,7 +51,7 @@ def add(url, table=control.bookmarksFile):
         dbcur.execute("INSERT INTO bookmark Values (?, ?)", (dbid, item))
         dbcon.commit()
 
-    except BaseException:
+    except Exception:
 
         pass
 
@@ -80,7 +81,7 @@ def delete(url, table=control.bookmarksFile):
 
         control.refresh()
 
-    except BaseException:
+    except Exception:
 
         pass
 
@@ -95,13 +96,13 @@ def get(table=control.bookmarksFile):
         dbcur.execute("SELECT * FROM bookmark")
         items = dbcur.fetchall()
         try:
-            items = [eval(i[1].encode('utf-8')) for i in items]
-        except AttributeError:
-            items = [eval(i[1]) for i in items]
+            items = [evaluate(i[1].encode('utf-8')) for i in items]
+        except Exception:
+            items = [evaluate(i[1]) for i in items]
 
         return items
 
-    except BaseException:
+    except Exception:
 
         pass
 

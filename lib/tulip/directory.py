@@ -26,7 +26,7 @@ from kodi_six.xbmc import log
 
 def add(
     items, cacheToDisc=True, content=None, mediatype=None, infotype='video', argv=None, as_playlist=False,
-    clear_first=True, progress=False
+    pd_heading=None, pd_message='', clear_first=True, progress=False, category=None
 ):
 
     if argv is None:
@@ -48,7 +48,7 @@ def add(
     if progress:
 
         pd = control.progressDialogGB
-        pd.create(control.name())
+        pd.create(heading=control.name() if not pd_heading else pd_heading, message=pd_message)
 
     else:
 
@@ -69,7 +69,7 @@ def add(
 
             try:
                 label = control.lang(i['title']).encode('utf-8')
-            except BaseException:
+            except Exception:
                 label = i['title']
 
             if 'label' in i and not i['label'] == '0':
@@ -113,7 +113,7 @@ def add(
 
             try:
                 url = 'url={0}'.format(quote_plus(i['url']))
-            except BaseException:
+            except Exception:
                 url = None
 
             try:
@@ -123,7 +123,7 @@ def add(
                     title = 'title={0}'.format(quote_plus(i['title'].encode('utf-8')))
                 except KeyError:
                     title = None
-            except BaseException:
+            except Exception:
                 title = None
 
             try:
@@ -133,7 +133,7 @@ def add(
                     icon = 'image={0}'.format(quote_plus(i['image'].encode('utf-8')))
                 except KeyError:
                     icon = None
-            except BaseException:
+            except Exception:
                 icon = None
             try:
                 name = 'name={0}'.format(quote_plus(i['name']))
@@ -142,11 +142,11 @@ def add(
                     name = 'name={0}'.format(quote_plus(i['name'].encode('utf-8')))
                 except KeyError:
                     name = None
-            except BaseException:
+            except Exception:
                 name = None
             try:
                 year = 'year={0}'.format(quote_plus(i['year']))
-            except BaseException:
+            except Exception:
                 year = None
             try:
                 plot = 'plot={0}'.format(quote_plus(i['plot']))
@@ -155,7 +155,7 @@ def add(
                     plot = 'plot={0}'.format(quote_plus(i['plot'].encode('utf-8')))
                 except KeyError:
                     plot = None
-            except BaseException:
+            except Exception:
                 plot = None
             try:
                 genre = 'genre={0}'.format(quote_plus(i['genre']))
@@ -164,15 +164,15 @@ def add(
                     genre = 'genre={0}'.format(quote_plus(i['genre'].encode('utf-8')))
                 except KeyError:
                     genre = None
-            except BaseException:
+            except Exception:
                 genre = None
             try:
                 dash = 'dash={0}'.format(quote_plus(i['dash']))
-            except BaseException:
+            except Exception:
                 dash = None
             try:
                 query = 'query={0}'.format(quote_plus(i['query']))
-            except BaseException:
+            except Exception:
                 query = None
 
             parts = [foo for foo in [action, url, title, icon, name, year, plot, genre, dash, query] if foo]
@@ -188,7 +188,7 @@ def add(
 
                     try:
                         tmenu = control.lang(menu['title']).encode('utf-8')
-                    except BaseException:
+                    except Exception:
                         tmenu = menu['title']
                     try:
                         qmenu = urlencode(menu['query'])
@@ -196,11 +196,11 @@ def add(
                         qmenu = urlencode(dict((k, v.encode('utf-8')) for k, v in menu['query'].items()))
                     cm.append((tmenu, 'RunPlugin({0}?{1})'.format(sysaddon, qmenu)))
 
-                except BaseException:
+                except Exception:
 
                     pass
 
-            meta = dict((k, v) for k, v in iteritems(i) if not (k == 'cm' or k == 'streaminfo') and not v == '0')
+            meta = dict((k, v) for k, v in iteritems(i) if not (k == 'cm' or k == 'streaminfo') and (not v == '0' or v is None))
 
             if mediatype is not None:
                 meta['mediatype'] = mediatype
@@ -235,7 +235,7 @@ def add(
             else:
                 control.addItem(handle=syshandle, url=uri, listitem=item, isFolder=isFolder, totalItems=len(items))
 
-        except BaseException as reason:
+        except Exception as reason:
             log('Directory not added, reason of failure: ' + repr(reason))
 
     if progress:
@@ -243,7 +243,9 @@ def add(
         pd.close()
 
     if as_playlist:
-        control.openPlaylist()
+
+        control.openPlaylist(1 if infotype == 'video' else 0)
+
         return
 
     try:
@@ -279,6 +281,9 @@ def add(
     if content is not None:
         control.content(syshandle, content)
 
+    if category is not None:
+        control.setcategory(syshandle, category)
+
     control.directory(syshandle, cacheToDisc=cacheToDisc)
 
 
@@ -305,7 +310,7 @@ def playlist_maker(items=None, argv=None):
             return
         try:
             url = '&url={0}'.format(quote_plus(i['url']))
-        except BaseException:
+        except Exception:
             url = None
         try:
             title = '&title={0}'.format(quote_plus(i['title']))
@@ -314,7 +319,7 @@ def playlist_maker(items=None, argv=None):
                 title = '&title={}'.format(quote_plus(i['title'].encode('utf-8')))
             except KeyError:
                 title = None
-        except BaseException:
+        except Exception:
             title = None
 
         try:
@@ -324,7 +329,7 @@ def playlist_maker(items=None, argv=None):
                 icon = '&image={0}'.format(quote_plus(i['image'].encode('utf-8')))
             except KeyError:
                 icon = None
-        except BaseException:
+        except Exception:
             icon = None
 
         try:
@@ -334,11 +339,11 @@ def playlist_maker(items=None, argv=None):
                 name = '&name={0}'.format(quote_plus(i['name'].encode('utf-8')))
             except KeyError:
                 name = None
-        except BaseException:
+        except Exception:
             name = None
         try:
             year = '&year={0}'.format(quote_plus(i['year']))
-        except BaseException:
+        except Exception:
             year = None
         try:
             plot = '&plot={0}'.format(quote_plus(i['plot']))
@@ -347,7 +352,7 @@ def playlist_maker(items=None, argv=None):
                 plot = '&plot={0}'.format(quote_plus(i['plot'].encode('utf-8')))
             except KeyError:
                 plot = None
-        except BaseException:
+        except Exception:
             plot = None
 
         parts = [foo for foo in [action, url, title, icon, name, year, plot] if foo]
@@ -355,8 +360,7 @@ def playlist_maker(items=None, argv=None):
         uri = '&'.join(parts)
 
         if icon:
-            tvg_logo = icon.replace(' ', '%20')
-            m3u_list.append(u'#EXTINF:0 tvg-logo="{0}",{1}\n'.format(tvg_logo, i['title']) + uri + '\n')
+            m3u_list.append(u'#EXTINF:0 tvg-logo="{0}",{1}\n'.format(icon, i['title']) + uri + '\n')
         else:
             m3u_list.append(u'#EXTINF:0,{0}\n'.format(i['title']) + uri + '\n')
 
@@ -439,12 +443,12 @@ def resolve(
     if resolved_mode:
         control.resolve(syshandle, True, item)
     else:
-        control.player.play(url, item)
+        control.player().play(url, item)
 
 
 def run_builtin(
         addon_id=control.addonInfo('id'), action=None, mode=None, content_type=None, url=None, query=None,
-        path_history='', get_url=False, command=('ActivateWindow', 'Container.Update')
+        path_history='', get_url=False, command=('ActivateWindow', 'Container.Update'), *args
 ):
 
     """
@@ -474,12 +478,17 @@ def run_builtin(
             query_string += 'action={0}'.format(action)
         elif mode and not action:
             query_string += 'mode={0}'.format(mode)
+        else:
+            query_string += 'action={0}&mode={1}'.format(action, mode)
 
         if url:
             query_string += '&url={0}'.format(quote_plus(url))
 
         if query:
-            query_string += '&{0}'.format(query)
+            query_string += '&query={0}'.format(query)
+
+        if args:
+            query_string += '&' + '&'.join(args)
 
     if 'content_type=video' in query_string:
         window_id = 'videos'
