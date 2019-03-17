@@ -21,9 +21,10 @@
 from __future__ import absolute_import, division
 
 from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
-import os, json, time
+import os, json, time, re
 from tulip.init import syshandle
 from tulip.compat import basestring
+from tulip.client import parseDOM
 
 
 integer = 1000
@@ -677,6 +678,33 @@ def activate_screensaver():
 def get_info_label(infolabel):
 
     return infoLabel("{0}".format(infolabel))
+
+
+def get_skin_resolution():
+
+    """
+    This function will return kodi's skin resolution as a tuple containing X-Y values
+    :return:
+    """
+
+    aspect_ratio = get_info_label('Skin.AspectRatio')
+
+    xml = join(transPath('special://skin/'), 'addon.xml')
+    with open(xml) as f:
+        xml_file = f.read()
+    res_extension_point = parseDOM(xml_file, 'extension', attrs={'point': 'xbmc.gui.skin'})[0]
+
+    res_lines = res_extension_point.splitlines()
+
+    try:
+        skin_resolution = [res for res in res_lines if aspect_ratio in res][0]
+    except IndexError:
+        skin_resolution = res_lines[0]
+
+    xval = int(re.findall('width="(\d{3,4})"', skin_resolution)[0])
+    yval = int(re.findall('height="(\d{3,4})"', skin_resolution)[0])
+
+    return xval, yval
 
 
 def conditional_visibility(boolean_condition):
