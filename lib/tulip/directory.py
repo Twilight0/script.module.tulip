@@ -215,7 +215,7 @@ def add(
             )
 
             item.addContextMenuItems(cm)
-            item.setInfo(type=infotype, infoLabels=meta)
+            item.setInfo(type=infotype if 'infotype' not in i else i['infotype'], infoLabels=meta)
 
             if isPlayable:
 
