@@ -58,6 +58,17 @@ def add(
 
         control.playlist(1 if infotype == 'video' else 0).clear()
 
+    meta_tags = [
+        'count', 'size', 'date', 'genre', 'country', 'year', 'episode', 'season', 'sortepisode', 'sortseason',
+        'episodeguide', 'showlink', 'top250', 'setid', 'tracknumber', 'rating', 'userrating', 'watched', 'playcount',
+        'overlay', 'cast', 'castandrole', 'director', 'mpaa', 'plot', 'plotoutline', 'title', 'originaltitle',
+        'sorttitle', 'duration', 'studio', 'tagline', 'writer', 'tvshowtitle', 'premiered', 'status', 'set',
+        'setoverview', 'tag', 'imdbnumber', 'code', 'aired', 'credits', 'lastplayed', 'album', 'artist', 'votes',
+        'path', 'trailer', 'dateadded', 'mediatype', 'dbid', 'tracknumber', 'discnumber', 'lyrics', 'listeners',
+        'musicbrainztrackid', 'musicbrainzartistid', 'musicbrainzalbumid', 'musicbrainzalbumartistid', 'comment',
+        'picturepath', 'platform', 'genres', 'publisher', 'developer', 'overview', 'gameclient'
+    ]
+
     for c, i in list(enumerate(items)):
 
         try:
@@ -200,7 +211,7 @@ def add(
 
                     pass
 
-            meta = dict((k, v) for k, v in iteritems(i) if not (k == 'cm' or k == 'streaminfo') and (not v == '0' or v is None))
+            meta = dict((k, v) for k, v in iteritems(i) if k in meta_tags and (not v == '0' or v is None))
 
             if mediatype is not None:
                 meta['mediatype'] = mediatype

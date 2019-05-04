@@ -262,7 +262,10 @@ def request(
         if close is True:
             response.close()
 
-        return result
+        try:
+            return str(result)
+        except Exception:
+            return result
 
     except Exception as reason:
         log('Client module failed, reason of failure: ' + repr(reason))
