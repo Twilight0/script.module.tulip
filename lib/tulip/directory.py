@@ -62,11 +62,10 @@ def add(
         'count', 'size', 'date', 'genre', 'country', 'year', 'episode', 'season', 'sortepisode', 'sortseason',
         'episodeguide', 'showlink', 'top250', 'setid', 'tracknumber', 'rating', 'userrating', 'watched', 'playcount',
         'overlay', 'cast', 'castandrole', 'director', 'mpaa', 'plot', 'plotoutline', 'title', 'originaltitle',
-        'sorttitle', 'duration', 'studio', 'tagline', 'writer', 'tvshowtitle', 'premiered', 'status', 'set',
+        'sorttitle', 'duration', 'studio', 'tagline', 'writer', 'tvshowtitle', 'premiered', 'status', 'set', 'gameclient',
         'setoverview', 'tag', 'imdbnumber', 'code', 'aired', 'credits', 'lastplayed', 'album', 'artist', 'votes',
         'path', 'trailer', 'dateadded', 'mediatype', 'dbid', 'tracknumber', 'discnumber', 'lyrics', 'listeners',
-        'musicbrainztrackid', 'musicbrainzartistid', 'musicbrainzalbumid', 'musicbrainzalbumartistid', 'comment',
-        'picturepath', 'platform', 'genres', 'publisher', 'developer', 'overview', 'gameclient'
+        'musicbrainztrackid', 'comment', 'picturepath', 'platform', 'genres', 'publisher', 'developer', 'overview'
     ]
 
     for c, i in list(enumerate(items)):
@@ -406,8 +405,7 @@ def resolve(
         return
 
     if not headers and '|' in url:
-        url = url.rpartition('|')[0]
-        headers = url.rpartition('|')[2]
+        url, sep, headers = url.rpartition('|')
     elif headers:
         if isinstance(headers, basestring):
             if headers.startswith('|'):
@@ -441,9 +439,9 @@ def resolve(
         item.setContentLookup(False)
         item.setMimeType('{0}'.format(mimetype))
         item.setProperty('inputstreamaddon', 'inputstream.{}'.format(inputstream_type))
-        item.setProperty('inputstream.{}.manifest_type'.format(inputstream_type), manifest_type)
+        item.setProperty('inputstream.{0}.manifest_type'.format(inputstream_type), manifest_type)
         if headers:
-            item.setProperty("inputstream.{}.stream_headers".format(inputstream_type), headers)
+            item.setProperty("inputstream.{0}.stream_headers".format(inputstream_type), headers)
     elif mimetype:
         item.setContentLookup(False)
         item.setMimeType('{0}'.format(mimetype))
