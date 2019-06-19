@@ -27,7 +27,7 @@ from kodi_six.xbmc import log
 
 from tulip.compat import (
     urllib2, cookielib, urlparse, URLopener, quote_plus, unquote, unicode, unescape, range, basestring, str,
-    urlsplit, urlencode, bytes, is_py3, is_py2, addinfourl
+    urlsplit, urlencode, bytes, is_py3, addinfourl
 )
 
 
@@ -37,10 +37,7 @@ def request(
 ):
 
     if isinstance(post, dict):
-        if is_py2:
-            post = urlencode(post)
-        elif is_py3:
-            post = bytes(urlencode(post), encoding='utf-8')
+        post = bytes(urlencode(post), encoding='utf-8')
     elif isinstance(post, basestring) and is_py3:
         post = bytes(post, encoding='utf-8')
 
@@ -272,10 +269,17 @@ def request(
         return
 
 
-def retriever(source, destination, *args):
+def retriever(source, destination, user_agent=None, referer=None, *args):
+
+    if user_agent is None:
+        user_agent = cache.get(randomagent, 12)
 
     class Opener(URLopener):
-        version = cache.get(randomagent, 12)
+        version = user_agent
+
+        def __init__(self):
+            URLopener.__init__(self)
+            self.addheaders = [('User-Agent', self.version), ('Accept', '*/*'), ('Referer', referer)]
 
     Opener().retrieve(source, destination, *args)
 

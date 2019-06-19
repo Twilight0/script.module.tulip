@@ -6,6 +6,7 @@
 - Moved all user agent related functions and strings into new user_agent module
 - Added datetime keys for youtube videos
 - Compat module enhancements
+- Cleantitle module enhancements
 - Directory module bugfixes
 - Added replace xml codes function
 - Various other tweaks

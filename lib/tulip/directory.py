@@ -74,7 +74,7 @@ def add(
 
             if progress:
 
-                p = control.percent(c, len(items))
+                p = control.per_cent(c, len(items))
                 pd.update(p)
 
             try:

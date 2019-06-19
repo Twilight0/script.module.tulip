@@ -69,12 +69,20 @@ def replace_xml_codes(title):
     title = title.replace('&THORN;', 'Þ').replace('&x27;', '\'').replace('&bull;', '•').replace('&iexcl;', '¡')
     title = title.replace('&iquest;', '¿').replace('&rsquo;', '’').replace('&lsquo;', '‘').replace('&sbquo;', '’')
     title = title.replace('&rdquo;', '”').replace('&ldquo;', '“').replace('&bdquo;', '”').replace('&rsaquo;', '›')
-    title = title.replace('lsaquo;', '‹').replace('&raquo;', '»').replace('&laquo;', '«').replace('Ft.', 'feat.')
-    title = title.replace(' ft ', ' feat. ').replace(' FT ', ' feat. ').replace(' Ft ', ' feat. ')
-    title = title.replace('ft.', 'feat.').replace(' FEAT ', ' feat. ').replace(' Feat ', ' feat. ')
-    title = title.replace('Feat.', 'feat.').replace('Featuring', 'feat.').replace('&copy;', '©').replace('&reg;', '®')
+    title = title.replace('lsaquo;', '‹').replace('&raquo;', '»').replace('&laquo;', '«').replace('&copy;', '©')
+    title = title.replace('&reg;', '®')
 
     title = title.strip()
+
+    return title
+
+
+def replace_feat(title):
+
+    title = title.replace('Ft.', 'feat.')
+    title = title.replace(' ft ', ' feat. ').replace(' FT ', ' feat. ').replace(' Ft ', ' feat. ')
+    title = title.replace('ft.', 'feat.').replace(' FEAT ', ' feat. ').replace(' Feat ', ' feat. ')
+    title = title.replace('Feat.', 'feat.').replace('Featuring', 'feat.')
 
     return title
 
