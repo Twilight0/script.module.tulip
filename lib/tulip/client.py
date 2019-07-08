@@ -264,7 +264,7 @@ def request(
         if close is True:
             response.close()
 
-        if isinstance(result, bytes) and not as_bytes:
+        if is_py3 and not as_bytes and isinstance(result, bytes):
             return result.decode('utf-8')
         else:
             return result
