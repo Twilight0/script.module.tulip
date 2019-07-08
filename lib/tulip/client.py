@@ -33,8 +33,13 @@ from tulip.compat import (
 
 def request(
         url, close=True, redirect=True, error=False, proxy=None, post=None, headers=None, mobile=False, limit=None,
-        referer=None, cookie=None, output='', timeout='30', username=None, password=None, verify=True
+        referer=None, cookie=None, output='', timeout='30', username=None, password=None, verify=True, as_bytes=False
 ):
+
+    try:
+        url = url.decode('utf-8')
+    except Exception:
+        pass
 
     if isinstance(post, dict):
         post = bytes(urlencode(post), encoding='utf-8')
@@ -259,7 +264,10 @@ def request(
         if close is True:
             response.close()
 
-        return result
+        if isinstance(result, bytes) and not as_bytes:
+            return result.decode('utf-8')
+        else:
+            return result
 
     except Exception as reason:
         log('Client module failed, reason of failure: ' + repr(reason))
@@ -436,12 +444,13 @@ def parseDOM(html, name=u"", attrs=None, ret=False):
 
     # log_debug("Name: " + repr(name) + " - Attrs:" + repr(attrs) + " - Ret: " + repr(ret) + " - HTML: " + str(type(html)))
 
-    if isinstance(name, basestring): # Should be handled
+    if isinstance(name, basestring):  # Should be handled
+
         try:
             name = name.decode("utf-8")
         except Exception:
             pass
-            log_debug("Couldn't decode name binary string: " + repr(name))
+            # log_debug("Couldn't decode name binary string: " + repr(name))
 
     if isinstance(html, basestring):
         try:
