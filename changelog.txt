@@ -1,3 +1,8 @@
+[B]2.4.X[/B]
+- User agents module tweaks
+- Addition of ability to autoplay through a playlist mode
+- Added some debug logging for client.request and directory.add
+
 [B]2.3.X[/B]
 - Add function (directory) can now set plugin category for skins to display
 - Changed all "BaseException" into "Exception"

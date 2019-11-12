@@ -30,7 +30,7 @@ def get(title, lower=True):
 
     title = re.sub('&#(\d+);', '', title)
     title = re.sub('(&#[0-9]+)([^;^0-9]+)', '\\1;\\2', title)
-    title = re.sub(r'\n|([[].+?[]])|([(].+?[)])|\s(vs|v[.])\s|(:|;|-|"|,|\'|\_|\.|\?)|\s', '', title)
+    title = re.sub(r'\n|([[].+?[]])|([(].+?[)])|\s(vs|v[.])\s|([:;\-,\'\s.?])|\s', '', title)
 
     if lower:
 

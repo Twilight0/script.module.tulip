@@ -21,7 +21,7 @@
 from __future__ import absolute_import, division
 
 from tulip.user_agents import randomagent, random_mobile_agent
-import re, sys, time
+import re, sys, time, traceback
 from tulip import cache, control
 from tulip.log import log_debug
 from kodi_six.xbmc import log
@@ -280,7 +280,12 @@ def request(
         return result
 
     except Exception as reason:
+
+        _, __, tb = sys.exc_info()
+
+        log(traceback.print_tb(tb))
         log('Client module failed, reason of failure: ' + repr(reason))
+
         return
 
 

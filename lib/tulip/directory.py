@@ -19,13 +19,14 @@
 '''
 from __future__ import absolute_import
 
+import traceback, sys
 from tulip.compat import urlencode, quote_plus, iteritems, basestring, parse_qsl
 from tulip import control
 from kodi_six.xbmc import log
 
 
 def add(
-    items, cacheToDisc=True, content=None, mediatype=None, infotype='video', argv=None, as_playlist=False,
+    items, cacheToDisc=True, content=None, mediatype=None, infotype='video', argv=None, as_playlist=False, auto_play=False,
     pd_heading=None, pd_message='', clear_first=True, progress=False, category=None
 ):
 
@@ -39,6 +40,7 @@ def add(
         syshandle = int(argv[1])
 
     if items is None or len(items) == 0:
+        log('Directory not added, reason of failure: ' + 'Empty or null list of items')
         return
 
     # sysicon = control.join(control.addonInfo('path'), 'resources', 'media')
@@ -246,6 +248,10 @@ def add(
                 control.addItem(handle=syshandle, url=uri, listitem=item, isFolder=isFolder, totalItems=len(items))
 
         except Exception as reason:
+
+            _, __, tb = sys.exc_info()
+
+            log(traceback.print_tb(tb))
             log('Directory not added, reason of failure: ' + repr(reason))
 
     if progress:
@@ -254,7 +260,10 @@ def add(
 
     if as_playlist:
 
-        control.openPlaylist(1 if infotype == 'video' else 0)
+        if not auto_play:
+            control.openPlaylist(1 if infotype == 'video' else 0)
+        else:
+            control.execute('Action(Play)')
 
         return
 
