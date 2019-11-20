@@ -17,7 +17,7 @@
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import traceback, sys
 from tulip.compat import urlencode, quote_plus, iteritems, basestring, parse_qsl
@@ -251,7 +251,7 @@ def add(
 
             _, __, tb = sys.exc_info()
 
-            log(traceback.print_tb(tb))
+            print(traceback.print_tb(tb))
             log('Directory not added, reason of failure: ' + repr(reason))
 
     if progress:
@@ -465,7 +465,7 @@ def resolve(
 
 
 def run_builtin(
-        addon_id=control.addonInfo('id'), action=None, mode=None, content_type=None, url=None, query=None,
+        addon_id=control.addonInfo('id'), action=None, mode=None, content_type=None, url=None, query=None, image=None,
         path_history='', get_url=False, command=('ActivateWindow', 'Container.Update'), *args
 ):
 
@@ -490,6 +490,7 @@ def run_builtin(
         query_string = ''
 
         if content_type:
+
             query_string += 'content_type={0}{1}'.format(content_type, '' if action is None and mode is None and query is None else '&')
 
         if action:
@@ -508,6 +509,10 @@ def run_builtin(
 
             query_string += '&query={0}'.format(query)
 
+        if image:
+
+            query_string += '&image={0}'.format(query)
+
         if args:
 
             query_string += '&' + '&'.join(args)
@@ -523,22 +528,22 @@ def run_builtin(
     elif 'content_type' in query_string and dict(parse_qsl(query_string))['content_type'] not in ['video', 'audio', 'image', 'executable']:
         raise AttributeError('Incorrect content_type specified')
 
-    addon_id = ''.join(['plugin://', addon_id, '/'])
+    addon_url = ''.join(['plugin://', addon_id, '/'])
 
     if 'content_type' in query_string and isinstance(command, tuple):
 
         # noinspection PyUnboundLocalVariable
-        executable = '{0}({1},"{2}?{3}"{4})'.format(command[0], window_id, addon_id, query_string, ',return' if not path_history else path_history)
+        executable = '{0}({1},"{2}?{3}"{4})'.format(command[0], window_id, addon_url, query_string, ',return' if not path_history else path_history)
 
     else:
 
         if isinstance(command, tuple):
 
-            executable = '{0}({1}?{2}{3})'.format(command[1], addon_id, query_string, ',return' if not path_history else path_history)
+            executable = '{0}({1}?{2}{3})'.format(command[1], addon_url, query_string, ',return' if not path_history else path_history)
 
         else:
 
-            executable = '{0}({1}?{2}{3})'.format(command, addon_id, query_string, ',return' if not path_history else path_history)
+            executable = '{0}({1}?{2}{3})'.format(command, addon_url, query_string, ',return' if not path_history else path_history)
 
     if get_url:
 

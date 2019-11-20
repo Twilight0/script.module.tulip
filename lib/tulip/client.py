@@ -18,7 +18,7 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 from tulip.user_agents import randomagent, random_mobile_agent
 import re, sys, time, traceback
@@ -283,7 +283,7 @@ def request(
 
         _, __, tb = sys.exc_info()
 
-        log(traceback.print_tb(tb))
+        print(traceback.print_tb(tb))
         log('Client module failed, reason of failure: ' + repr(reason))
 
         return
