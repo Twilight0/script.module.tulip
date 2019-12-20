@@ -76,8 +76,6 @@ verify = xbmcgui.PASSWORD_VERIFY
 item = xbmcgui.ListItem
 
 openFile = xbmcvfs.File
-read = openFile.read
-readbytes = openFile.readBytes
 makeFile = xbmcvfs.mkdir
 makeFiles = xbmcvfs.mkdirs
 deleteFile = xbmcvfs.delete
@@ -315,68 +313,19 @@ class CountdownDialog(object):
             self.pd.update(percent, line1, line2, line3)
 
 
-class Player(player):
-
-    def __init__(self):
-
-        player.__init__(self)
-
-    def play(self, item='', listitem=None, windowed=False, startpos=-1):
-
-        return self
-
-    def onPlayBackStarted(self):
-
-        pass
-
-    def onPlayBackEnded(self):
-
-        pass
-
-    def onPlayBackStopped(self):
-
-        pass
-
-    def onPlayBackError(self):
-
-        pass
-
-    def isPlaying(self):
-
-        pass
-
-
-class Monitor(monitor):
-
-    def __init__(self):
-
-        monitor.__init__(self)
-
-    def onSettingsChanged(self):
-
-        pass
-
-    def onAbortRequested(self):
-
-        pass
-
-    def onNotification(self, sender, method, data):
-
-        pass
-
-    def waitForAbort(self, timeout=-1):
-
-        pass
-        # return self
-
-    def abortRequested(self):
-
-        pass
-        # return self
-
 def per_cent(count, total):
 
     return min(int(round(count * 100 / total)), 100)
+
+
+def read(file_, numBytes=0):
+
+    return openFile(file_).read(numBytes)
+
+
+def readbytes(file_, numBytes=0):
+
+    return openFile(file_).readBytes(numBytes)
 
 
 def openSettings(query=None, id=addonInfo('id')):

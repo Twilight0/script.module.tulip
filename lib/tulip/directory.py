@@ -466,7 +466,7 @@ def resolve(
 
 def run_builtin(
         addon_id=control.addonInfo('id'), action=None, mode=None, content_type=None, url=None, query=None, image=None,
-        path_history='', get_url=False, command=('ActivateWindow', 'Container.Update'), *args
+        path_history='', get_url=False, command=('ActivateWindow', 'Container.Update'), *args, **kwargs
 ):
 
     """
@@ -477,7 +477,7 @@ def run_builtin(
     path_history can also be either ",return" or ",replace"
     """
 
-    if not query and not action and not mode and not content_type:
+    if not query and not action and not mode and not content_type and not args and not kwargs:
 
         raise TypeError('Cannot manipulate container without arguments')
 
@@ -491,7 +491,7 @@ def run_builtin(
 
         if content_type:
 
-            query_string += 'content_type={0}{1}'.format(content_type, '' if action is None and mode is None and query is None else '&')
+            query_string += 'content_type={0}{1}'.format(content_type, '' if action is None and mode is None and query is None and args is None and kwargs is None else '&')
 
         if action:
 
@@ -516,6 +516,10 @@ def run_builtin(
         if args:
 
             query_string += '&' + '&'.join(args)
+
+        if kwargs:
+
+            query_string += '&' + urlencode(kwargs)
 
     if 'content_type=video' in query_string:
         window_id = 'videos'

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="script.module.tulip" name="Tulip Routine Libraries" version="2.4.1" provider-name="Twilight0">
+<addon id="script.module.tulip" name="Tulip Routine Libraries" version="2.4.2" provider-name="Twilight0">
     <requires>
         <import addon="xbmc.python" version="2.24.0"/>
         <import addon="script.module.kodi-six" version="0.0.2"/>
@@ -15,6 +15,7 @@
 - User agents module tweaks
 - Addition of ability to autoplay through a playlist mode
 - Added some debug logging for client.request and directory.add
+- Removed some unused functions
 - Minor other tweaks</news>
     </extension>
 </addon>

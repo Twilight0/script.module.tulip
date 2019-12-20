@@ -28,10 +28,11 @@ from kodi_six.xbmc import log
 
 from tulip.compat import (
     urllib2, cookielib, urlparse, URLopener, quote_plus, unquote, unicode, unescape, range, basestring, str,
-    urlsplit, urlencode, bytes, is_py3, addinfourl
+    urlsplit, urlencode, bytes, is_py3, addinfourl, py3_dec
 )
 
 
+# noinspection PyUnboundLocalVariable
 def request(
         url, close=True, redirect=True, error=False, proxy=None, post=None, headers=None, mobile=False, limit=None,
         referer=None, cookie=None, output='', timeout='30', username=None, password=None, verify=True, as_bytes=False
@@ -249,8 +250,8 @@ def request(
             content = response.headers
             result = response.read(5242880)
 
-            if is_py3 and not as_bytes and isinstance(result, bytes):
-                result = result.decode('utf-8')
+            if not as_bytes:
+                result = py3_dec(result)
 
             return result, headers, content, cookie
 
@@ -274,8 +275,8 @@ def request(
         if close is True:
             response.close()
 
-        if is_py3 and not as_bytes and isinstance(result, bytes):
-            result = result.decode('utf-8')
+        if not as_bytes:
+            result = py3_dec(result)
 
         return result
 
