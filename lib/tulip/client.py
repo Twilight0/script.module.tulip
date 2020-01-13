@@ -20,16 +20,22 @@
 
 from __future__ import absolute_import, division, print_function
 
+from tulip.cleantitle import replaceHTMLCodes
+from tulip.parsers import parseDOM
 from tulip.user_agents import randomagent, random_mobile_agent
-import re, sys, time, traceback
+import re, sys, time, traceback, gzip
+from os import sep
+from os.path import basename, splitext
 from tulip import cache, control
 from tulip.log import log_debug
 from kodi_six.xbmc import log
 
 from tulip.compat import (
     urllib2, cookielib, urlparse, URLopener, quote_plus, unquote, unicode, unescape, range, basestring, str,
-    urlsplit, urlencode, bytes, is_py3, addinfourl, py3_dec
+    urlsplit, urlencode, bytes, is_py3, addinfourl, py3_dec, iteritems, StringIO
 )
+
+PROGRESS = control.enum(OFF=0, WINDOW=1, BACKGROUND=2)
 
 
 # noinspection PyUnboundLocalVariable
@@ -45,7 +51,7 @@ def request(
 
     if isinstance(post, dict):
         post = bytes(urlencode(post), encoding='utf-8')
-    elif isinstance(post, basestring) and is_py3:
+    elif isinstance(post, str) and is_py3:
         post = bytes(post, encoding='utf-8')
 
     try:
@@ -189,7 +195,7 @@ def request(
 
                     netloc = '{0}://{1}'.format(urlparse(url).scheme, urlparse(url).netloc)
 
-                    cf = cache.get(cfcookie, 168, netloc, headers['User-Agent'], timeout)
+                    cf = cache.get(Cfcookie.get, 168, netloc, headers['User-Agent'], timeout)
 
                     headers['Cookie'] = cf
 
@@ -264,7 +270,19 @@ def request(
 
             return content
 
+        elif output == 'file_size':
+
+            try:
+                content = int(response.headers['Content-Length'])
+            except Exception:
+                content = '0'
+
+            response.close()
+
+            return content
+
         else:
+
             if limit == '0':
                 result = response.read(224 * 1024)
             elif limit is not None:
@@ -290,32 +308,39 @@ def request(
         return
 
 
-def retriever(source, destination, user_agent=None, referer=None, *args):
+def retriever(source, destination, user_agent=None, referer=None, reporthook=None, data=None, **kwargs):
 
     if user_agent is None:
         user_agent = cache.get(randomagent, 12)
 
+    if referer is None:
+        referer = '{0}://{1}/'.format(urlparse(source).scheme, urlparse(source).netloc)
+
     class Opener(URLopener):
+
         version = user_agent
 
         def __init__(self):
-            URLopener.__init__(self)
-            self.addheaders = [('User-Agent', self.version), ('Accept', '*/*'), ('Referer', referer)]
 
-    Opener().retrieve(source, destination, *args)
+            URLopener.__init__(self)
+
+            headers = [('User-Agent', self.version), ('Accept', '*/*'), ('Referer', referer)]
+
+            if kwargs:
+                headers.extend(iteritems(kwargs))
+
+            self.addheaders = headers
+
+    Opener().retrieve(source, destination, reporthook, data)
 
 
 def url2name(url):
-
-    from os.path import basename
 
     url = url.split('|')[0]
     return basename(unquote(urlsplit(url)[2]))
 
 
 def get_extension(url, response):
-
-    from os.path import splitext
 
     filename = url2name(url)
     if 'Content-Disposition' in response.info():
@@ -332,14 +357,8 @@ def get_extension(url, response):
     return ext
 
 
-def enum(**enums):
-
-    return type(b'Enum', (), enums)
-
-
+# noinspection PyUnresolvedReferences
 def download_media(url, path, file_name, initiate_int='', completion_int='', exception_int='', progress=None):
-
-    PROGRESS = enum(OFF=0, WINDOW=1, BACKGROUND=2)
 
     try:
         if progress is None:
@@ -383,8 +402,6 @@ def download_media(url, path, file_name, initiate_int='', completion_int='', exc
                 control.makeFiles(path)
             except Exception as e:
                 log_debug('Path Create Failed: %s (%s)' % (e, path))
-
-            from os import sep
 
             if not path.endswith(sep):
                 path += sep
@@ -431,187 +448,6 @@ def download_media(url, path, file_name, initiate_int='', completion_int='', exc
             control.infoDialog('Download_complete for file name {0}'.format(file_name))
 
 
-def parseDOM(html, name=u"", attrs=None, ret=False):
-
-    """
-    :param html:
-        String to parse, or list of strings to parse.
-    :type html:
-        string or list
-    :param name:
-        Element to match ( for instance "span" )
-    :type name:
-        string
-    :param attrs:
-        Dictionary with attributes you want matched in the elment (for
-        instance { "id": "span3", "class": "oneclass.*anotherclass",
-        "attribute": "a random tag" } )
-    :type attrs:
-        dict
-    :param ret:
-        Attribute in element to return value of. If not set(or False), returns
-        content of DOM element.
-    :type ret:
-        string
-    """
-
-    if attrs is None:
-        attrs = {}
-
-    # log_debug("Name: " + repr(name) + " - Attrs:" + repr(attrs) + " - Ret: " + repr(ret) + " - HTML: " + str(type(html)))
-
-    if isinstance(name, basestring):  # Should be handled
-
-        try:
-            name = name.decode("utf-8")
-        except Exception:
-            pass
-            # log_debug("Couldn't decode name binary string: " + repr(name))
-
-    if isinstance(html, basestring):
-        try:
-            html = [html.decode("utf-8")]  # Replace with chardet thingy
-        except Exception:
-            html = [html]
-    elif isinstance(html, unicode):
-        html = [html]
-    elif not isinstance(html, list):
-        log_debug("Input isn't list or string/unicode.")
-        return u""
-
-    if not name.strip():
-        log_debug("Missing tag name")
-        return u""
-
-    ret_lst = []
-    for item in html:
-        temp_item = re.compile('(<[^>]*?\n[^>]*?>)').findall(item)
-        for match in temp_item:
-            item = item.replace(match, match.replace("\n", " "))
-
-        lst = _getDOMElements(item, name, attrs)
-
-        if isinstance(ret, basestring):
-            # log_debug("Getting attribute %s content for %s matches " % (ret, len(lst) ))
-            lst2 = []
-            for match in lst:
-                lst2 += _getDOMAttributes(match, name, ret)
-            lst = lst2
-        else:
-            # log_debug("Getting element content for %s matches " % len(lst))
-            lst2 = []
-            for match in lst:
-                # log_debug("Getting element content for %s" % match)
-                temp = _getDOMContent(item, name, match, ret).strip()
-                item = item[item.find(temp, item.find(match)) + len(temp):]
-                lst2.append(temp)
-            lst = lst2
-        ret_lst += lst
-
-    # log_debug("Done: " + repr(ret_lst))
-    return ret_lst
-
-
-def _getDOMContent(html, name, match, ret):  # Cleanup
-    # log_debug("match: " + match)
-
-    endstr = u"</" + name  # + ">"
-
-    start = html.find(match)
-    end = html.find(endstr, start)
-    pos = html.find("<" + name, start + 1 )
-
-    # log_debug(str(start) + " < " + str(end) + ", pos = " + str(pos) + ", endpos: " + str(end))
-
-    while pos < end and pos != -1:  # Ignore too early </endstr> return
-        tend = html.find(endstr, end + len(endstr))
-        if tend != -1:
-            end = tend
-        pos = html.find("<" + name, pos + 1)
-        # log_debug("loop: " + str(start) + " < " + str(end) + " pos = " + str(pos))
-
-    # log_debug("start: %s, len: %s, end: %s" % (start, len(match), end))
-    if start == -1 and end == -1:
-        result = u""
-    elif start > -1 and end > -1:
-        result = html[start + len(match):end]
-    elif end > -1:
-        result = html[:end]
-    elif start > -1:
-        result = html[start + len(match):]
-
-    if ret:
-        endstr = html[end:html.find(">", html.find(endstr)) + 1]
-        result = match + result + endstr
-
-    # log_debug("done result length: " + str(len(result)))
-    return result
-
-
-def _getDOMAttributes(match, name, ret):
-
-    lst = re.compile('<' + name + '.*?' + ret + '=([\'"].[^>]*?[\'"])>', re.M | re.S).findall(match)
-    if len(lst) == 0:
-        lst = re.compile('<' + name + '.*?' + ret + '=(.[^>]*?)>', re.M | re.S).findall(match)
-    ret = []
-    for tmp in lst:
-        cont_char = tmp[0]
-        if cont_char in "'\"":
-            # log_debug("Using %s as quotation mark" % cont_char)
-
-            # Limit down to next variable.
-            if tmp.find('=' + cont_char, tmp.find(cont_char, 1)) > -1:
-                tmp = tmp[:tmp.find('=' + cont_char, tmp.find(cont_char, 1))]
-
-            # Limit to the last quotation mark
-            if tmp.rfind(cont_char, 1) > -1:
-                tmp = tmp[1:tmp.rfind(cont_char)]
-        else:
-            # log_debug("No quotation mark found")
-            if tmp.find(" ") > 0:
-                tmp = tmp[:tmp.find(" ")]
-            elif tmp.find("/") > 0:
-                tmp = tmp[:tmp.find("/")]
-            elif tmp.find(">") > 0:
-                tmp = tmp[:tmp.find(">")]
-
-        ret.append(tmp.strip())
-
-    # log_debug("Done: " + repr(ret))
-    return ret
-
-
-def _getDOMElements(item, name, attrs):
-
-    lst = []
-    for key in attrs:
-        lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=[\'"]' + attrs[key] + '[\'"].*?>))', re.M | re.S).findall(item)
-        if len(lst2) == 0 and attrs[key].find(" ") == -1:  # Try matching without quotation marks
-            lst2 = re.compile('(<' + name + '[^>]*?(?:' + key + '=' + attrs[key] + '.*?>))', re.M | re.S).findall(item)
-
-        if len(lst) == 0:
-            # log_debug("Setting main list " + repr(lst2))
-            lst = lst2
-            lst2 = []
-        else:
-            # log_debug("Setting new list " + repr(lst2))
-            test = list(range(len(lst)))
-            test.reverse()
-            for i in test:  # Delete anything missing from the next list.
-                if not lst[i] in lst2:
-                    # log_debug("Purging mismatch " + str(len(lst)) + " - " + repr(lst[i]))
-                    del(lst[i])
-
-    if len(lst) == 0 and attrs == {}:
-        # log_debug("No list found, trying to match on name only")
-        lst = re.compile('(<' + name + '>)', re.M | re.S).findall(item)
-        if len(lst) == 0:
-            lst = re.compile('(<' + name + ' .*?>)', re.M | re.S).findall(item)
-
-    # log_debug("Done: " + str(type(lst)))
-    return lst
-
-
 def parse_headers(string):
 
     """
@@ -637,74 +473,117 @@ def stripTags(html):
     return html
 
 
-def replaceHTMLCodes(txt):
+class Cfcookie:
 
-    txt = re.sub("(&#[0-9]+)([^;^0-9]+)", "\\1;\\2", txt)
-    txt = unescape(txt)
-    txt = txt.replace("&quot;", "\"")
-    txt = txt.replace("&amp;", "&")
-    txt = txt.replace("&#38;", "&")
-    txt = txt.replace("&nbsp;", "")
+    def __init__(self):
+        self.cookie = None
 
-    return txt
-
-
-def cfcookie(netloc, ua, timeout):
-    try:
-        headers = {'User-Agent': ua}
-
-        req = urllib2.Request(netloc, headers=headers)
+    def get(self, netloc, ua, timeout):
 
         try:
-            urllib2.urlopen(req, timeout=int(timeout))
+
+            self.netloc = netloc
+            self.ua = ua
+            self.timeout = timeout
+            self.cookie = None
+            self._get_cookie(netloc, ua, timeout)
+
+            if self.cookie is None:
+                log_debug('%s returned an error. Could not collect tokens.' % netloc)
+
+            return self.cookie
+
+        except Exception as e:
+
+            log_debug('%s returned an error. Could not collect tokens - Error: %s.' % (netloc, str(e)))
+
+            return self.cookie
+
+    def _get_cookie(self, netloc, ua, timeout):
+
+        class NoRedirection(urllib2.HTTPErrorProcessor):
+
+            def http_response(self, request, response):
+
+                return response
+
+        def parseJSString(s):
+
+            try:
+
+                offset = 1 if s[0] == '+' else 0
+                val = int(
+                    eval(s.replace('!+[]', '1').replace('!![]', '1').replace('[]', '0').replace('(', 'str(')[offset:]))
+                return val
+
+            except:
+
+                pass
+
+        cookies = cookielib.LWPCookieJar()
+        opener = urllib2.build_opener(NoRedirection, urllib2.HTTPCookieProcessor(cookies))
+        opener.addheaders = [('User-Agent', ua)]
+
+        try:
+
+            response = opener.open(netloc, timeout=int(timeout))
+            result = response.read()
+
         except urllib2.HTTPError as response:
-            result = response.read(5242880)
 
-        jschl = re.findall('name="jschl_vc" value="(.+?)"/>', result)[0]
+            result = response.read()
 
-        init = re.findall('setTimeout\(function\(\){\s*.*?.*:(.*?)};', result)[-1]
+            try:
+                encoding = response.info().getheader('Content-Encoding')
+            except Exception:
+                encoding = None
 
-        builder = re.findall(r"challenge-form\'\);\s*(.*)a.v", result)[0]
+            if encoding == 'gzip':
+                result = gzip.GzipFile(fileobj=StringIO(result)).read()
 
-        decryptVal = parseJSString(init)
+        jschl = re.compile('name="jschl_vc" value="(.+?)"/>').findall(result)[0]
+        init = re.compile(r'setTimeout\(function\(\){\s*.*?.*:(.*?)};').findall(result)[0]
+        builder = re.compile(r"challenge-form\'\);\s*(.*)a.v").findall(result)[0]
+
+        if '/' in init:
+            init = init.split('/')
+            decryptVal = parseJSString(init[0]) / float(parseJSString(init[1]))
+        else:
+            decryptVal = parseJSString(init)
 
         lines = builder.split(';')
-
         for line in lines:
-
             if len(line) > 0 and '=' in line:
-
                 sections = line.split('=')
-                line_val = parseJSString(sections[1])
-                decryptVal = int(eval(str(decryptVal) + str(sections[0][-1]) + str(line_val)))
+                if '/' in sections[1]:
+                    subsecs = sections[1].split('/')
+                    line_val = parseJSString(subsecs[0]) / float(parseJSString(subsecs[1]))
+                else:
+                    line_val = parseJSString(sections[1])
+                decryptVal = float(eval('%.16f' % decryptVal + sections[0][-1] + '%.16f' % line_val))
 
-        answer = decryptVal + len(urlparse(netloc).netloc)
+        answer = float('%.10f' % decryptVal) + len(urlparse(netloc).netloc)
 
-        query = '%s/cdn-cgi/l/chk_jschl?jschl_vc=%s&jschl_answer=%s' % (netloc, jschl, answer)
+        query = '%scdn-cgi/l/chk_jschl?jschl_vc=%s&jschl_answer=%s' % (netloc, jschl, answer)
 
         if 'type="hidden" name="pass"' in result:
             passval = re.findall('name="pass" value="(.*?)"', result)[0]
-            query = '%s/cdn-cgi/l/chk_jschl?pass=%s&jschl_vc=%s&jschl_answer=%s' % (
-                netloc, quote_plus(passval), jschl, answer
-            )
-            time.sleep(5)
+            query = '%scdn-cgi/l/chk_jschl?pass=%s&jschl_vc=%s&jschl_answer=%s' % (
+                netloc, quote_plus(passval), jschl, answer)
+            time.sleep(6)
 
-        cookies = cookielib.LWPCookieJar()
-        handlers = [urllib2.HTTPHandler(), urllib2.HTTPSHandler(), urllib2.HTTPCookieProcessor(cookies)]
-        opener = urllib2.build_opener(*handlers)
-        urllib2.install_opener(opener)
+        opener.addheaders = [('User-Agent', ua),
+                             ('Referer', netloc),
+                             ('Accept', 'text/html, application/xhtml+xml, application/xml, */*'),
+                             ('Accept-Encoding', 'gzip, deflate')]
 
-        try:
-            req = urllib2.Request(query, headers=headers)
-            urllib2.urlopen(req, timeout=int(timeout))
-        except Exception:
-            pass
+        response = opener.open(query)
+        response.close()
 
         cookie = '; '.join(['%s=%s' % (i.name, i.value) for i in cookies])
 
-        return cookie
-    except Exception:
-        pass
+        if 'cf_clearance' in cookie:
+            self.cookie = cookie
 
 
 def parseJSString(s):
@@ -714,3 +593,9 @@ def parseJSString(s):
         return val
     except Exception:
         pass
+
+
+__all__ = [
+    'parseDOM', 'request', 'stripTags', 'retriever', 'replaceHTMLCodes', 'parseJSString', 'parse_headers',
+    'url2name', 'get_extension'
+]

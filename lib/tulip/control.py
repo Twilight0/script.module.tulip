@@ -91,6 +91,11 @@ bookmarksFile = os.path.join(dataPath, 'bookmarks.db')
 cacheFile = os.path.join(dataPath, 'cache.db')
 
 
+def enum(**enums):
+
+    return type(b'Enum', (), enums)
+
+
 def name():
 
     return addonInfo('name')

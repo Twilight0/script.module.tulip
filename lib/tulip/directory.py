@@ -388,7 +388,7 @@ def playlist_maker(items=None, argv=None):
 
 def resolve(
         url, meta=None, icon=None, dash=False, manifest_type=None, inputstream_type='adaptive', headers=None,
-        mimetype=None, resolved_mode=True, live=False
+        mimetype=None, resolved_mode=True, live=False, verify=True
 ):
 
     """
@@ -422,6 +422,13 @@ def resolve(
         elif isinstance(headers, dict):
             headers = urlencode(headers)
 
+    if not verify and 'verifypeer' not in headers:
+
+        if headers:
+            headers += '&verifypeer=False'
+        else:
+            headers = 'verifypeer=False'
+
     if not dash and headers:
         url = '|'.join([url, headers])
 
@@ -441,17 +448,26 @@ def resolve(
         isa_enabled = False
 
     if dash and krypton_plus and isa_enabled:
+
         if not manifest_type:
+
             manifest_type = 'mpd'
+
         if not mimetype:
+
             mimetype = 'application/xml+dash'
+
         item.setContentLookup(False)
         item.setMimeType('{0}'.format(mimetype))
         item.setProperty('inputstreamaddon', 'inputstream.{}'.format(inputstream_type))
         item.setProperty('inputstream.{0}.manifest_type'.format(inputstream_type), manifest_type)
+
         if headers:
+
             item.setProperty("inputstream.{0}.stream_headers".format(inputstream_type), headers)
+
     elif mimetype:
+
         item.setContentLookup(False)
         item.setMimeType('{0}'.format(mimetype))
 

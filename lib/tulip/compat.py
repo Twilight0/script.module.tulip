@@ -55,8 +55,8 @@ if is_py2:
 
 elif is_py3:
 
-    bytes = bytes
-    str = unicode = basestring = str
+    bytes = basestring = bytes
+    str = unicode = str
     range = range
     zip = zip
 
@@ -107,6 +107,7 @@ try:
     from SocketServer import ThreadingMixIn
     from HTMLParser import HTMLParser
     unescape = HTMLParser().unescape
+    HTTPError = urllib2.HTTPError
 
 # Python 3:
 except ImportError:
@@ -123,6 +124,7 @@ except ImportError:
         unquote_plus, quote_plus
     )
     from urllib.response import addinfourl
+    from urllib.error import HTTPError
     import queue as Queue
 
 finally:
@@ -135,5 +137,6 @@ __all__ = [
     "is_py2", "is_py3", "str", "bytes", "urlparse", "urlunparse", "urljoin", "parse_qsl", "quote", "unquote", "Queue",
     "range", "urlencode", "zip", "urlsplit", "urlunsplit", "cookielib", "URLopener", "quote_plus", "unescape",
     "parse_qs", "unquote_plus", "urllib2", "unicode", "database", "basestring", "urlopen", "Request", "OrderedDict",
-    "iteritems", "BaseHTTPServer", "ThreadingMixIn", "addinfourl", "StringIO", "py2_enc", "py2_uni", "py3_dec"
+    "iteritems", "BaseHTTPServer", "ThreadingMixIn", "addinfourl", "StringIO", "py2_enc", "py2_uni", "py3_dec",
+    "HTTPError"
 ]

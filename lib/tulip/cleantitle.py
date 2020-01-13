@@ -20,7 +20,7 @@
 from __future__ import absolute_import
 
 import re, unicodedata
-from tulip.compat import unicode
+from tulip.compat import unicode, unescape
 
 
 def get(title, lower=True):
@@ -28,8 +28,8 @@ def get(title, lower=True):
     if title is None:
         return
 
-    title = re.sub('&#(\d+);', '', title)
-    title = re.sub('(&#[0-9]+)([^;^0-9]+)', '\\1;\\2', title)
+    title = re.sub(r'&#(\d+);', '', title)
+    title = re.sub(r'(&#[0-9]+)([^;^0-9]+)', '\\1;\\2', title)
     title = re.sub(r'\n|([[].+?[]])|([(].+?[)])|\s(vs|v[.])\s|([:;\-,\'\s.?])|\s', '', title)
 
     if lower:
@@ -78,3 +78,18 @@ def strip_accents(string):
     result = ''.join(c for c in unicodedata.normalize('NFD', string) if unicodedata.category(c) != 'Mn')
 
     return result
+
+
+def replaceHTMLCodes(txt):
+
+    txt = re.sub("(&#[0-9]+)([^;^0-9]+)", "\\1;\\2", txt)
+    txt = unescape(txt)
+    txt = txt.replace("&quot;", "\"")
+    txt = txt.replace("&amp;", "&")
+    txt = txt.replace("&#38;", "&")
+    txt = txt.replace("&nbsp;", "")
+
+    return txt
+
+
+__all__ = ['get', 'replaceHTMLCodes', 'get', 'query', 'normalize', 'strip_accents']
