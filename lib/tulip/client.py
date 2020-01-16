@@ -263,11 +263,15 @@ def request(
             return result, headers, content, cookie
 
         elif output == 'geturl':
+
             result = response.geturl()
 
         elif output == 'headers':
 
             content = response.headers
+
+            if close:
+                response.close()
 
             return content
 
