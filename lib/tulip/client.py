@@ -23,7 +23,7 @@ from __future__ import absolute_import, division, print_function
 from tulip.cleantitle import replaceHTMLCodes
 from tulip.parsers import parseDOM
 from tulip.user_agents import randomagent, random_mobile_agent
-import re, sys, time, traceback, gzip
+import re, sys, time, traceback, gzip, json
 from os import sep
 from os.path import basename, splitext
 from tulip import cache, control
@@ -31,7 +31,7 @@ from tulip.log import log_debug
 from kodi_six.xbmc import log
 
 from tulip.compat import (
-    urllib2, cookielib, urlparse, URLopener, quote_plus, unquote, unicode, unescape, range, basestring, str,
+    urllib2, cookielib, urlparse, URLopener, quote_plus, unquote, str,
     urlsplit, urlencode, bytes, is_py3, addinfourl, py3_dec, iteritems, StringIO
 )
 
@@ -257,6 +257,7 @@ def request(
             result = response.read(5242880)
 
             if not as_bytes:
+
                 result = py3_dec(result)
 
             return result, headers, content, cookie
@@ -281,12 +282,23 @@ def request(
 
             return content
 
+        elif output == 'json':
+
+            content = json.loads(response.read(5242880))
+
+            response.close()
+
+            return content
+
         else:
 
             if limit == '0':
                 result = response.read(224 * 1024)
             elif limit is not None:
-                result = response.read(int(limit) * 1024)
+                if isinstance(limit, int):
+                    result = response.read(limit * 1024)
+                else:
+                    result = response.read(int(limit) * 1024)
             else:
                 result = response.read(5242880)
 
