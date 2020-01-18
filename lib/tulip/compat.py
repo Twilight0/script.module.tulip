@@ -108,6 +108,7 @@ try:
     from HTMLParser import HTMLParser
     unescape = HTMLParser().unescape
     HTTPError = urllib2.HTTPError
+    import cPickle as pickle
 
 # Python 3:
 except ImportError:
@@ -126,6 +127,7 @@ except ImportError:
     from urllib.response import addinfourl
     from urllib.error import HTTPError
     import queue as Queue
+    import pickle
 
 finally:
 
@@ -138,5 +140,5 @@ __all__ = [
     "range", "urlencode", "zip", "urlsplit", "urlunsplit", "cookielib", "URLopener", "quote_plus", "unescape",
     "parse_qs", "unquote_plus", "urllib2", "unicode", "database", "basestring", "urlopen", "Request", "OrderedDict",
     "iteritems", "BaseHTTPServer", "ThreadingMixIn", "addinfourl", "StringIO", "py2_enc", "py2_uni", "py3_dec",
-    "HTTPError"
+    "HTTPError", "pickle"
 ]

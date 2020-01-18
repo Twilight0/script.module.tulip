@@ -23,7 +23,7 @@ from __future__ import absolute_import, division, print_function
 from tulip.cleantitle import replaceHTMLCodes
 from tulip.parsers import parseDOM
 from tulip.user_agents import randomagent, random_mobile_agent
-import re, sys, time, traceback, gzip, json
+import re, sys, time, traceback, gzip, json, socket
 from os import sep
 from os.path import basename, splitext
 from tulip import cache, control
@@ -611,7 +611,17 @@ def parseJSString(s):
         pass
 
 
+def check_connection(host="1.1.1.1", port=53, timeout=3):
+
+    try:
+        socket.setdefaulttimeout(timeout)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+        return True
+    except socket.error:
+        return False
+
+
 __all__ = [
     'parseDOM', 'request', 'stripTags', 'retriever', 'replaceHTMLCodes', 'parseJSString', 'parse_headers',
-    'url2name', 'get_extension'
+    'url2name', 'get_extension', 'check_connection'
 ]
