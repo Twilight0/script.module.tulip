@@ -440,7 +440,7 @@ def resolve(
     if meta is not None:
         item.setInfo(type='Video', infoLabels=meta)
 
-    krypton_plus = int(control.infoLabel('System.AddonVersion(xbmc.python)').replace('.', '')) >= 2250
+    krypton_plus = control.kodi_version() >= 17.0
 
     try:
         isa_enabled = control.addon_details('inputstream.adaptive').get('enabled')
