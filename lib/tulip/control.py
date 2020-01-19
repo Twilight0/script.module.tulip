@@ -72,6 +72,8 @@ image = xbmcgui.ControlImage
 alphanum_input = xbmcgui.INPUT_ALPHANUM
 password_input = xbmcgui.INPUT_PASSWORD
 hide_input = xbmcgui.ALPHANUM_HIDE_INPUT
+input_date = xbmcgui.INPUT_DATE
+input_time = xbmcgui.INPUT_TIME
 verify = xbmcgui.PASSWORD_VERIFY
 item = xbmcgui.ListItem
 
