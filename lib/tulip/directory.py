@@ -553,17 +553,17 @@ def run_builtin(
     if 'content_type' in query_string and isinstance(command, tuple):
 
         # noinspection PyUnboundLocalVariable
-        executable = '{0}({1},"{2}?{3}"{4})'.format(command[0], window_id, addon_url, query_string, ',return' if not path_history else path_history)
+        executable = '{0}({1},"{2}?{3}"{4})'.format(command[0], window_id, addon_url, query_string, ',return' if not path_history else ',' + path_history)
 
     else:
 
         if isinstance(command, tuple):
 
-            executable = '{0}({1}?{2}{3})'.format(command[1], addon_url, query_string, ',return' if not path_history else path_history)
+            executable = '{0}({1}?{2}{3})'.format(command[1], addon_url, query_string, ',return' if not path_history else ',' + path_history)
 
         else:
 
-            executable = '{0}({1}?{2}{3})'.format(command, addon_url, query_string, ',return' if not path_history else path_history)
+            executable = '{0}({1}?{2}{3})'.format(command, addon_url, query_string, ',return' if not path_history else ',' + path_history)
 
     if get_url:
 
