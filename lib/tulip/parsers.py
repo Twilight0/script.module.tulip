@@ -21,6 +21,7 @@
 import re
 from collections import namedtuple
 from tulip.compat import iteritems, unicode, str, basestring
+from tulip.log import log_debug
 
 tag_re = re.compile(r'''(?=<(?P<tag>[a-zA-Z]+)(?P<attr>.*?)(?P<end>/)?>(?:(?P<inner>.*?)</\s*(?P=tag)\s*>)?)''', re.MULTILINE | re.DOTALL)
 attr_re = re.compile(r'''\s*(?P<key>[\w-]+)\s*(?:=\s*(?P<quote>["']?)(?P<value>.*?)(?P=quote)\s*)?''')
