@@ -55,8 +55,8 @@ if is_py2:
 
 elif is_py3:
 
-    bytes = basestring = bytes
-    str = unicode = str
+    bytes = bytes
+    str = unicode = basestring = str
     range = range
     zip = zip
 
