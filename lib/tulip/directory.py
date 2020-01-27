@@ -255,6 +255,7 @@ def add(
             log('Directory not added, reason of failure: ' + repr(reason))
 
     if progress:
+
         pd.update(100)
         pd.close()
 

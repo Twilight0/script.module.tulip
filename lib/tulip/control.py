@@ -95,7 +95,10 @@ cacheFile = os.path.join(dataPath, 'cache.db')
 
 def enum(**enums):
 
-    return type(b'Enum', (), enums)
+    try:
+        return type(b'Enum', (), enums)
+    except TypeError:
+        return type('Enum', (), enums)
 
 
 def name():
