@@ -220,18 +220,17 @@ class youtube(object):
 
                 duration = 0
                 try:
-                    duration += 60 * 60 * int(re.findall(r'(\d*)H', d)[0])
+                    duration += 60 * 60 * int(re.search(r'(\d*)H', d).group(1))
                 except Exception:
                     pass
                 try:
-                    duration += 60 * int(re.findall(r'(\d*)M', d)[0])
+                    duration += 60 * int(re.search(r'(\d*)M', d).group(1))
                 except Exception:
                     pass
                 try:
-                    duration += int(re.findall(r'(\d*)S', d)[0])
+                    duration += int(re.search(r'(\d*)S', d).group(1))
                 except Exception:
                     pass
-                duration = str(duration)
 
                 self.list[item]['duration'] = duration
             except Exception:
