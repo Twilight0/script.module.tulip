@@ -21,7 +21,7 @@
 from __future__ import absolute_import, division, print_function
 
 from tulip.cleantitle import replaceHTMLCodes
-from tulip.parsers import parseDOM
+from tulip.parsers import parseDOM, parseDOM2
 from tulip.user_agents import randomagent, random_mobile_agent
 import re, sys, time, traceback, gzip, json, socket
 from os import sep
@@ -623,5 +623,5 @@ def check_connection(host="1.1.1.1", port=53, timeout=3):
 
 __all__ = [
     'parseDOM', 'request', 'stripTags', 'retriever', 'replaceHTMLCodes', 'parseJSString', 'parse_headers',
-    'url2name', 'get_extension', 'check_connection'
+    'url2name', 'get_extension', 'check_connection', 'parseDOM2'
 ]
