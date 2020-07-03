@@ -193,15 +193,9 @@ def request(
 
                 if 'cf-browser-verification' in response.read(5242880):
 
-                    netloc = '{0}://{1}'.format(urlparse(url).scheme, urlparse(url).netloc)
+                    log_debug('This request cannot be handled due to human verification gate')
 
-                    cf = cache.get(Cfcookie.get, 168, netloc, headers['User-Agent'], timeout)
-
-                    headers['Cookie'] = cf
-
-                    req = urllib2.Request(url, data=post, headers=headers)
-
-                    response = urllib2.urlopen(req, timeout=int(timeout))
+                    return
 
                 elif error is False:
                     return
@@ -213,11 +207,6 @@ def request(
 
             try:
                 result = '; '.join(['%s=%s' % (i.name, i.value) for i in cookies])
-            except Exception:
-                pass
-
-            try:
-                result = cf
             except Exception:
                 pass
 
@@ -245,11 +234,6 @@ def request(
 
             try:
                 cookie = '; '.join(['%s=%s' % (i.name, i.value) for i in cookies])
-            except Exception:
-                pass
-
-            try:
-                cookie = cf
             except Exception:
                 pass
 
@@ -487,119 +471,6 @@ def stripTags(html):
         sub_end = html.find(">")
 
     return html
-
-
-class Cfcookie:
-
-    def __init__(self):
-        self.cookie = None
-
-    def get(self, netloc, ua, timeout):
-
-        try:
-
-            self.netloc = netloc
-            self.ua = ua
-            self.timeout = timeout
-            self.cookie = None
-            self._get_cookie(netloc, ua, timeout)
-
-            if self.cookie is None:
-                log_debug('%s returned an error. Could not collect tokens.' % netloc)
-
-            return self.cookie
-
-        except Exception as e:
-
-            log_debug('%s returned an error. Could not collect tokens - Error: %s.' % (netloc, str(e)))
-
-            return self.cookie
-
-    def _get_cookie(self, netloc, ua, timeout):
-
-        class NoRedirection(urllib2.HTTPErrorProcessor):
-
-            def http_response(self, request, response):
-
-                return response
-
-        def parseJSString(s):
-
-            try:
-
-                offset = 1 if s[0] == '+' else 0
-                val = int(
-                    eval(s.replace('!+[]', '1').replace('!![]', '1').replace('[]', '0').replace('(', 'str(')[offset:]))
-                return val
-
-            except:
-
-                pass
-
-        cookies = cookielib.LWPCookieJar()
-        opener = urllib2.build_opener(NoRedirection, urllib2.HTTPCookieProcessor(cookies))
-        opener.addheaders = [('User-Agent', ua)]
-
-        try:
-
-            response = opener.open(netloc, timeout=int(timeout))
-            result = response.read()
-
-        except urllib2.HTTPError as response:
-
-            result = response.read()
-
-            try:
-                encoding = response.info().getheader('Content-Encoding')
-            except Exception:
-                encoding = None
-
-            if encoding == 'gzip':
-                result = gzip.GzipFile(fileobj=StringIO(result)).read()
-
-        jschl = re.compile('name="jschl_vc" value="(.+?)"/>').findall(result)[0]
-        init = re.compile(r'setTimeout\(function\(\){\s*.*?.*:(.*?)};').findall(result)[0]
-        builder = re.compile(r"challenge-form\'\);\s*(.*)a.v").findall(result)[0]
-
-        if '/' in init:
-            init = init.split('/')
-            decryptVal = parseJSString(init[0]) / float(parseJSString(init[1]))
-        else:
-            decryptVal = parseJSString(init)
-
-        lines = builder.split(';')
-        for line in lines:
-            if len(line) > 0 and '=' in line:
-                sections = line.split('=')
-                if '/' in sections[1]:
-                    subsecs = sections[1].split('/')
-                    line_val = parseJSString(subsecs[0]) / float(parseJSString(subsecs[1]))
-                else:
-                    line_val = parseJSString(sections[1])
-                decryptVal = float(eval('%.16f' % decryptVal + sections[0][-1] + '%.16f' % line_val))
-
-        answer = float('%.10f' % decryptVal) + len(urlparse(netloc).netloc)
-
-        query = '%scdn-cgi/l/chk_jschl?jschl_vc=%s&jschl_answer=%s' % (netloc, jschl, answer)
-
-        if 'type="hidden" name="pass"' in result:
-            passval = re.findall('name="pass" value="(.*?)"', result)[0]
-            query = '%scdn-cgi/l/chk_jschl?pass=%s&jschl_vc=%s&jschl_answer=%s' % (
-                netloc, quote_plus(passval), jschl, answer)
-            time.sleep(6)
-
-        opener.addheaders = [('User-Agent', ua),
-                             ('Referer', netloc),
-                             ('Accept', 'text/html, application/xhtml+xml, application/xml, */*'),
-                             ('Accept-Encoding', 'gzip, deflate')]
-
-        response = opener.open(query)
-        response.close()
-
-        cookie = '; '.join(['%s=%s' % (i.name, i.value) for i in cookies])
-
-        if 'cf_clearance' in cookie:
-            self.cookie = cookie
 
 
 def parseJSString(s):

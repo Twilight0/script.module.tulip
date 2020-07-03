@@ -1,3 +1,8 @@
+[B]2.6.X[/B]
+- Removed cloudflare related functions as they need too frequent updates
+- Improved parsers module
+- Logging module tweaks
+
 [B]2.5.X[/B]
 - Tweaks in client module (updated cfscrape & some minor other tweaks)
 - Added the parsers module

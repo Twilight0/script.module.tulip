@@ -51,6 +51,34 @@ def itertags(html, tag):
             yield Tag(match.group("tag"), attrs, match.group("inner"))
 
 
+def itertags_wrapper(html, tag, attrs=None, ret=False):
+
+    try:
+
+        result = list(itertags(html, tag))
+
+        if isinstance(attrs, dict):
+
+            attrs = list(iteritems(attrs))
+
+            result = [
+                i for i in result if any(
+                    [a for a in attrs if any([a[0] == k and re.match(a[1], v) for k, v in iteritems(i.attributes)])]
+                )
+            ]
+
+        if ret:
+
+            # noinspection PyTypeChecker
+            result = [i.attributes[ret] for i in result if ret in i.attributes]
+
+    except Exception:
+
+        result = []
+
+    return result
+
+
 def parseDOM(html, name=u"", attrs=None, ret=False):
 
     """

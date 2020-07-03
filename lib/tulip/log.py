@@ -58,9 +58,10 @@ def log_severe(msg):
     log(msg, level=LOGSEVERE)
 
 
-def log(msg, level=LOGDEBUG, setting='debug'):
+def log(msg, level=LOGDEBUG, setting=None):
     # override message level to force logging when addon logging turned on
-    if control.setting(setting) == 'true' and level == LOGDEBUG:
+
+    if level == LOGDEBUG and setting and control.setting(setting) == 'true':
         level = LOGNOTICE
 
     try:
