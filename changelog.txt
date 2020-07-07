@@ -1,7 +1,9 @@
 [B]2.6.X[/B]
 - Removed cloudflare related functions as they need too frequent updates
 - Improved parsers module
+- Added feed parser & thumbmaker into youtube module
 - Logging module tweaks
+- Updated user agents
 
 [B]2.5.X[/B]
 - Tweaks in client module (updated cfscrape & some minor other tweaks)

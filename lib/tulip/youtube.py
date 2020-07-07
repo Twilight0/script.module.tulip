@@ -24,6 +24,10 @@ from datetime import datetime
 from tulip.compat import urlparse, parse_qs, quote_plus, range
 from tulip import client, workers, control, directory, iso8601
 
+MAXRES_THUMBNAIL = 2
+HQ_THUMBNAIL = 1
+MQ_THUMBNAIL = 0
+
 
 class youtube(object):
 
@@ -31,7 +35,7 @@ class youtube(object):
 
         self.list = [];  self.data = []
 
-        self.base_link = 'http://www.youtube.com/'
+        self.base_link = 'https://www.youtube.com/'
         self.base_addon = 'plugin://plugin.video.youtube/'
         self.google_base_link = 'https://www.googleapis.com/youtube/v3/'
 
@@ -361,3 +365,69 @@ class youtube(object):
             self.list.append(data)
 
         return self.list
+
+
+def thumb_maker(video_id, thumbnail_quality=MQ_THUMBNAIL):
+
+    """
+    Makes a video thumbnail out of a youtube video id
+
+    :param video_id: A youtube video id <string>
+    :param thumbnail_quality: integer, possible values 0, 1, 2
+    :return: string
+    """
+
+    if thumbnail_quality == 2:
+        thumbnail_quality = 'maxresdefault'
+    elif thumbnail_quality == 1:
+        thumbnail_quality = 'hqdefault'
+    else:
+        thumbnail_quality = 'mqdefault'
+
+    return 'http://img.youtube.com/vi/{0}/{1}.jpg'.format(video_id, thumbnail_quality)
+
+
+def feed_parser(url=None, channel_id=None, playlist_id=None, user=None):
+
+    """
+    Useful for loading a brief list of videos without API key
+    """
+
+    channel_prefix = 'https://www.youtube.com/feeds/videos.xml?channel_id={}'
+    playlist_prefix = 'https://www.youtube.com/feeds/videos.xml?playlist_id={}'
+    user_prefix = 'https://www.youtube.com/feeds/videos.xml?user={}'
+
+    if channel_id:
+
+        url = channel_prefix.format(channel_id)
+
+    elif playlist_id:
+
+        url = playlist_prefix.format(playlist_id)
+
+    elif user:
+
+        url = user_prefix.format(user)
+
+    elif not url:
+
+        raise TypeError('Did not provide a usable url for the feed parser to work')
+
+    result = []
+
+    xml = client.request(url)
+
+    items = client.parseDOM(xml, 'entry')
+
+    for item in items:
+
+        title = client.parseDOM(item, 'title')[0]
+        image = client.parseDOM(item, 'media:thumbnail', ret='url')[0]
+        _url = client.parseDOM(item, 'link', ret='href')[0]
+        plot = client.parseDOM(item, 'media:description')[0]
+
+        data = {'title': title, 'image': image, 'url': _url, 'plot': plot}
+
+        result.append(data)
+
+    return result

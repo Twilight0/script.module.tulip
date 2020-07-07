@@ -401,4 +401,4 @@ def parseDOM2(html, name='', attrs=None, req=False, exclude_comments=False):
     return all_results
 
 
-__all__ = ['itertags', 'parseDOM', 'parseDOM2']
+__all__ = ['itertags', 'parseDOM', 'parseDOM2', 'itertags_wrapper']
