@@ -4,6 +4,7 @@
 - Added feed parser & thumbmaker into youtube module
 - Logging module tweaks
 - Updated user agents
+- Allow to bypass cache in the request function
 
 [B]2.5.X[/B]
 - Tweaks in client module (updated cfscrape & some minor other tweaks)
