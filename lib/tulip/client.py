@@ -26,16 +26,18 @@ from tulip.user_agents import randomagent, random_mobile_agent, CHROME, IPHONE_6
 import sys, traceback, json, socket
 from os import sep
 from os.path import basename, splitext
-from tulip import control
-from tulip.log import log_debug
-from kodi_six.xbmc import log
+try:
+    from tulip.log import log_debug
+except:
+    log_debug = None
+
 
 from tulip.compat import (
     urllib2, cookielib, urlparse, URLopener, unquote, str, urlsplit, urlencode, bytes, is_py3, addinfourl, py3_dec,
     iteritems
 )
 
-PROGRESS = control.enum(OFF=0, WINDOW=1, BACKGROUND=2)
+
 
 
 # noinspection PyUnboundLocalVariable
@@ -201,7 +203,10 @@ def request(
 
                 if 'cf-browser-verification' in response.read(5242880):
 
-                    log_debug('This request cannot be handled due to human verification gate')
+                    if log_debug:
+                        log_debug('This request cannot be handled due to human verification gate')
+                    else:
+                        print('This request cannot be handled due to human verification gate')
 
                     return
 
@@ -311,7 +316,10 @@ def request(
         _, __, tb = sys.exc_info()
 
         print(traceback.print_tb(tb))
-        log('Client module failed, reason of failure: ' + repr(reason))
+        if log_debug:
+            log_debug('Client module failed, reason of failure: ' + repr(reason))
+        else:
+            print('Client module failed, reason of failure: ' + repr(reason))
 
         return
 
@@ -372,6 +380,10 @@ def get_extension(url, response):
 # noinspection PyUnresolvedReferences
 def download_media(url, path, file_name, initiate_int='', completion_int='', exception_int='', progress=None):
 
+    from tulip import control
+
+    PROGRESS = control.enum(OFF=0, WINDOW=1, BACKGROUND=2)
+
     try:
         if progress is None:
             progress = int(control.setting('progress_dialog'))
@@ -406,14 +418,20 @@ def download_media(url, path, file_name, initiate_int='', completion_int='', exc
 
             file_name += '.' + get_extension(url, response)
             full_path = control.join(path, file_name)
-            log_debug('Downloading: %s -> %s' % (url, full_path))
+            if log_debug:
+                log_debug('Downloading: %s -> %s' % (url, full_path))
+            else:
+                print('Downloading: %s -> %s' % (url, full_path))
 
             path = control.transPath(control.legalfilename(path))
 
             try:
                 control.makeFiles(path)
             except Exception as e:
-                log_debug('Path Create Failed: %s (%s)' % (e, path))
+                if log_debug:
+                    log_debug('Path Create Failed: %s (%s)' % (e, path))
+                else:
+                    print('Path Create Failed: %s (%s)' % (e, path))
 
             if not path.endswith(sep):
                 path += sep
@@ -437,7 +455,10 @@ def download_media(url, path, file_name, initiate_int='', completion_int='', exc
                     raise Exception('Failed to write file')
 
                 percent_progress = total_len * 100 / content_length if content_length > 0 else 0
-                log_debug('Position : {0} / {1} = {2}%'.format(total_len, content_length, percent_progress))
+                if log_debug:
+                    log_debug('Position : {0} / {1} = {2}%'.format(total_len, content_length, percent_progress))
+                else:
+                    print('Position : {0} / {1} = {2}%'.format(total_len, content_length, percent_progress))
                 pd.update(percent_progress)
 
             file_desc.close()
@@ -449,11 +470,17 @@ def download_media(url, path, file_name, initiate_int='', completion_int='', exc
             else:
                 control.infoDialog('Download_complete for file name {0}'.format(file_name))
 
-            log_debug('Download Complete: {0} -> {1}'.format(url, full_path))
+            if log_debug:
+                log_debug('Download Complete: {0} -> {1}'.format(url, full_path))
+            else:
+                print('Download Complete: {0} -> {1}'.format(url, full_path))
 
     except Exception as e:
 
-        log_debug('Error ({0}) during download: {1} -> {2}'.format(str(e), url, file_name))
+        if log_debug:
+            log_debug('Error ({0}) during download: {1} -> {2}'.format(str(e), url, file_name))
+        else:
+            print('Error ({0}) during download: {1} -> {2}'.format(str(e), url, file_name))
         if isinstance(exception_int, int):
             control.infoDialog(control.lang(exception_int).format(str(e), file_name))
         else:

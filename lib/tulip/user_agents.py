@@ -18,7 +18,6 @@
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from tulip import cache
 from tulip.compat import urlencode
 from random import choice
 
@@ -78,7 +77,11 @@ def ios_agent():
     return 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25'
 
 
-def spoofer(headers=None, _agent=True, age_str=cache.get(randomagent, 12), referer=False, ref_str='', url=None):
+def spoofer(headers=None, _agent=True, age_str=None, referer=False, ref_str='', url=None):
+
+    if age_str is None:
+        from tulip import cache
+        age_str = cache.get(randomagent, 12)
 
     pipe = '|'
 

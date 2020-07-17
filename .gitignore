@@ -1,3 +1,5 @@
 \.idea/
 
 \.vscode/
+
+lib/tulip/__pycache__/

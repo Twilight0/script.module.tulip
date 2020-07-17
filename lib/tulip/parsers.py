@@ -17,11 +17,15 @@
         You should have received a copy of the GNU General Public License
         along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+from __future__ import print_function
 
 import re
 from collections import namedtuple
 from tulip.compat import iteritems, unicode, str, basestring
-from tulip.log import log_debug
+try:
+    from tulip.log import log_debug
+except Exception:
+    log_debug = None
 
 tag_re = re.compile(r'''(?=<(?P<tag>[a-zA-Z]+)(?P<attr>.*?)(?P<end>/)?>(?:(?P<inner>.*?)</\s*(?P=tag)\s*>)?)''', re.MULTILINE | re.DOTALL)
 attr_re = re.compile(r'''\s*(?P<key>[\w-]+)\s*(?:=\s*(?P<quote>["']?)(?P<value>.*?)(?P=quote)\s*)?''')
@@ -124,11 +128,17 @@ def parseDOM(html, name=u"", attrs=None, ret=False):
     elif isinstance(html, unicode):
         html = [html]
     elif not isinstance(html, list):
-        log_debug("Input isn't list or string/unicode.")
+        if log_debug:
+            log_debug("Input isn't list or string/unicode.")
+        else:
+            print("Input isn't list or string/unicode.")
         return u""
 
     if not name.strip():
-        log_debug("Missing tag name")
+        if log_debug:
+            log_debug("Missing tag name")
+        else:
+            print("Missing tag name")
         return u""
 
     ret_lst = []
