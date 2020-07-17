@@ -22,17 +22,17 @@ from __future__ import absolute_import, division, print_function
 
 from tulip.cleantitle import replaceHTMLCodes
 from tulip.parsers import parseDOM, parseDOM2
-from tulip.user_agents import randomagent, random_mobile_agent
-import re, sys, time, traceback, gzip, json, socket
+from tulip.user_agents import randomagent, random_mobile_agent, CHROME, IPHONE_6
+import sys, traceback, json, socket
 from os import sep
 from os.path import basename, splitext
-from tulip import cache, control
+from tulip import control
 from tulip.log import log_debug
 from kodi_six.xbmc import log
 
 from tulip.compat import (
-    urllib2, cookielib, urlparse, URLopener, quote_plus, unquote, str,
-    urlsplit, urlencode, bytes, is_py3, addinfourl, py3_dec, iteritems, StringIO
+    urllib2, cookielib, urlparse, URLopener, unquote, str, urlsplit, urlencode, bytes, is_py3, addinfourl, py3_dec,
+    iteritems
 )
 
 PROGRESS = control.enum(OFF=0, WINDOW=1, BACKGROUND=2)
@@ -41,7 +41,8 @@ PROGRESS = control.enum(OFF=0, WINDOW=1, BACKGROUND=2)
 # noinspection PyUnboundLocalVariable
 def request(
         url, close=True, redirect=True, error=False, proxy=None, post=None, headers=None, mobile=False, limit=None,
-        referer=None, cookie=None, output='', timeout='30', username=None, password=None, verify=True, as_bytes=False
+        referer=None, cookie=None, output='', timeout='30', username=None, password=None, verify=True, as_bytes=False,
+        allow_caching=True
 ):
 
     try:
@@ -136,10 +137,17 @@ def request(
         if 'User-Agent' in headers:
             pass
         elif mobile is not True:
-            #headers['User-Agent'] = agent()
-            headers['User-Agent'] = cache.get(randomagent, 12)
+            if allow_caching:
+                from tulip import cache
+                headers['User-Agent'] = cache.get(randomagent, 12)
+            else:
+                headers['User-Agent'] = CHROME
         else:
-            headers['User-Agent'] = cache.get(random_mobile_agent, 12)
+            if allow_caching:
+                from tulip import cache
+                headers['User-Agent'] = cache.get(random_mobile_agent, 12)
+            else:
+                headers['User-Agent'] = IPHONE_6
 
         if 'Referer' in headers:
             pass
@@ -308,10 +316,14 @@ def request(
         return
 
 
-def retriever(source, destination, user_agent=None, referer=None, reporthook=None, data=None, **kwargs):
+def retriever(source, destination, user_agent=None, referer=None, reporthook=None, data=None, allow_caching=True,**kwargs):
 
     if user_agent is None:
-        user_agent = cache.get(randomagent, 12)
+        if allow_caching:
+            from tulip import cache
+            user_agent = cache.get(randomagent, 12)
+        else:
+            user_agent = CHROME
 
     if referer is None:
         referer = '{0}://{1}/'.format(urlparse(source).scheme, urlparse(source).netloc)
