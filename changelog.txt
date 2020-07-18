@@ -5,6 +5,7 @@
 - Logging module tweaks
 - Updated user agents
 - Allow to bypass cache in the request function
+- Allow nextitem to have title and/or name property
 
 [B]2.5.X[/B]
 - Tweaks in client module (updated cfscrape & some minor other tweaks)

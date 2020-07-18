@@ -275,6 +275,10 @@ def add(
             raise Exception()
 
         url = '{0}?action={1}&url={2}'.format(sysaddon, i['nextaction'], quote_plus(i['next']))
+        if 'name' in i:
+            url += '&name={0}'.format(quote_plus(i['name'].encode('utf-8')))
+        if 'title' in i:
+            url += '&title={0}'.format(quote_plus(i['title'].encode('utf-8')))
         icon = i['nexticon'] if 'nexticon' in i else control.addonmedia('next.png')
         fanart = i['nextfanart'] if 'nextfanart' in i else sysfanart
 
