@@ -4,7 +4,7 @@
 - Added feed parser & thumbmaker into youtube module
 - Logging module tweaks
 - Updated user agents
-- Allow to bypass cache in the request function
+- Allow some modules to be used outside of Kodi as standalone ones
 - Allow nextitem to have title and/or name property
 
 [B]2.5.X[/B]

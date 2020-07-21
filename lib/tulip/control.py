@@ -711,6 +711,8 @@ def active_mode():
 
 def quit_kodi():
 
+    busy()
+
     execute('Quit')
 
 

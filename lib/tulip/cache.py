@@ -20,14 +20,17 @@
 
 from __future__ import absolute_import
 
-import re, hashlib, time
+import re, hashlib, time, os
 from ast import literal_eval as evaluate
-from tulip import control
+try:
+    from tulip import control
+except Exception:
+    control = None
 from tulip.compat import str, database
 
 
 # noinspection PyUnboundLocalVariable
-def get(function_, time_out, *args, **table):
+def cache(function_, time_out, *args, **table):
 
     try:
 
@@ -52,8 +55,13 @@ def get(function_, time_out, *args, **table):
 
     try:
 
-        control.makeFile(control.dataPath)
-        dbcon = database.connect(control.cacheFile)
+        if control:
+            control.makeFile(control.dataPath)
+            dbcon = database.connect(control.cacheFile)
+        else:
+            db_file = os.path.join(os.path.curdir, 'cache.db')
+            dbcon = database.connect(db_file)
+
         dbcur = dbcon.cursor()
         dbcur.execute("SELECT * FROM {tn} WHERE func = '{f}' AND args = '{a}'".format(tn=table, f=f, a=a))
         match = dbcur.fetchone()
@@ -82,24 +90,43 @@ def get(function_, time_out, *args, **table):
             return r
 
     except Exception:
+
         return
 
     try:
 
         r = repr(r)
         t = int(time.time())
-        dbcur.execute("CREATE TABLE IF NOT EXISTS {} (""func TEXT, ""args TEXT, ""response TEXT, ""added TEXT, ""UNIQUE(func, args)"");".format(table))
+
+        dbcur.execute(
+            "CREATE TABLE IF NOT EXISTS {} (""func TEXT, ""args TEXT, ""response TEXT, ""added TEXT, ""UNIQUE(func, args)"");".format(
+                table))
         dbcur.execute("DELETE FROM {0} WHERE func = '{1}' AND args = '{2}'".format(table, f, a))
         dbcur.execute("INSERT INTO {} Values (?, ?, ?, ?)".format(table), (f, a, r, t))
+
         dbcon.commit()
 
-    except Exception:
-        pass
+        return r
 
-    try:
-        return evaluate(r.encode('utf-8'))
     except Exception:
-        return evaluate(r)
+
+        return
+
+
+# noinspection PyUnboundLocalVariable
+def get(function_, time_out, *args, **table):
+
+    r = cache(function_, time_out, *args, **table)
+
+    if r:
+
+        try:
+
+            return evaluate(r.encode('utf-8'))
+
+        except Exception:
+
+            return evaluate(r)
 
 
 # noinspection PyUnboundLocalVariable
@@ -124,23 +151,39 @@ def timeout(function_, *args, **table):
         table = 'rel_list'
 
     try:
-        control.makeFile(control.dataPath)
-        dbcon = database.connect(control.cacheFile)
+
+        if control:
+
+            control.makeFile(control.dataPath)
+            dbcon = database.connect(control.cacheFile)
+
+        else:
+
+            db_file = os.path.join(os.path.curdir, 'cache.db')
+            dbcon = database.connect(db_file)
+
         dbcur = dbcon.cursor()
         dbcur.execute("SELECT * FROM {tn} WHERE func = '{f}' AND args = '{a}'".format(tn=table, f=f, a=a))
         match = dbcur.fetchone()
+
         return int(match[3])
+
     except Exception:
+
         return
 
 
-def clear(table=None, withyes=True):
+def clear(table=None, withyes=False):
+
     try:
-        control.idle()
+
+        if control:
+
+            control.idle()
 
         if table is None:
             table = ['rel_list', 'rel_lib']
-        elif not type(table) == list:
+        elif not isinstance(table, list):
             table = [table]
 
         if withyes:
@@ -153,12 +196,12 @@ def clear(table=None, withyes=True):
             if not yes:
                 return
 
+        if control:
+            dbcon = database.connect(control.cacheFile)
+            dbcur = dbcon.cursor()
         else:
-
-            pass
-
-        dbcon = database.connect(control.cacheFile)
-        dbcur = dbcon.cursor()
+            dbcon = database.connect(os.path.join(os.path.curdir, 'cache.db'))
+            dbcur = dbcon.cursor()
 
         for t in table:
             try:
@@ -168,7 +211,8 @@ def clear(table=None, withyes=True):
             except Exception:
                 pass
 
-        control.infoDialog(control.lang(30402).encode('utf-8'))
+        if control:
+            control.infoDialog(control.lang(30402).encode('utf-8'))
     except Exception:
         pass
 
