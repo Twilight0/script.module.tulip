@@ -30,7 +30,7 @@ from tulip.compat import str, database
 
 
 # noinspection PyUnboundLocalVariable
-def cache(function_, time_out, *args, **table):
+def get(function_, time_out, *args, **table):
 
     try:
 
@@ -90,43 +90,26 @@ def cache(function_, time_out, *args, **table):
             return r
 
     except Exception:
-
         return
 
     try:
 
         r = repr(r)
         t = int(time.time())
-
         dbcur.execute(
-            "CREATE TABLE IF NOT EXISTS {} (""func TEXT, ""args TEXT, ""response TEXT, ""added TEXT, ""UNIQUE(func, args)"");".format(
-                table))
+            "CREATE TABLE IF NOT EXISTS {} (""func TEXT, ""args TEXT, ""response TEXT, ""added TEXT, ""UNIQUE(func, args)"");".format(table)
+        )
         dbcur.execute("DELETE FROM {0} WHERE func = '{1}' AND args = '{2}'".format(table, f, a))
         dbcur.execute("INSERT INTO {} Values (?, ?, ?, ?)".format(table), (f, a, r, t))
-
         dbcon.commit()
 
-        return r
-
     except Exception:
+        pass
 
-        return
-
-
-# noinspection PyUnboundLocalVariable
-def get(function_, time_out, *args, **table):
-
-    r = cache(function_, time_out, *args, **table)
-
-    if r:
-
-        try:
-
-            return evaluate(r.encode('utf-8'))
-
-        except Exception:
-
-            return evaluate(r)
+    try:
+        return evaluate(r.encode('utf-8'))
+    except Exception:
+        return evaluate(r)
 
 
 # noinspection PyUnboundLocalVariable
@@ -165,7 +148,6 @@ def timeout(function_, *args, **table):
         dbcur = dbcon.cursor()
         dbcur.execute("SELECT * FROM {tn} WHERE func = '{f}' AND args = '{a}'".format(tn=table, f=f, a=a))
         match = dbcur.fetchone()
-
         return int(match[3])
 
     except Exception:
@@ -173,20 +155,18 @@ def timeout(function_, *args, **table):
         return
 
 
-def clear(table=None, withyes=False):
+def clear(table=None, withyes=False, notify=True):
 
     try:
-
         if control:
-
             control.idle()
 
         if table is None:
             table = ['rel_list', 'rel_lib']
-        elif not isinstance(table, list):
+        elif not type(table) == list:
             table = [table]
 
-        if withyes:
+        if withyes and control:
 
             try:
                 yes = control.yesnoDialog(control.lang(30401).encode('utf-8'), '', '')
@@ -211,7 +191,7 @@ def clear(table=None, withyes=False):
             except Exception:
                 pass
 
-        if control:
+        if control and notify:
             control.infoDialog(control.lang(30402).encode('utf-8'))
     except Exception:
         pass
