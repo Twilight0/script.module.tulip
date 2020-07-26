@@ -6,6 +6,7 @@
 - Updated user agents
 - Allow some modules to be used outside of Kodi as standalone ones
 - Allow nextitem to have title and/or name property
+- Add ability to clear bookmarks
 
 [B]2.5.X[/B]
 - Tweaks in client module (updated cfscrape & some minor other tweaks)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-    Tulip routine libraries, based on lambda's lamlib
+    Tulip library
     Author Twilight0
     iso8601 module: https://pypi.python.org/pypi/iso8601
 

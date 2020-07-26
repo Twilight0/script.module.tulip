@@ -1,22 +1,13 @@
 # -*- coding: utf-8 -*-
 
 '''
-    Tulip routine libraries, based on lambda's lamlib
+    Tulip library
     Author Twilight0
 
-        License summary below, for more details please read license.txt file
-
-        This program is free software: you can redistribute it and/or modify
-        it under the terms of the GNU General Public License as published by
-        the Free Software Foundation, either version 2 of the License, or
-        (at your option) any later version.
-        This program is distributed in the hope that it will be useful,
-        but WITHOUT ANY WARRANTY; without even the implied warranty of
-        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-        GNU General Public License for more details.
-        You should have received a copy of the GNU General Public License
-        along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    SPDX-License-Identifier: GPL-3.0-only
+    See LICENSES/GPL-3.0-only for more information.
 '''
+
 
 from __future__ import absolute_import
 
@@ -155,7 +146,13 @@ def timeout(function_, *args, **table):
         return
 
 
-def clear(table=None, withyes=False, notify=True):
+def clear(table=None, withyes=False, notify=True, file_=None):
+
+    if file_ is None:
+        if control:
+            file_ = control.cacheFile
+        else:
+            file_ = os.path.join(os.path.curdir, 'cache.db')
 
     try:
         if control:
@@ -176,12 +173,8 @@ def clear(table=None, withyes=False, notify=True):
             if not yes:
                 return
 
-        if control:
-            dbcon = database.connect(control.cacheFile)
-            dbcur = dbcon.cursor()
-        else:
-            dbcon = database.connect(os.path.join(os.path.curdir, 'cache.db'))
-            dbcur = dbcon.cursor()
+        dbcon = database.connect(file_)
+        dbcur = dbcon.cursor()
 
         for t in table:
             try:
