@@ -20,4 +20,8 @@ class Thread(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
-        self._target(*self._args)
+
+        try:
+            self._target(*self._args)
+        except TypeError:
+            pass
