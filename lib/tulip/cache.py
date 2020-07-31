@@ -146,7 +146,7 @@ def timeout(function_, *args, **table):
         return
 
 
-def clear(table=None, withyes=False, notify=True, file_=None):
+def clear(table=None, withyes=False, notify=True, file_=None, label_yes_no=30401, label_success=30402):
 
     if file_ is None:
         if control:
@@ -166,9 +166,9 @@ def clear(table=None, withyes=False, notify=True, file_=None):
         if withyes and control:
 
             try:
-                yes = control.yesnoDialog(control.lang(30401).encode('utf-8'), '', '')
+                yes = control.yesnoDialog(control.lang(label_yes_no).encode('utf-8'), '', '')
             except Exception:
-                yes = control.yesnoDialog(control.lang(30401), '', '')
+                yes = control.yesnoDialog(control.lang(label_yes_no), '', '')
 
             if not yes:
                 return
@@ -185,16 +185,16 @@ def clear(table=None, withyes=False, notify=True, file_=None):
                 pass
 
         if control and notify:
-            control.infoDialog(control.lang(30402).encode('utf-8'))
+            control.infoDialog(control.lang(label_success).encode('utf-8'))
     except Exception:
         pass
 
 
-def delete(withyes=True):
+def delete(withyes=True, label_yes_no=30401, label_success=30402):
 
     if withyes:
 
-        yes = control.yesnoDialog(control.lang(30401).encode('utf-8'), '', '')
+        yes = control.yesnoDialog(control.lang(label_yes_no).encode('utf-8'), '', '')
 
         if not yes:
             return
@@ -205,4 +205,4 @@ def delete(withyes=True):
 
     control.deleteFile(control.cacheFile)
 
-    control.infoDialog(control.lang(30402).encode('utf-8'))
+    control.infoDialog(control.lang(label_success).encode('utf-8'))
