@@ -8,6 +8,7 @@
 - Allow nextitem to have title and/or name property
 - Add ability to clear all bookmarks at once
 - Add integer labels as optional parameters
+- A few changes for Kodi 19+
 
 [B]2.5.X[/B]
 - Tweaks in client module (updated cfscrape & some minor other tweaks)

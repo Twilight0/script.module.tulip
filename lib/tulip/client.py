@@ -14,7 +14,7 @@ from __future__ import absolute_import, division, print_function
 from tulip.cleantitle import replaceHTMLCodes
 from tulip.parsers import parseDOM, parseDOM2
 from tulip.user_agents import randomagent, random_mobile_agent, CHROME, IPHONE_6
-import sys, traceback, json, socket
+import sys, traceback, json, socket, ssl
 from os import sep
 from os.path import basename, splitext
 try:
@@ -62,14 +62,26 @@ def request(
         if proxy is not None:
 
             if username is not None and password is not None:
-                passmgr = urllib2.ProxyBasicAuthHandler()
-                passmgr.add_password(None, uri=url, user=username, passwd=password)
+
+                if is_py3:
+
+                    passmgr = urllib2.HTTPPasswordMgr()
+                    passmgr.add_password(None, uri=url, user=username, passwd=password)
+
+                else:
+
+                    passmgr = urllib2.ProxyBasicAuthHandler()
+                    passmgr.add_password(None, uri=url, user=username, passwd=password)
+
                 handlers += [
                     urllib2.ProxyHandler({'http': '{0}'.format(proxy)}), urllib2.HTTPHandler,
                     urllib2.ProxyBasicAuthHandler(passmgr)
                 ]
+
             else:
+
                 handlers += [urllib2.ProxyHandler({'http':'{0}'.format(proxy)}), urllib2.HTTPHandler]
+
             opener = urllib2.build_opener(*handlers)
             urllib2.install_opener(opener)
 
@@ -81,39 +93,13 @@ def request(
             opener = urllib2.build_opener(*handlers)
             urllib2.install_opener(opener)
 
-        try:
-            import platform
-            is_XBOX = platform.uname()[1] == 'XboxOne'
-        except Exception:
-            is_XBOX = False
-
-        if not verify and sys.version_info >= (2, 7, 12):
+        if not verify or ((2, 7, 8) < sys.version_info < (2, 7, 12)):
 
             try:
 
-                import ssl
-                ssl_context = ssl._create_unverified_context()
-                handlers += [urllib2.HTTPSHandler(context=ssl_context)]
-                opener = urllib2.build_opener(*handlers)
-                urllib2.install_opener(opener)
-
-            except Exception:
-
-                pass
-
-        elif verify and ((2, 7, 8) < sys.version_info < (2, 7, 12) or is_XBOX):
-
-            try:
-
-                import ssl
-                try:
-                    import _ssl
-                    CERT_NONE = _ssl.CERT_NONE
-                except Exception:
-                    CERT_NONE = ssl.CERT_NONE
                 ssl_context = ssl.create_default_context()
                 ssl_context.check_hostname = False
-                ssl_context.verify_mode = CERT_NONE
+                ssl_context.verify_mode = ssl.CERT_NONE
                 handlers += [urllib2.HTTPSHandler(context=ssl_context)]
                 opener = urllib2.build_opener(*handlers)
                 urllib2.install_opener(opener)
@@ -210,7 +196,7 @@ def request(
         if output == 'cookie':
 
             try:
-                result = '; '.join(['%s=%s' % (i.name, i.value) for i in cookies])
+                result = '; '.join(['{0}={1}'.format(i.name, i.value) for i in cookies])
             except Exception:
                 pass
 
