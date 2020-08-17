@@ -25,7 +25,7 @@ except:
 
 from tulip.compat import (
     urllib2, cookielib, urlparse, URLopener, unquote, str, urlsplit, urlencode, bytes, is_py3, addinfourl, py3_dec,
-    iteritems
+    iteritems, HTTPError
 )
 
 
@@ -174,7 +174,7 @@ def request(
 
             response = urllib2.urlopen(req, timeout=int(timeout))
 
-        except urllib2.HTTPError as response:
+        except HTTPError as response:
 
             if response.code == 503:
 
