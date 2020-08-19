@@ -402,4 +402,17 @@ def parseDOM2(html, name='', attrs=None, req=False, exclude_comments=False):
     return all_results
 
 
-__all__ = ['itertags', 'parseDOM', 'parseDOM2', 'itertags_wrapper']
+def parse_headers(string):
+
+    """
+    Converts a multi-line response/request headers string into a dictionary
+    :param string: string of headers
+    :return: dictionary of response headers
+    """
+
+    headers = dict([line.partition(': ')[::2] for line in string.splitlines()])
+
+    return headers
+
+
+__all__ = ['itertags', 'parseDOM', 'parseDOM2', 'itertags_wrapper', 'parse_headers']

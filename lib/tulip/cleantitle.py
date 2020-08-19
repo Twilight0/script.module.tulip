@@ -71,6 +71,18 @@ def strip_accents(string):
     return result
 
 
+def stripTags(html):
+
+    sub_start = html.find("<")
+    sub_end = html.find(">")
+    while sub_end > sub_start > -1:
+        html = html.replace(html[sub_start:sub_end + 1], "").strip()
+        sub_start = html.find("<")
+        sub_end = html.find(">")
+
+    return html
+
+
 def replaceHTMLCodes(txt):
 
     txt = re.sub("(&#[0-9]+)([^;^0-9]+)", "\\1;\\2", txt)

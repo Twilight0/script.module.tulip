@@ -11,8 +11,8 @@
 
 from __future__ import absolute_import, division, print_function
 
-from tulip.cleantitle import replaceHTMLCodes
-from tulip.parsers import parseDOM, parseDOM2
+from tulip.cleantitle import replaceHTMLCodes, stripTags
+from tulip.parsers import parseDOM, parseDOM2, parse_headers
 from tulip.user_agents import randomagent, random_mobile_agent, CHROME, IPHONE_6
 import sys, traceback, json, socket, ssl
 from os import sep
@@ -25,10 +25,8 @@ except:
 
 from tulip.compat import (
     urllib2, cookielib, urlparse, URLopener, unquote, str, urlsplit, urlencode, bytes, is_py3, addinfourl, py3_dec,
-    iteritems, HTTPError
+    iteritems, HTTPError, quote, py2_enc, urlunparse
 )
-
-
 
 
 # noinspection PyUnboundLocalVariable
@@ -464,31 +462,6 @@ def download_media(url, path, file_name, initiate_int='', completion_int='', exc
             control.infoDialog('Download_complete for file name {0}'.format(file_name))
 
 
-def parse_headers(string):
-
-    """
-    Converts a multi-line response/request headers string into a dictionary
-    :param string: string of headers
-    :return: dictionary of response headers
-    """
-
-    headers = dict([line.partition(': ')[::2] for line in string.splitlines()])
-
-    return headers
-
-
-def stripTags(html):
-
-    sub_start = html.find("<")
-    sub_end = html.find(">")
-    while sub_end > sub_start > -1:
-        html = html.replace(html[sub_start:sub_end + 1], "").strip()
-        sub_start = html.find("<")
-        sub_end = html.find(">")
-
-    return html
-
-
 def parseJSString(s):
     try:
         offset = 1 if s[0] == '+' else 0
@@ -496,6 +469,36 @@ def parseJSString(s):
         return val
     except Exception:
         pass
+
+
+def quote_paths(url):
+
+    """
+    This function will quote paths **only** in a given url
+    :param url: string or unicode
+    :return: joined url string
+    """
+
+    try:
+
+        url = py2_enc(url)
+
+        if url.startswith('http'):
+
+            parsed = urlparse(url)
+            processed_path = '/'.join([quote(i) for i in parsed.path.split('/')])
+            url = urlunparse(parsed._replace(path=processed_path))
+
+            return url
+
+        else:
+
+            path = '/'.join([quote(i) for i in url.split('/')])
+            return path
+
+    except Exception:
+
+        return url
 
 
 def check_connection(host="1.1.1.1", port=53, timeout=3):
@@ -510,5 +513,5 @@ def check_connection(host="1.1.1.1", port=53, timeout=3):
 
 __all__ = [
     'parseDOM', 'request', 'stripTags', 'retriever', 'replaceHTMLCodes', 'parseJSString', 'parse_headers',
-    'url2name', 'get_extension', 'check_connection', 'parseDOM2'
+    'url2name', 'get_extension', 'check_connection', 'parseDOM2', 'quote_paths'
 ]
