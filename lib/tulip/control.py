@@ -45,6 +45,7 @@ monitor = xbmc.Monitor
 wait = monitor().waitForAbort
 aborted = monitor().abortRequested
 cleanmovietitle = xbmc.getCleanMovieTitle
+getregion = xbmc.getRegion
 
 transPath = xbmc.translatePath
 skinPath = transPath('special://skin/')
