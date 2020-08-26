@@ -10,9 +10,11 @@ import posixpath
 
 from tulip.compat import urlopen, Request, HTTPError, urlparse, urljoin
 
+
 from tulip.m3u8.model import (
     M3U8, Segment, SegmentList, PartialSegment, PartialSegmentList, Key, Playlist, IFramePlaylist, Media, MediaList,
-    PlaylistList, Start, RenditionReport, RenditionReportList, ServerControl, Skip, PartInformation
+    PlaylistList, Start, RenditionReport, RenditionReportList, ServerControl, Skip, PartInformation, PreloadHint,
+    DateRange, DateRangeList
 )
 from tulip.m3u8.parser import parse, is_url, ParseError
 
@@ -21,7 +23,7 @@ PYTHON_MAJOR_VERSION = sys.version_info
 __all__ = (
     'M3U8', 'Segment', 'SegmentList', 'PartialSegment', 'PartialSegmentList', 'Key', 'Playlist', 'IFramePlaylist',
     'Media', 'MediaList', 'PlaylistList', 'Start', 'RenditionReport', 'RenditionReportList', 'ServerControl', 'Skip',
-    'PartInformation', 'loads', 'load', 'parse', 'ParseError'
+    'PartInformation', 'PreloadHint' 'DateRange', 'DateRangeList', 'loads', 'load', 'parse', 'ParseError'
 )
 
 def loads(content, uri=None, custom_tags_parser=None):
@@ -39,14 +41,12 @@ def loads(content, uri=None, custom_tags_parser=None):
 
 
 def load(uri, timeout=None, headers={}, custom_tags_parser=None, verify_ssl=True):
-
     '''
     Retrieves the content from a given URI and returns a M3U8 object.
     Raises ValueError if invalid content or IOError if request fails.
     Raises socket.timeout(python 2.7+) or urllib2.URLError(python 2.6) if
     timeout happens when loading from uri
     '''
-
     if is_url(uri):
         return _load_from_uri(uri, timeout, headers, custom_tags_parser, verify_ssl)
     else:

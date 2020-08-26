@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
+# coding: utf-8
 # Copyright 2014 Globo.com Player authors. All rights reserved.
 # Use of this source code is governed by a MIT License
 # license that can be found in the LICENSE file.
-
-from __future__ import absolute_import, division, unicode_literals
 
 import os
 import errno
@@ -211,6 +208,9 @@ class M3U8(object):
         self.session_keys = [ SessionKey(base_uri=self.base_uri, **params) if params else None
                       for params in self.data.get('session_keys', []) ]
 
+        preload_hint = self.data.get('preload_hint', None)
+        self.preload_hint = preload_hint and PreloadHint(base_uri=self.base_uri, **preload_hint)
+
     def __unicode__(self):
         return self.dumps()
 
@@ -223,13 +223,17 @@ class M3U8(object):
         self._base_uri = new_base_uri
         self.media.base_uri = new_base_uri
         self.playlists.base_uri = new_base_uri
+        self.iframe_playlists.base_uri = new_base_uri
         self.segments.base_uri = new_base_uri
+        self.rendition_reports.base_uri = new_base_uri
         for key in self.keys:
             if key:
                 key.base_uri = new_base_uri
         for key in self.session_keys:
             if key:
                 key.base_uri = new_base_uri
+        if self.preload_hint:
+            self.preload_hint.base_uri = new_base_uri
 
     @property
     def base_path(self):
@@ -252,6 +256,10 @@ class M3U8(object):
         self.media.base_path = self._base_path
         self.segments.base_path = self._base_path
         self.playlists.base_path = self._base_path
+        self.iframe_playlists.base_path = self._base_path
+        self.rendition_reports.base_path = self._base_path
+        if self.preload_hint:
+            self.preload_hint.base_path = self._base_path
 
 
     def add_playlist(self, playlist):
@@ -317,6 +325,9 @@ class M3U8(object):
             output.append(str(key))
 
         output.append(str(self.segments))
+
+        if self.preload_hint:
+            output.append(str(self.preload_hint))
 
         if self.rendition_reports:
             output.append(str(self.rendition_reports))
@@ -405,16 +416,22 @@ class Segment(BasePathMixin):
 
     `parts`
       partial segments that make up this segment
+
+    `dateranges`
+      any dateranges that should  preceed the segment
+
+    `gap_tag`
+      GAP tag indicates that a Media Segment is missing
     '''
 
     def __init__(self, uri=None, base_uri=None, program_date_time=None, current_program_date_time=None,
                  duration=None, title=None, byterange=None, cue_out=False, cue_out_start=False,
                  cue_in=False, discontinuity=False, key=None, scte35=None, scte35_duration=None,
-                 keyobject=None, parts=None, init_section=None):
+                 keyobject=None, parts=None, init_section=None, dateranges=None, gap_tag=None):
         self.uri = uri
         self.duration = duration
         self.title = title
-        self.base_uri = base_uri
+        self._base_uri = base_uri
         self.byterange = byterange
         self.program_date_time = program_date_time
         self.current_program_date_time = current_program_date_time
@@ -425,11 +442,13 @@ class Segment(BasePathMixin):
         self.scte35 = scte35
         self.scte35_duration = scte35_duration
         self.key = keyobject
-        self.parts = PartialSegmentList( [ PartialSegment(base_uri=self.base_uri, **partial) for partial in parts ] if parts else [] )
+        self.parts = PartialSegmentList( [ PartialSegment(base_uri=self._base_uri, **partial) for partial in parts ] if parts else [] )
         if init_section is not None:
-            self.init_section = InitializationSection(self.base_uri, **init_section)
+            self.init_section = InitializationSection(self._base_uri, **init_section)
         else:
             self.init_section = None
+        self.dateranges = DateRangeList( [ DateRange(**daterange) for daterange in dateranges ] if dateranges else [] )
+        self.gap_tag = gap_tag
 
         # Key(base_uri=base_uri, **key) if key else None
 
@@ -438,7 +457,6 @@ class Segment(BasePathMixin):
 
     def dumps(self, last_segment):
         output = []
-
 
         if last_segment and self.key != last_segment.key:
             output.append(str(self.key))
@@ -466,6 +484,10 @@ class Segment(BasePathMixin):
             output.append('#EXT-X-PROGRAM-DATE-TIME:%s\n' %
                           format_date_time(self.program_date_time))
 
+        if len(self.dateranges):
+            output.append(str(self.dateranges))
+            output.append('\n')
+
         if self.cue_out_start:
             output.append('#EXT-X-CUE-OUT{}\n'.format(
                 (':' + self.scte35_duration) if self.scte35_duration else ''))
@@ -488,6 +510,9 @@ class Segment(BasePathMixin):
             if self.byterange:
                 output.append('#EXT-X-BYTERANGE:%s\n' % self.byterange)
 
+            if self.gap_tag:
+                output.append('#EXT-X-GAP\n')
+
             output.append(self.uri)
 
         return ''.join(output)
@@ -495,6 +520,27 @@ class Segment(BasePathMixin):
     def __str__(self):
         return self.dumps(None)
 
+    @property
+    def base_path(self):
+        return super(Segment, self).base_path
+
+    @base_path.setter
+    def base_path(self, newbase_path):
+        super(Segment, self.__class__).base_path.fset(self, newbase_path)
+        self.parts.base_path = newbase_path
+        if self.init_section is not None:
+            self.init_section.base_path = newbase_path
+
+    @property
+    def base_uri(self):
+        return self._base_uri
+
+    @base_uri.setter
+    def base_uri(self, newbase_uri):
+        self._base_uri = newbase_uri
+        self.parts.base_uri = newbase_uri
+        if self.init_section is not None:
+            self.init_section.base_uri = newbase_uri
 
 class SegmentList(list, GroupedBasePathMixin):
 
@@ -543,12 +589,21 @@ class PartialSegment(BasePathMixin):
       the Partial Segment contains an independent frame
 
     `gap`
-      the Partial Segment is not available
+      GAP attribute indicates the Partial Segment is not available
+
+    `dateranges`
+      any dateranges that should preceed the partial segment
+
+    `gap_tag`
+      GAP tag indicates one or more of the parent Media Segment's Partial
+      Segments have a GAP=YES attribute. This tag should appear immediately
+      after the first EXT-X-PART tag in the Parent Segment with a GAP=YES
+      attribute.
     '''
 
     def __init__(self, base_uri, uri, duration, program_date_time=None,
                  current_program_date_time=None, byterange=None,
-                 independent=None, gap=None):
+                 independent=None, gap=None, dateranges=None, gap_tag=None):
         self.base_uri = base_uri
         self.uri = uri
         self.duration = duration
@@ -557,11 +612,22 @@ class PartialSegment(BasePathMixin):
         self.byterange = byterange
         self.independent = independent
         self.gap = gap
+        self.dateranges = DateRangeList( [ DateRange(**daterange) for daterange in dateranges ] if dateranges else [] )
+        self.gap_tag = gap_tag
 
     def dumps(self, last_segment):
-        output = ['#EXT-X-PART:DURATION=%s,URI="%s"' % (
+        output = []
+
+        if len(self.dateranges):
+            output.append(str(self.dateranges))
+            output.append('\n')
+
+        if self.gap_tag:
+            output.append('#EXT-X-GAP\n')
+
+        output.append('#EXT-X-PART:DURATION=%s,URI="%s"' % (
             int_or_float_to_string(self.duration), self.uri
-        )]
+        ))
 
         if self.independent:
             output.append(',INDEPENDENT=%s' % self.independent)
@@ -603,13 +669,14 @@ class Key(BasePathMixin):
 
     tag = ext_x_key
 
-    def __init__(self, method, base_uri, uri=None, iv=None, keyformat=None, keyformatversions=None):
+    def __init__(self, method, base_uri, uri=None, iv=None, keyformat=None, keyformatversions=None, **kwargs):
         self.method = method
         self.uri = uri
         self.iv = iv
         self.keyformat = keyformat
         self.keyformatversions = keyformatversions
         self.base_uri = base_uri
+        self._extra_params = kwargs
 
     def __str__(self):
         output = [
@@ -1036,6 +1103,35 @@ class PartInformation(object):
     def __str__(self):
         return self.dumps()
 
+class PreloadHint(BasePathMixin):
+    def __init__(self, type, base_uri, uri, byterange_start=None, byterange_length=None):
+        self.hint_type = type
+        self.base_uri = base_uri
+        self.uri = uri
+        self.byterange_start = byterange_start
+        self.byterange_length = byterange_length
+
+    def __getitem__(self, item):
+        return getattr(self, item)
+
+    def dumps(self):
+        hint = []
+        hint.append('TYPE=' + self.hint_type)
+        hint.append('URI=' + quoted(self.uri))
+
+        for attr in ['byterange_start', 'byterange_length']:
+            if self[attr] is not None:
+                hint.append('%s=%s' % (
+                    denormalize_attribute(attr),
+                    int_or_float_to_string(self[attr])
+                ))
+
+        return ('#EXT-X-PRELOAD-HINT:' + ','.join(hint))
+
+    def __str__(self):
+        return self.dumps()
+
+
 class SessionData(object):
     def __init__(self, data_id, value=None, uri=None, language=None):
         self.data_id = data_id
@@ -1058,6 +1154,62 @@ class SessionData(object):
     def __str__(self):
         return self.dumps()
 
+class DateRangeList(TagList):
+    pass
+
+class DateRange(object):
+    def __init__(self, **kwargs):
+        self.id = kwargs['id']
+        self.start_date = kwargs.get('start_date')
+        self.class_ = kwargs.get('class')
+        self.end_date = kwargs.get('end_date')
+        self.duration = kwargs.get('duration')
+        self.planned_duration = kwargs.get('planned_duration')
+        self.scte35_cmd = kwargs.get('scte35_cmd')
+        self.scte35_out = kwargs.get('scte35_out')
+        self.scte35_in = kwargs.get('scte35_in')
+        self.end_on_next = kwargs.get('end_on_next')
+        self.x_client_attrs = [ (attr, kwargs.get(attr)) for attr in kwargs if attr.startswith('x_') ]
+
+    def dumps(self):
+        daterange = []
+        daterange.append('ID=' + quoted(self.id))
+
+        # whilst START-DATE is technically REQUIRED by the spec, this is
+        # contradicted by an example in the same document (see
+        # https://tools.ietf.org/html/rfc8216#section-8.10), and also by
+        # real-world implementations, so we make it optional here
+        if (self.start_date):
+            daterange.append('START-DATE=' + quoted(self.start_date))
+        if (self.class_):
+            daterange.append('CLASS=' + quoted(self.class_))
+        if (self.end_date):
+            daterange.append('END-DATE=' + quoted(self.end_date))
+        if (self.duration):
+            daterange.append('DURATION=' + int_or_float_to_string(self.duration))
+        if (self.planned_duration):
+            daterange.append('PLANNED-DURATION=' + int_or_float_to_string(self.planned_duration))
+        if (self.scte35_cmd):
+            daterange.append('SCTE35-CMD=' + self.scte35_cmd)
+        if (self.scte35_out):
+            daterange.append('SCTE35-OUT=' + self.scte35_out)
+        if (self.scte35_in):
+            daterange.append('SCTE35-IN=' + self.scte35_in)
+        if (self.end_on_next):
+            daterange.append('END-ON-NEXT=' + self.end_on_next)
+
+        # client attributes sorted alphabetically output order is predictable
+        for attr, value in sorted(self.x_client_attrs):
+            daterange.append('%s=%s' % (
+                denormalize_attribute(attr),
+                value
+            ))
+
+        return '#EXT-X-DATERANGE:' + ','.join(daterange)
+
+    def __str__(self):
+        return self.dumps()
+
 def find_key(keydata, keylist):
     if not keydata:
         return None
@@ -1073,7 +1225,6 @@ def find_key(keydata, keylist):
 
 def denormalize_attribute(attribute):
     return attribute.replace('_', '-').upper()
-
 
 def quoted(string):
     return '"%s"' % string

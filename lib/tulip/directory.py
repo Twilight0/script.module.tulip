@@ -404,7 +404,7 @@ def resolve(
     from tulip.init import syshandle
 
     # Fail gracefully instead of making Kodi complain.
-    if url is None:
+    if not url:
         from kodi_six.xbmc import log
         log('URL was not provided, failure to resolve stream')
         return

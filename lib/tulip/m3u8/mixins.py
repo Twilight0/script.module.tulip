@@ -1,15 +1,10 @@
-# -*- coding: utf-8 -*-
-
-# Copyright 2014 Globo.com Player authors. All rights reserved.
-# Use of this source code is governed by a MIT License
-# license that can be found in the LICENSE file.
-from __future__ import absolute_import, division, unicode_literals
 
 import os
 from tulip.m3u8.parser import is_url
 from tulip.compat import urljoin
 
 def _urijoin(base_uri, path):
+
     if is_url(base_uri):
         return urljoin(base_uri, path)
     else:
