@@ -11,6 +11,10 @@
 
 class URLDispatcher:
 
+    """
+    Based on tknorris URLDispatcher which works with 'modes'
+    """
+
     def __init__(self):
 
         self.func_registry = {}; self.args_registry = {}; self.kwargs_registry = {}
@@ -94,16 +98,17 @@ class URLDispatcher:
 
         from kodi_six import xbmc
 
-        for action in sorted(self.func_registry, key=lambda x: int(x)):
+        for action in self.func_registry:
 
             value = self.func_registry[action]
             args = self.args_registry[action]
             kwargs = self.kwargs_registry[action]
-            line = 'Action {0} Registered - {1} args: {2} kwargs: {3}'.format(str(action), str(value), str(args), str(kwargs))
+            line = 'Action {0} Registered - {1} args: {2} kwargs: {3}'.format(
+                str(action), str(value), str(args), str(kwargs)
+            )
             xbmc.log(line, xbmc.LOGNOTICE)
 
     # since all params are passed as strings, do any conversions necessary to get good types (e.g. boolean)
-
     def __coerce(self, arg):
 
         try:
@@ -121,3 +126,8 @@ class URLDispatcher:
 
         except:
             return arg
+
+
+urldispatcher = URLDispatcher()
+
+__all__ = ['urldispatcher']

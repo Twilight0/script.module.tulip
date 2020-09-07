@@ -748,3 +748,27 @@ def open_web_browser(url):
         import webbrowser
 
         return webbrowser.open(url)
+
+
+def update_repositories():
+
+    xbmc.executebuiltin('UpdateAddonRepos')
+
+
+def update_addons():
+
+    xbmc.executebuiltin('UpdateLocalAddons')
+
+
+def install_addon(addon_id, send_yes=True):
+
+    xbmc.executebuiltin('InstallAddon({0})'.format(addon_id))
+
+    if send_yes:
+
+        while not wait(1):
+            if xbmc.getCondVisibility('Window.IsActive(yesnodialog)'):
+                xbmc.executebuiltin('SendClick(yesnodialog,11)')
+                break
+            elif not xbmc.getCondVisibility('Window.IsActive(yesnodialog)'):
+                break

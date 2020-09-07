@@ -8,6 +8,10 @@
 - Allow nextitem to have title and/or name property
 - Add ability to clear all bookmarks at once
 - Add integer labels as optional parameters
+- Moved a few functions from client to other modules
+- Added the quote paths function, useful for non ascii characters in urls
+- Fix in url_dispatcher module
+- Added a few functions into control module
 - A few changes for Kodi 19+
 
 [B]2.5.X[/B]
