@@ -421,9 +421,9 @@ def resolve(
     if not verify and 'verifypeer' not in headers:
 
         if headers:
-            headers += '&verifypeer=False'
+            headers += '&verifypeer=false'
         else:
-            headers = 'verifypeer=False'
+            headers = 'verifypeer=false'
 
     if not dash and headers:
         url = '|'.join([url, headers])
