@@ -292,9 +292,9 @@ def request(
 
         print(traceback.print_tb(tb))
         if log_debug:
-            log_debug('Client module failed, reason of failure: ' + repr(reason))
+            log_debug('Request failed, reason: ' + repr(reason) + 'on url:' + url)
         else:
-            print('Client module failed, reason of failure: ' + repr(reason))
+            print('Request failed, reason: ' + repr(reason) + 'on url:' + url)
 
         return
 
