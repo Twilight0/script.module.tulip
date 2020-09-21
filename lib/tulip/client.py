@@ -292,9 +292,9 @@ def request(
 
         print(traceback.print_tb(tb))
         if log_debug:
-            log_debug('Request failed, reason: ' + repr(reason) + 'on url:' + url)
+            log_debug('Request failed, reason: ' + repr(reason) + 'on url: ' + url)
         else:
-            print('Request failed, reason: ' + repr(reason) + 'on url:' + url)
+            print('Request failed, reason: ' + repr(reason) + 'on url: ' + url)
 
         return
 
