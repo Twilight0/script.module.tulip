@@ -11,14 +11,26 @@
 
 from __future__ import absolute_import
 
-import re, hashlib, time, os
+import re
+import functools
+import time
+import hashlib
+import os
+import shutil
+
 from ast import literal_eval as evaluate
+from tulip.compat import str, database, is_py2, pickle
+from tulip.log import log_debug
+
 try:
     from tulip import control
+    cache_path = control.join(control.dataPath, 'cache')
 except Exception:
     control = None
-from tulip.compat import str, database
+    cache_path = os.path.join(os.curdir, 'function_cache')
 
+if not os.path.exists(cache_path):
+    os.makedirs(cache_path)
 
 # noinspection PyUnboundLocalVariable
 def get(function_, time_out, *args, **table):
@@ -206,3 +218,111 @@ def delete(withyes=True, label_yes_no=30401, label_success=30402):
     control.deleteFile(control.cacheFile)
 
     control.infoDialog(control.lang(label_success).encode('utf-8'))
+
+# Functions below shamelessly taken and adapted from ResolveURL, so thanks to all of its contributors
+
+def reset_cache(notify=False, label_success=30402):
+
+    try:
+        shutil.rmtree(cache_path)
+        if notify:
+            control.infoDialog(control.lang(label_success).encode('utf-8'))
+        return True
+    except Exception as e:
+        log_debug('Failed to create cache: {0}: {1}'.format(cache_path, e))
+        return False
+
+
+def _get_func(name, args=None, kwargs=None, cache_limit=1):
+
+    now = time.time()
+    max_age = now - (cache_limit * 60 * 60)
+
+    if args is None:
+        args = []
+
+    if kwargs is None:
+        kwargs = {}
+
+    full_path = os.path.join(cache_path, _get_filename(name, args, kwargs))
+
+    if os.path.exists(full_path):
+
+        mtime = os.path.getmtime(full_path)
+
+        if mtime >= max_age:
+
+            with open(full_path, 'rb') as f:
+                pickled_result = f.read()
+
+            return True, pickle.loads(pickled_result)
+
+    return False, None
+
+
+def _save_func(name, args=None, kwargs=None, result=None):
+
+    try:
+
+        if args is None:
+            args = []
+
+        if kwargs is None:
+            kwargs = {}
+
+        pickled_result = pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL)
+        full_path = os.path.join(cache_path, _get_filename(name, args, kwargs))
+
+        with open(full_path, 'wb') as f:
+            f.write(pickled_result)
+
+    except Exception as e:
+
+        log_debug('Failure during cache write: {0}'.format(e))
+
+
+def _get_filename(name, args, kwargs):
+
+    if is_py2:
+        arg_hash = hashlib.md5(name).hexdigest() + hashlib.md5(str(args)).hexdigest() + hashlib.md5(str(kwargs)).hexdigest()
+    else:
+        arg_hash = hashlib.md5(name.encode('utf8')).hexdigest() + hashlib.md5(str(args).encode('utf8')).hexdigest() + hashlib.md5(str(kwargs).encode('utf8')).hexdigest()
+
+    return arg_hash
+
+
+def cache_method(cache_limit):
+
+    def wrap(func):
+
+        @functools.wraps(func)
+        def memoizer(*args, **kwargs):
+
+            if args:
+
+                klass, real_args = args[0], args[1:]
+                full_name = '%s.%s.%s' % (klass.__module__, klass.__class__.__name__, func.__name__)
+
+            else:
+
+                full_name = func.__name__
+                real_args = args
+
+            in_cache, result = _get_func(full_name, real_args, kwargs, cache_limit=cache_limit)
+
+            if in_cache:
+
+                log_debug('Using method cache for: |{0}|{1}|{2}| -> |{3}|'.format(full_name, args, kwargs, len(pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL))))
+                return result
+
+            else:
+
+                log_debug('Calling cached method: |{0}|{1}|{2}|'.format(full_name, args, kwargs))
+                result = func(*args, **kwargs)
+                _save_func(full_name, real_args, kwargs, result)
+
+                return result
+
+        return memoizer
+
+    return wrap

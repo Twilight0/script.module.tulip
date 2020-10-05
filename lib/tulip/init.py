@@ -24,7 +24,7 @@ sysaddon = argv[0]
 
 try:
 
-    params_tuple = parse_qsl(argv[2].replace('?',''))
+    params_tuple = parse_qsl(argv[2][1:])
     params = dict(params_tuple)
 
 except IndexError:

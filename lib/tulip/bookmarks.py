@@ -88,6 +88,7 @@ def get(file_=control.bookmarksFile):
         dbcur = dbcon.cursor()
         dbcur.execute("SELECT * FROM bookmark")
         items = dbcur.fetchall()
+
         try:
             items = [evaluate(i[1].encode('utf-8')) for i in items]
         except Exception:

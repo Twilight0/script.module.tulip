@@ -6,4 +6,6 @@ lib/tulip/__pycache__/
 
 *.pyc
 
+\.env
+
 lib/tulip/m3u8/.fuse_hidden*
