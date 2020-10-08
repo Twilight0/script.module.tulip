@@ -29,9 +29,6 @@ except Exception:
     control = None
     cache_path = os.path.join(os.curdir, 'function_cache')
 
-if not os.path.exists(cache_path):
-    os.makedirs(cache_path)
-
 # noinspection PyUnboundLocalVariable
 def get(function_, time_out, *args, **table):
 
@@ -220,51 +217,31 @@ def delete(withyes=True, label_yes_no=30401, label_success=30402):
 
 # Functions below shamelessly taken and adapted from ResolveURL, so thanks to all of its contributors
 
-def reset_cache(notify=False, label_success=30402):
+class FunctionCache:
 
-    try:
-        shutil.rmtree(cache_path)
-        if notify:
-            control.infoDialog(control.lang(label_success).encode('utf-8'))
-        return True
-    except Exception as e:
-        if control:
-            log_debug('Failed to create cache: {0}: {1}'.format(cache_path, e))
-        else:
-            print('Failed to create cache: {0}: {1}'.format(cache_path, e))
-        return False
+    def __init__(self):
 
+        if not os.path.exists(cache_path):
+            os.makedirs(cache_path)
 
-def _get_func(name, args=None, kwargs=None, cache_limit=1):
+    def reset_cache(self, notify=False, label_success=30402):
 
-    now = time.time()
-    max_age = now - (cache_limit * 60 * 60)
+        try:
+            shutil.rmtree(cache_path)
+            if notify:
+                control.infoDialog(control.lang(label_success).encode('utf-8'))
+            return True
+        except Exception as e:
+            if control:
+                log_debug('Failed to create cache: {0}: {1}'.format(cache_path, e))
+            else:
+                print('Failed to create cache: {0}: {1}'.format(cache_path, e))
+            return False
 
-    if args is None:
-        args = []
+    def _get_func(self, name, args=None, kwargs=None, cache_limit=1):
 
-    if kwargs is None:
-        kwargs = {}
-
-    full_path = os.path.join(cache_path, _get_filename(name, args, kwargs))
-
-    if os.path.exists(full_path):
-
-        mtime = os.path.getmtime(full_path)
-
-        if mtime >= max_age:
-
-            with open(full_path, 'rb') as f:
-                pickled_result = f.read()
-
-            return True, pickle.loads(pickled_result)
-
-    return False, None
-
-
-def _save_func(name, args=None, kwargs=None, result=None):
-
-    try:
+        now = time.time()
+        max_age = now - (cache_limit * 60 * 60)
 
         if args is None:
             args = []
@@ -272,68 +249,91 @@ def _save_func(name, args=None, kwargs=None, result=None):
         if kwargs is None:
             kwargs = {}
 
-        pickled_result = pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL)
-        full_path = os.path.join(cache_path, _get_filename(name, args, kwargs))
+        full_path = os.path.join(cache_path, self._get_filename(name, args, kwargs))
 
-        with open(full_path, 'wb') as f:
-            f.write(pickled_result)
+        if os.path.exists(full_path):
 
-    except Exception as e:
+            mtime = os.path.getmtime(full_path)
 
-        if control:
-            log_debug('Failure during cache write: {0}'.format(e))
+            if mtime >= max_age:
+
+                with open(full_path, 'rb') as f:
+                    pickled_result = f.read()
+
+                return True, pickle.loads(pickled_result)
+
+        return False, None
+
+    def _save_func(self, name, args=None, kwargs=None, result=None):
+
+        try:
+
+            if args is None:
+                args = []
+
+            if kwargs is None:
+                kwargs = {}
+
+            pickled_result = pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL)
+            full_path = os.path.join(cache_path, self._get_filename(name, args, kwargs))
+
+            with open(full_path, 'wb') as f:
+                f.write(pickled_result)
+
+        except Exception as e:
+
+            if control:
+                log_debug('Failure during cache write: {0}'.format(e))
+            else:
+                print('Failure during cache write: {0}'.format(e))
+
+    def _get_filename(self, name, args, kwargs):
+
+        if is_py2:
+            arg_hash = hashlib.md5(name).hexdigest() + hashlib.md5(str(args)).hexdigest() + hashlib.md5(str(kwargs)).hexdigest()
         else:
-            print('Failure during cache write: {0}'.format(e))
+            arg_hash = hashlib.md5(name.encode('utf8')).hexdigest() + hashlib.md5(str(args).encode('utf8')).hexdigest() + hashlib.md5(str(kwargs).encode('utf8')).hexdigest()
 
+        return arg_hash
 
-def _get_filename(name, args, kwargs):
+    def cache_method(self, cache_limit):
 
-    if is_py2:
-        arg_hash = hashlib.md5(name).hexdigest() + hashlib.md5(str(args)).hexdigest() + hashlib.md5(str(kwargs)).hexdigest()
-    else:
-        arg_hash = hashlib.md5(name.encode('utf8')).hexdigest() + hashlib.md5(str(args).encode('utf8')).hexdigest() + hashlib.md5(str(kwargs).encode('utf8')).hexdigest()
+        def wrap(func):
 
-    return arg_hash
+            @functools.wraps(func)
+            def memoizer(*args, **kwargs):
 
+                if args:
 
-def cache_method(cache_limit):
+                    klass, real_args = args[0], args[1:]
+                    full_name = '%s.%s.%s' % (klass.__module__, klass.__class__.__name__, func.__name__)
 
-    def wrap(func):
-
-        @functools.wraps(func)
-        def memoizer(*args, **kwargs):
-
-            if args:
-
-                klass, real_args = args[0], args[1:]
-                full_name = '%s.%s.%s' % (klass.__module__, klass.__class__.__name__, func.__name__)
-
-            else:
-
-                full_name = func.__name__
-                real_args = args
-
-            in_cache, result = _get_func(full_name, real_args, kwargs, cache_limit=cache_limit)
-
-            if in_cache:
-
-                if control:
-                    log_debug('Using method cache for: |{0}|{1}|{2}| -> |{3}|'.format(full_name, args, kwargs, len(pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL))))
                 else:
-                    print('Using method cache for: |{0}|{1}|{2}| -> |{3}|'.format(full_name, args, kwargs, len(pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL))))
-                return result
 
-            else:
+                    full_name = func.__name__
+                    real_args = args
 
-                if control:
-                    log_debug('Calling cached method: |{0}|{1}|{2}|'.format(full_name, args, kwargs))
+                in_cache, result = self._get_func(full_name, real_args, kwargs, cache_limit=cache_limit)
+
+                if in_cache:
+
+                    if control:
+                        log_debug('Using method cache for: |{0}|{1}|{2}| -> |{3}|'.format(full_name, args, kwargs, len(pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL))))
+                    else:
+                        print('Using method cache for: |{0}|{1}|{2}| -> |{3}|'.format(full_name, args, kwargs, len(pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL))))
+                    return result
+
                 else:
-                    print('Calling cached method: |{0}|{1}|{2}|'.format(full_name, args, kwargs))
-                result = func(*args, **kwargs)
-                _save_func(full_name, real_args, kwargs, result)
 
-                return result
+                    if control:
+                        log_debug('Calling cached method: |{0}|{1}|{2}|'.format(full_name, args, kwargs))
+                    else:
+                        print('Calling cached method: |{0}|{1}|{2}|'.format(full_name, args, kwargs))
+                    result = func(*args, **kwargs)
+                    self._save_func(full_name, real_args, kwargs, result)
 
-        return memoizer
+                    return result
 
-    return wrap
+            return memoizer
+
+        return wrap
