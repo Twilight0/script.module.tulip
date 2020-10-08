@@ -9,7 +9,7 @@
 '''
 
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import re
 import functools
@@ -20,10 +20,10 @@ import shutil
 
 from ast import literal_eval as evaluate
 from tulip.compat import str, database, is_py2, pickle
-from tulip.log import log_debug
 
 try:
     from tulip import control
+    from tulip.log import log_debug
     cache_path = control.join(control.dataPath, 'cache')
 except Exception:
     control = None
@@ -119,7 +119,6 @@ def get(function_, time_out, *args, **table):
 def timeout(function_, *args, **table):
 
     try:
-        response = None
 
         f = repr(function_)
         f = re.sub(r'.+\smethod\s|.+function\s|\sat\s.+|\sof\s.+', '', f)
@@ -229,7 +228,10 @@ def reset_cache(notify=False, label_success=30402):
             control.infoDialog(control.lang(label_success).encode('utf-8'))
         return True
     except Exception as e:
-        log_debug('Failed to create cache: {0}: {1}'.format(cache_path, e))
+        if control:
+            log_debug('Failed to create cache: {0}: {1}'.format(cache_path, e))
+        else:
+            print('Failed to create cache: {0}: {1}'.format(cache_path, e))
         return False
 
 
@@ -278,7 +280,10 @@ def _save_func(name, args=None, kwargs=None, result=None):
 
     except Exception as e:
 
-        log_debug('Failure during cache write: {0}'.format(e))
+        if control:
+            log_debug('Failure during cache write: {0}'.format(e))
+        else:
+            print('Failure during cache write: {0}'.format(e))
 
 
 def _get_filename(name, args, kwargs):
@@ -312,12 +317,18 @@ def cache_method(cache_limit):
 
             if in_cache:
 
-                log_debug('Using method cache for: |{0}|{1}|{2}| -> |{3}|'.format(full_name, args, kwargs, len(pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL))))
+                if control:
+                    log_debug('Using method cache for: |{0}|{1}|{2}| -> |{3}|'.format(full_name, args, kwargs, len(pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL))))
+                else:
+                    print('Using method cache for: |{0}|{1}|{2}| -> |{3}|'.format(full_name, args, kwargs, len(pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL))))
                 return result
 
             else:
 
-                log_debug('Calling cached method: |{0}|{1}|{2}|'.format(full_name, args, kwargs))
+                if control:
+                    log_debug('Calling cached method: |{0}|{1}|{2}|'.format(full_name, args, kwargs))
+                else:
+                    print('Calling cached method: |{0}|{1}|{2}|'.format(full_name, args, kwargs))
                 result = func(*args, **kwargs)
                 _save_func(full_name, real_args, kwargs, result)
 
