@@ -14,18 +14,18 @@ from __future__ import absolute_import, division, print_function
 from tulip.cleantitle import replaceHTMLCodes, stripTags
 from tulip.parsers import parseDOM, parseDOM2, parse_headers
 from tulip.user_agents import randomagent, random_mobile_agent, CHROME, IPHONE_6
-import sys, traceback, json, socket, ssl
+import sys, traceback, json, ssl
 from os import sep
 from os.path import basename, splitext
 try:
     from tulip.log import log_debug
-except:
+except Exception:
     log_debug = None
 
 
 from tulip.compat import (
     urllib2, cookielib, urlparse, URLopener, unquote, str, urlsplit, urlencode, bytes, is_py3, addinfourl, py3_dec,
-    iteritems, HTTPError, quote, py2_enc, urlunparse
+    iteritems, HTTPError, quote, py2_enc, urlunparse, httplib
 )
 
 
@@ -501,13 +501,24 @@ def quote_paths(url):
         return url
 
 
-def check_connection(host="1.1.1.1", port=53, timeout=3):
+def check_connection(url="1.1.1.1", timeout=3):
+
+    conn = httplib.HTTPConnection(url, timeout=timeout)
 
     try:
-        socket.setdefaulttimeout(timeout)
-        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+
+        conn.request("HEAD", "/")
+        conn.close()
+
         return True
-    except socket.error:
+
+    except Exception as e:
+
+        if log_debug:
+            log_debug(e)
+        else:
+            print(e)
+
         return False
 
 
