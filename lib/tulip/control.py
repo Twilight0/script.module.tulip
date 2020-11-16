@@ -172,6 +172,19 @@ def inputDialog(heading=name(), default='', type=alphanum_input, option=0, autoc
         return dialog.input(heading=heading, defaultt=default, type=type, option=option, autoclose=autoclose)
 
 
+if kodi_version() >= 18.0:
+
+    def text_viewer(heading, text, use_mono=False):
+
+        dialog.textviewer(heading, text, use_mono)
+
+else:
+
+    def text_viewer(heading, text):
+
+        dialog.textviewer(heading, text)
+
+
 class WorkingDialog(object):
 
     def __init__(self):

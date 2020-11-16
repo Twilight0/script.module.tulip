@@ -14,6 +14,7 @@ import re, json
 from datetime import datetime
 from tulip.compat import urlparse, parse_qs, quote_plus, range
 from tulip import client, workers, control, directory, iso8601
+from kodi_six.utils import py2_encode
 
 MAXRES_THUMBNAIL = 2
 HQ_THUMBNAIL = 1
@@ -289,8 +290,8 @@ class youtube(object):
 
         except Exception:
 
-            query = ''.join([name, append_string])
-            query = self.youtube_search.format(query)
+            query = ' '.join([name, append_string])
+            query = self.youtube_search.format(py2_encode(query))
             url = self.search(query)
 
             if url is None:
@@ -301,6 +302,7 @@ class youtube(object):
     def search(self, url):
 
         try:
+
             query = parse_qs(urlparse(url).query)['q'][0]
 
             url = self.search_link.format(''.join([quote_plus(query), self.key_link]))
@@ -314,7 +316,9 @@ class youtube(object):
                 url = self.resolve(url)
                 if url is not None:
                     return url
+
         except Exception:
+
             return
 
     def resolve(self, url):
@@ -322,19 +326,8 @@ class youtube(object):
         try:
 
             vid = url.split('?v=')[-1].split('/')[-1].split('?')[0].split('&')[0]
-            result = client.request(''.join([self.base_link, 'watch?v={}'.format(vid)]))
 
-            message = client.parseDOM(result, 'div', attrs={'id': 'unavailable-submessage'})
-            message = ''.join(message)
-
-            alert = client.parseDOM(result, 'div', attrs={'id': 'watch7-notification-area'})
-
-            if len(alert) > 0:
-                raise Exception
-            if re.search('[a-zA-Z]', message):
-                raise Exception
-
-            url = self.play_link.format(id)
+            url = self.play_link.format(vid)
 
             return url
 
