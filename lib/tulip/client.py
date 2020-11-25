@@ -13,7 +13,7 @@ from __future__ import absolute_import, division, print_function
 
 from tulip.cleantitle import replaceHTMLCodes, stripTags
 from tulip.parsers import parseDOM, parseDOM2, parse_headers
-from tulip.user_agents import randomagent, random_mobile_agent, CHROME, IPHONE_6
+from tulip.user_agents import randomagent, random_mobile_agent, CHROME, ANDROID
 from tulip.utils import enum
 import sys, traceback, json, ssl
 from os import sep
@@ -125,7 +125,7 @@ def request(
                 from tulip import cache
                 headers['User-Agent'] = cache.get(random_mobile_agent, 12)
             else:
-                headers['User-Agent'] = IPHONE_6
+                headers['User-Agent'] = ANDROID
 
         if 'Referer' in headers:
             pass
