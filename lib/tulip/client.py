@@ -14,6 +14,7 @@ from __future__ import absolute_import, division, print_function
 from tulip.cleantitle import replaceHTMLCodes, stripTags
 from tulip.parsers import parseDOM, parseDOM2, parse_headers
 from tulip.user_agents import randomagent, random_mobile_agent, CHROME, IPHONE_6
+from tulip.utils import enum
 import sys, traceback, json, ssl
 from os import sep
 from os.path import basename, splitext
@@ -355,9 +356,7 @@ def get_extension(url, response):
 # noinspection PyUnresolvedReferences
 def download_media(url, path, file_name, initiate_int='', completion_int='', exception_int='', progress=None):
 
-    from tulip import control
-
-    PROGRESS = control.enum(OFF=0, WINDOW=1, BACKGROUND=2)
+    PROGRESS = enum(OFF=0, WINDOW=1, BACKGROUND=2)
 
     try:
         if progress is None:

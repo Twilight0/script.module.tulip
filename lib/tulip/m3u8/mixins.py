@@ -4,7 +4,6 @@ from tulip.m3u8.parser import is_url
 from tulip.compat import urljoin
 
 def _urijoin(base_uri, path):
-
     if is_url(base_uri):
         return urljoin(base_uri, path)
     else:

@@ -101,12 +101,7 @@ else:
     legalfilename = xbmc.makeLegalFilename
 
 
-def enum(**enums):
 
-    try:
-        return type(b'Enum', (), enums)
-    except TypeError:
-        return type('Enum', (), enums)
 
 
 def name():
@@ -356,11 +351,6 @@ class CountdownDialog(object):
     def update(self, percent, line1=''):
         if self.pd is not None:
             self.pd.update(percent, line1)
-
-
-def per_cent(count, total):
-
-    return min(int(round(count * 100 / total)), 100)
 
 
 def read(file_, numBytes=0):
