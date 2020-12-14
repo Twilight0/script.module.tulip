@@ -4,13 +4,12 @@
 # license that can be found in the LICENSE file.
 
 import sys
+import ssl
 import os
+import posixpath
 
+from tulip.compat import urlopen, Request, urlparse, urljoin
 
-from tulip.compat import urlopen, Request, HTTPError, urlparse, urljoin
-
-
-from tulip.m3u8.httpclient import DefaultHTTPClient, _parsed_url
 from tulip.m3u8.model import (
     M3U8, Segment, SegmentList, PartialSegment, PartialSegmentList, Key, Playlist, IFramePlaylist, Media, MediaList,
     PlaylistList, Start, RenditionReport, RenditionReportList, ServerControl, Skip, PartInformation, PreloadHint,
@@ -18,11 +17,12 @@ from tulip.m3u8.model import (
 )
 from tulip.m3u8.parser import parse, is_url, ParseError
 
+PYTHON_MAJOR_VERSION = sys.version_info
 
 __all__ = (
     'M3U8', 'Segment', 'SegmentList', 'PartialSegment', 'PartialSegmentList', 'Key', 'Playlist', 'IFramePlaylist',
     'Media', 'MediaList', 'PlaylistList', 'Start', 'RenditionReport', 'RenditionReportList', 'ServerControl', 'Skip',
-    'PartInformation', 'PreloadHint', 'DateRange', 'DateRangeList', 'loads', 'load', 'parse', 'ParseError'
+    'PartInformation', 'DateRange', 'DateRangeList', 'loads', 'load', 'parse', 'ParseError'
 )
 
 def loads(content, uri=None, custom_tags_parser=None):
@@ -39,16 +39,57 @@ def loads(content, uri=None, custom_tags_parser=None):
         return M3U8(content, base_uri=base_uri, custom_tags_parser=custom_tags_parser)
 
 
-def load(uri, timeout=None, headers={}, custom_tags_parser=None, http_client=DefaultHTTPClient(), verify_ssl=True):
+def load(uri, timeout=None, headers={}, custom_tags_parser=None, verify_ssl=True):
+
     '''
     Retrieves the content from a given URI and returns a M3U8 object.
     Raises ValueError if invalid content or IOError if request fails.
+    Raises socket.timeout(python 2.7+) or urllib2.URLError(python 2.6) if
+    timeout happens when loading from uri
     '''
+
     if is_url(uri):
-        content, base_uri = http_client.download(uri, timeout, headers, verify_ssl)
-        return M3U8(content, base_uri=base_uri, custom_tags_parser=custom_tags_parser)
+        return _load_from_uri(uri, timeout, headers, custom_tags_parser, verify_ssl)
     else:
         return _load_from_file(uri, custom_tags_parser)
+
+
+def _load_from_uri(uri, timeout=None, headers={}, custom_tags_parser=None, verify_ssl=True):
+
+    request = Request(uri, headers=headers)
+    context = None
+
+    if not verify_ssl:
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+
+    resource = urlopen(request, timeout=timeout, context=context)
+    base_uri = _parsed_url(resource.geturl())
+
+    if PYTHON_MAJOR_VERSION < (3,):
+        content = _read_python2x(resource)
+    else:
+        content = _read_python3x(resource)
+
+    return M3U8(content, base_uri=base_uri, custom_tags_parser=custom_tags_parser)
+
+
+def _parsed_url(url):
+    parsed_url = urlparse(url)
+    prefix = parsed_url.scheme + '://' + parsed_url.netloc
+    base_path = posixpath.normpath(parsed_url.path + '/..')
+    return urljoin(prefix, base_path)
+
+
+def _read_python2x(resource):
+    return resource.read().strip()
+
+
+def _read_python3x(resource):
+    return resource.read().decode(
+        resource.headers.get_content_charset(failobj="utf-8")
+    )
 
 
 def _load_from_file(uri, custom_tags_parser=None):

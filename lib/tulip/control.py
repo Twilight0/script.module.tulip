@@ -101,9 +101,6 @@ else:
     legalfilename = xbmc.makeLegalFilename
 
 
-
-
-
 def name():
 
     return addonInfo('name')
