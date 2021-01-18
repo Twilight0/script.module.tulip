@@ -9,21 +9,24 @@
 '''
 
 from __future__ import absolute_import
-
-__all__ = ['log_notice', 'log_debug', 'log_info', 'log_warning', 'log_error']
-
 from kodi_six import xbmc
 from tulip import control
 
 LOGDEBUG = xbmc.LOGDEBUG
 LOGERROR = xbmc.LOGERROR
-LOGFATAL = xbmc.LOGFATAL
-LOGINFO = xbmc.LOGINFO
 LOGNONE = xbmc.LOGNONE
-LOGNOTICE = xbmc.LOGINFO  # LOGNOTICE has been deprecated in Kodi 19
-LOGSEVERE = xbmc.LOGSEVERE
 LOGWARNING = xbmc.LOGWARNING
 
+if control.kodi_version() >= 19.0:
+    LOGNOTICE = xbmc.LOGWARNING
+    LOGSEVERE = xbmc.LOGERROR
+    LOGINFO = xbmc.LOGWARNING
+    LOGFATAL = xbmc.LOGERROR
+else:
+    LOGNOTICE = xbmc.LOGNOTICE
+    LOGSEVERE = xbmc.LOGSEVERE
+    LOGINFO = xbmc.LOGINFO
+    LOGFATAL = xbmc.LOGFATAL
 
 def log_debug(msg):
     log(msg, level=LOGDEBUG)
@@ -62,3 +65,6 @@ def log(msg, level=LOGDEBUG, setting=None):
             xbmc.log('{0}'.format(msg), level)
         except Exception as reason:
             xbmc.log('Logging Failure: {0}' % reason, level)
+
+
+__all__ = ['log_notice', 'log_debug', 'log_info', 'log_warning', 'log_error']

@@ -3,6 +3,7 @@
 - New utils module
 - Updated user agent strings
 - Updated m3u8 modules
+- Various fixes & tweaks for Kodi 19
 
 [B]2.7.X[/B]
 - New cache functions (taken from ResolveURL and adapted)

@@ -47,12 +47,6 @@ aborted = monitor().abortRequested
 cleanmovietitle = xbmc.getCleanMovieTitle
 getregion = xbmc.getRegion
 
-transPath = xbmc.translatePath
-skinPath = transPath('special://skin/')
-addonPath = transPath(addonInfo('path'))
-
-dataPath = transPath(addonInfo('profile'))
-
 window = xbmcgui.Window(10000)
 dialog = xbmcgui.Dialog()
 progressDialog = xbmcgui.DialogProgress()
@@ -77,11 +71,7 @@ listDir = xbmcvfs.listdir
 exists = xbmcvfs.exists
 copy = xbmcvfs.copy
 rename = xbmcvfs.rename
-
 join = os.path.join
-settingsFile = join(dataPath, 'settings.xml')
-bookmarksFile = join(dataPath, 'bookmarks.db')
-cacheFile = join(dataPath, 'cache.db')
 
 
 def kodi_version():
@@ -97,8 +87,17 @@ def kodi_version():
 
 if kodi_version() >= 19.0:
     legalfilename = xbmcvfs.makeLegalFilename
+    transPath = xbmcvfs.translatePath
 else:
     legalfilename = xbmc.makeLegalFilename
+    transPath = xbmc.translatePath
+
+skinPath = transPath('special://skin/')
+addonPath = transPath(addonInfo('path'))
+dataPath = transPath(addonInfo('profile'))
+settingsFile = join(dataPath, 'settings.xml')
+bookmarksFile = join(dataPath, 'bookmarks.db')
+cacheFile = join(dataPath, 'cache.db')
 
 
 def name():
