@@ -14,7 +14,7 @@ from __future__ import absolute_import, division
 from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
 import os, json, time
 from tulip.init import syshandle
-from tulip.compat import basestring
+from tulip.compat import basestring, is_py3
 
 
 integer = 1000
@@ -85,7 +85,7 @@ def kodi_version():
     return float(addon('xbmc.addon').getAddonInfo('version')[:4])
 
 
-if kodi_version() >= 19.0:
+if is_py3:
     legalfilename = xbmcvfs.makeLegalFilename
     transPath = xbmcvfs.translatePath
 else:
@@ -141,7 +141,7 @@ def okDialog(heading, line1):
 
 def yesnoDialog(line1, heading=addonInfo('name'), nolabel='', yeslabel=''):
 
-    if kodi_version() >= 19.0:
+    if is_py3:
         return dialog.yesno(heading, message=line1, nolabel=nolabel, yeslabel=yeslabel)
     else:
         return dialog.yesno(heading, line1=line1, nolabel=nolabel, yeslabel=yeslabel)

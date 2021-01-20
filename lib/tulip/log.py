@@ -11,13 +11,14 @@
 from __future__ import absolute_import
 from kodi_six import xbmc
 from tulip import control
+from tulip.compat import is_py3
 
 LOGDEBUG = xbmc.LOGDEBUG
 LOGERROR = xbmc.LOGERROR
 LOGNONE = xbmc.LOGNONE
 LOGWARNING = xbmc.LOGWARNING
 
-if control.kodi_version() >= 19.0:
+if is_py3:
     LOGNOTICE = xbmc.LOGWARNING
     LOGSEVERE = xbmc.LOGERROR
     LOGINFO = xbmc.LOGWARNING
