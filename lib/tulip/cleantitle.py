@@ -90,7 +90,10 @@ def replaceHTMLCodes(txt):
     txt = txt.replace("&quot;", "\"")
     txt = txt.replace("&amp;", "&")
     txt = txt.replace("&#38;", "&")
-    txt = txt.replace("&nbsp;", "")
+    txt = txt.replace("&nbsp;", " ")
+    txt = txt.replace('&#8230;', '...')
+    txt = txt.replace('&#8217;', '\'')
+    txt = txt.replace('&#8211;', '-')
 
     return txt
 
