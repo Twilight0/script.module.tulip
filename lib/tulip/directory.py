@@ -12,6 +12,7 @@ from __future__ import absolute_import, print_function
 
 import traceback, sys
 from tulip.compat import urlencode, quote_plus, iteritems, basestring, parse_qsl
+from tulip.utils import percent
 from tulip import control
 from kodi_six.xbmc import log
 
@@ -67,7 +68,7 @@ def add(
 
             if progress:
 
-                p = control.per_cent(c, len(items))
+                p = percent(c, len(items))
                 pd.update(p)
 
             try:
@@ -418,9 +419,9 @@ def resolve(
         elif isinstance(headers, dict):
             headers = urlencode(headers)
 
-    if not verify and 'verifypeer' not in headers:
+    if not verify:
 
-        if headers:
+        if headers and 'verifypeer' not in headers:
             headers += '&verifypeer=false'
         else:
             headers = 'verifypeer=false'
