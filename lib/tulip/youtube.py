@@ -64,12 +64,12 @@ class youtube(object):
 
     def _playlist(self, url, limit):
 
-        try:
-            result = client.request(url)
-            result = json.loads(result)
-            items = result['items']
-        except Exception:
-            pass
+        # try:
+        result = client.request(url)
+        result = json.loads(result)
+        items = result['items']
+        # except Exception:
+        #     pass
 
         for i in list(range(1, limit)):
             try:
