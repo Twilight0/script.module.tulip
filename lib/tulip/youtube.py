@@ -12,7 +12,7 @@ from __future__ import absolute_import
 
 import re, json
 from datetime import datetime
-from tulip.compat import urlparse, parse_qs, quote_plus, range
+from tulip.compat import urlparse, parse_qs, quote_plus, range, py3_dec
 from tulip import client, workers, control, directory, iso8601
 from kodi_six.utils import py2_encode
 
@@ -208,7 +208,7 @@ class youtube(object):
             try:
                 vid = self.list[item]['url']
 
-                self.list[item]['url'] = self.play_link.format(vid)
+                self.list[item]['url'] = self.play_link.format(py3_dec(vid))
 
                 d = [(i['id'], i['contentDetails']) for i in items]
                 d = [i for i in d if i[0] == vid]
@@ -280,7 +280,7 @@ class youtube(object):
                     raise Exception
                 return url
             elif not url.startswith('http://'):
-                url = self.play_link.format(url)
+                url = self.play_link.format(py3_dec(url))
                 url = self.resolve(url)
                 if url is None:
                     raise Exception
@@ -327,7 +327,7 @@ class youtube(object):
 
             vid = url.split('?v=')[-1].split('/')[-1].split('?')[0].split('&')[0]
 
-            url = self.play_link.format(vid)
+            url = self.play_link.format(py3_dec(vid))
 
             return url
 
@@ -340,7 +340,7 @@ class youtube(object):
         for item in items_list[:-1]:
 
             title = item['snippet']['title']
-            url = self.play_link.format(item['id']['videoId'])
+            url = self.play_link.format(py3_dec(item['id']['videoId']))
             image = item['snippet']['thumbnails'][thumb_quality]['url']
             plot = item['snippet']['description']
 

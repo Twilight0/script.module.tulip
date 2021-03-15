@@ -11,7 +11,7 @@
 from __future__ import absolute_import, print_function
 
 import traceback, sys
-from tulip.compat import urlencode, quote_plus, iteritems, basestring, parse_qsl
+from tulip.compat import urlencode, quote_plus, iteritems, basestring, parse_qsl, py3_dec
 from tulip.utils import percent
 from tulip import control
 from kodi_six.xbmc import log
@@ -87,6 +87,8 @@ def add(
                 image = control.addonmedia(i['icon'])
             else:
                 image = sysimage
+
+            image = py3_dec(image)
 
             if 'banner' in i and not i['banner'] == '0':
                 banner = i['banner']
