@@ -86,13 +86,13 @@ class youtube(object):
             try:
                 title = item['snippet']['title']
                 try:
-                    title = title.encode('utf-8')
+                    title = py2_encode(title)
                 except AttributeError:
                     pass
 
                 url = item['id']
                 try:
-                    url = url.encode('utf-8')
+                    url = py2_encode(url)
                 except AttributeError:
                     pass
 
@@ -100,7 +100,7 @@ class youtube(object):
                 if '/default.jpg' in image:
                     raise Exception
                 try:
-                    image = image.encode('utf-8')
+                    image = py2_encode(image)
                 except AttributeError:
                     pass
 
@@ -144,7 +144,7 @@ class youtube(object):
             try:
                 title = item['snippet']['title']
                 try:
-                    title = title.encode('utf-8')
+                    title = py2_encode(title)
                 except AttributeError:
                     pass
 
@@ -154,7 +154,7 @@ class youtube(object):
                     url = item['id']['videoId']
 
                 try:
-                    url = url.encode('utf-8')
+                    url = py2_encode(url)
                 except AttributeError:
                     pass
 
@@ -162,7 +162,7 @@ class youtube(object):
                 if '/default.jpg' in image:
                     raise Exception
                 try:
-                    image = image.encode('utf-8')
+                    image = py2_encode(image)
                 except AttributeError:
                     pass
 
@@ -255,10 +255,10 @@ class youtube(object):
                 title = control.infoLabel('listitem.label')
             icon = control.infoLabel('listitem.icon')
 
-            item = control.item(path=url, iconImage=icon, thumbnailImage=icon)
+            item = control.item(path=url)
 
             try:
-                item.setArt({'icon': icon})
+                item.setArt({'icon': icon, 'thumb': icon})
             except Exception:
                 pass
 
@@ -341,7 +341,7 @@ class youtube(object):
 
             title = item['snippet']['title']
             url = self.play_link.format(py3_dec(item['id']['videoId']))
-            image = item['snippet']['thumbnails'][thumb_quality]['url']
+            image = py3_dec(item['snippet']['thumbnails'][thumb_quality]['url'])
             plot = item['snippet']['description']
 
             data = {'title': title, 'url': url, 'image': image, 'plot': plot}

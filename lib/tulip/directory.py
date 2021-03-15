@@ -88,8 +88,6 @@ def add(
             else:
                 image = sysimage
 
-            image = py3_dec(image)
-
             if 'banner' in i and not i['banner'] == '0':
                 banner = i['banner']
             elif 'fanart' in i and not i['fanart'] == '0':
