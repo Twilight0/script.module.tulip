@@ -31,6 +31,11 @@ class youtube(object):
         self.base_addon = 'plugin://plugin.video.youtube/'
         self.google_base_link = 'https://www.googleapis.com/youtube/v3/'
 
+        try:
+            key = key.decode('utf-8')
+        except Exception:
+            pass
+
         self.key_link = '&key={0}'.format(key or control.setting(api_key_setting))
 
         self.playlists_link = ''.join([self.google_base_link, 'playlists?part=snippet&maxResults=50&channelId={}'])
