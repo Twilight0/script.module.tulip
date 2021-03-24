@@ -17,20 +17,25 @@ import time
 import hashlib
 import os
 import shutil
+from kodi_six import xbmcvfs
 
 from ast import literal_eval as evaluate
-from tulip.compat import str, database, is_py2, pickle
+from tulip.compat import str, database, pickle
 
 try:
     from tulip import control
-    from tulip.log import log_debug
+    from tulip.log import log_debug, log_notice
     cache_path = control.join(control.dataPath, 'cache')
 except Exception:
     control = None
     cache_path = os.path.join(os.curdir, 'function_cache')
 
+ENABLED = True
+
 # noinspection PyUnboundLocalVariable
-def get(function_, time_out, *args, **table):
+def get(function_, duration, *args, **table):
+
+    log_notice('Tulip Library: This function does not work well on Python 3, please use cache_method or cache_function')
 
     try:
 
@@ -73,7 +78,7 @@ def get(function_, time_out, *args, **table):
 
         t1 = int(match[3])
         t2 = int(time.time())
-        update = (abs(t2 - t1) / 3600) >= int(time_out)
+        update = (abs(t2 - t1) / 3600) >= int(duration)
         if not update:
             return response
 
@@ -96,9 +101,7 @@ def get(function_, time_out, *args, **table):
 
         r = repr(r)
         t = int(time.time())
-        dbcur.execute(
-            "CREATE TABLE IF NOT EXISTS {} (""func TEXT, ""args TEXT, ""response TEXT, ""added TEXT, ""UNIQUE(func, args)"");".format(table)
-        )
+        dbcur.execute("CREATE TABLE IF NOT EXISTS {} (""func TEXT, ""args TEXT, ""response TEXT, ""added TEXT, ""UNIQUE(func, args)"");".format(table))
         dbcur.execute("DELETE FROM {0} WHERE func = '{1}' AND args = '{2}'".format(table, f, a))
         dbcur.execute("INSERT INTO {} Values (?, ?, ?, ?)".format(table), (f, a, r, t))
         dbcon.commit()
@@ -228,7 +231,7 @@ class FunctionCache:
 
         try:
             shutil.rmtree(cache_path)
-            if notify:
+            if notify and control:
                 control.infoDialog(control.lang(label_success).encode('utf-8'))
             return True
         except Exception as e:
@@ -238,101 +241,100 @@ class FunctionCache:
                 print('Failed to create cache: {0}: {1}'.format(cache_path, e))
             return False
 
-    def _get_func(self, name, args=None, kwargs=None, cache_limit=1):
+    def _get_filename(self, name, args, kwargs):
 
-        now = time.time()
-        max_age = now - (cache_limit * 60 * 60)
+        _name = hashlib.md5(name.encode('utf-8')).hexdigest()
+        _args = hashlib.md5(str(args).encode('utf-8')).hexdigest()
+        _kwargs = hashlib.md5(str(kwargs).encode('utf-8')).hexdigest()
+
+        return _name + _args + _kwargs
+
+    def _load(self, name, args=None, kwargs=None, limit=60):
+        if not ENABLED or limit <= 0:
+            return False, None
 
         if args is None:
             args = []
-
         if kwargs is None:
             kwargs = {}
 
-        full_path = os.path.join(cache_path, self._get_filename(name, args, kwargs))
+        now = time.time()
+        max_age = now - limit
 
-        if os.path.exists(full_path):
-
-            mtime = os.path.getmtime(full_path)
+        filename = os.path.join(cache_path, self._get_filename(name, args, kwargs))
+        if os.path.exists(filename):
+            mtime = xbmcvfs.Stat(filename).st_mtime()
 
             if mtime >= max_age:
+                with open(filename, 'rb') as file_handle:
+                    payload = file_handle.read()
 
-                with open(full_path, 'rb') as f:
-                    pickled_result = f.read()
-
-                return True, pickle.loads(pickled_result)
+                return True, pickle.loads(payload)
 
         return False, None
 
-    def _save_func(self, name, args=None, kwargs=None, result=None):
+    def _save(self, name, args=None, kwargs=None, result=None):
+
+        if args is None:
+            args = []
+        if kwargs is None:
+            kwargs = {}
 
         try:
+            payload = pickle.dumps(result)
 
-            if args is None:
-                args = []
+            filename = os.path.join(cache_path, self._get_filename(name, args, kwargs))
+            with open(filename, 'wb') as file_handle:
+                file_handle.write(payload)
 
-            if kwargs is None:
-                kwargs = {}
+            return True
 
-            pickled_result = pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL)
-            full_path = os.path.join(cache_path, self._get_filename(name, args, kwargs))
+        except:  # pylint: disable=bare-except
+            return False
 
-            with open(full_path, 'wb') as f:
-                f.write(pickled_result)
+    def cache_method(self, limit):
+        def wrap(func):
 
-        except Exception as e:
+            @functools.wraps(func)
+            def memoizer(*args, **kwargs):
+                if args:
+                    klass, rargs = args[0], args[1:]
+                    name = '%s.%s.%s' % (klass.__module__, klass.__class__.__name__, func.__name__)
+                else:
+                    name = func.__name__
+                    rargs = args
 
-            if control:
-                log_debug('Failure during cache write: {0}'.format(e))
-            else:
-                print('Failure during cache write: {0}'.format(e))
+                cached, payload = self._load(name, rargs, kwargs, limit=limit)
+                if cached:
+                    return payload
 
-    def _get_filename(self, name, args, kwargs):
+                payload = func(*args, **kwargs)
+                if ENABLED and limit > 0:
+                    self._save(name, rargs, kwargs, payload)
 
-        if is_py2:
-            arg_hash = hashlib.md5(name).hexdigest() + hashlib.md5(str(args)).hexdigest() + hashlib.md5(str(kwargs)).hexdigest()
-        else:
-            arg_hash = hashlib.md5(name.encode('utf8')).hexdigest() + hashlib.md5(str(args).encode('utf8')).hexdigest() + hashlib.md5(str(kwargs).encode('utf8')).hexdigest()
+                return payload
 
-        return arg_hash
+            return memoizer
 
-    def cache_method(self, cache_limit):
+        return wrap
+
+    def cache_function(self, limit):
 
         def wrap(func):
 
             @functools.wraps(func)
             def memoizer(*args, **kwargs):
+                name = func.__name__
 
-                if args:
+                cached, payload = self._load(name, args, kwargs, limit=limit)
+                if cached:
+                    return payload
 
-                    klass, real_args = args[0], args[1:]
-                    full_name = '%s.%s.%s' % (klass.__module__, klass.__class__.__name__, func.__name__)
+                payload = func(*args, **kwargs)
+                if ENABLED and limit > 0:
+                    self._save(name, args, kwargs, payload)
 
-                else:
-
-                    full_name = func.__name__
-                    real_args = args
-
-                in_cache, result = self._get_func(full_name, real_args, kwargs, cache_limit=cache_limit)
-
-                if in_cache:
-
-                    if control:
-                        log_debug('Using method cache for: |{0}|{1}|{2}| -> |{3}|'.format(full_name, args, kwargs, len(pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL))))
-                    else:
-                        print('Using method cache for: |{0}|{1}|{2}| -> |{3}|'.format(full_name, args, kwargs, len(pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL))))
-                    return result
-
-                else:
-
-                    if control:
-                        log_debug('Calling cached method: |{0}|{1}|{2}|'.format(full_name, args, kwargs))
-                    else:
-                        print('Calling cached method: |{0}|{1}|{2}|'.format(full_name, args, kwargs))
-                    result = func(*args, **kwargs)
-                    self._save_func(full_name, real_args, kwargs, result)
-
-                    return result
+                return payload
 
             return memoizer
 

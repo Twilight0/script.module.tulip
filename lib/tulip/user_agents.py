@@ -8,10 +8,11 @@
     See LICENSES/GPL-3.0-only for more information.
 '''
 
-
+from tulip.cache import FunctionCache
 from tulip.compat import urlencode
 from random import choice
 
+function_cache = FunctionCache().cache_function
 
 ANDROID = "Mozilla/5.0 (Linux; Android 10; SM-G975U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.93 Mobile Safari/537.36"
 CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36/8mqQhSuL-09"
@@ -29,6 +30,7 @@ PY_URLLIB_2 = "Python-urllib/2.7"
 PY_URLLIB_3 = "Python-urllib/3.8"
 
 
+@function_cache(2880)
 def randomagent():
 
     agents = [ANDROID, CHROME, EDGE, FIREFOX, FIREFOX_MAC, SAFARI, VIVALDI, IE_11]
@@ -46,6 +48,7 @@ def mobile_agent():
     return 'Mozilla/5.0 (Android 4.4.4; Mobile; rv:64.0) Gecko/64.0 Firefox/64.0'
 
 
+@function_cache(2880)
 def random_mobile_agent():
 
     agents = [
@@ -67,8 +70,7 @@ def ios_agent():
 def spoofer(headers=None, _agent=True, age_str=None, referer=False, ref_str='', url=None):
 
     if age_str is None:
-        from tulip import cache
-        age_str = cache.get(randomagent, 12)
+        age_str = randomagent()
 
     pipe = '|'
 

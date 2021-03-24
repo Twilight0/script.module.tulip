@@ -12,14 +12,13 @@ from __future__ import absolute_import
 
 import re, json
 from datetime import datetime
-from tulip.compat import urlparse, parse_qs, quote_plus, range, py3_dec
+from tulip.compat import urlparse, parse_qs, quote_plus, range, py3_dec, py2_enc
 from tulip import client, workers, control, directory, iso8601
-from kodi_six.utils import py2_encode
+from tulip.log import log_debug
 
 MAXRES_THUMBNAIL = 2
 HQ_THUMBNAIL = 1
 MQ_THUMBNAIL = 0
-
 
 class youtube(object):
 
@@ -30,13 +29,7 @@ class youtube(object):
         self.base_link = 'https://www.youtube.com/'
         self.base_addon = 'plugin://plugin.video.youtube/'
         self.google_base_link = 'https://www.googleapis.com/youtube/v3/'
-
-        try:
-            key = key.decode('utf-8')
-        except Exception:
-            pass
-
-        self.key_link = '&key={0}'.format(key or control.setting(api_key_setting))
+        self.key_link = '&key={0}'.format(py3_dec(key) or control.setting(api_key_setting))
 
         self.playlists_link = ''.join([self.google_base_link, 'playlists?part=snippet&maxResults=50&channelId={}'])
         self.playlist_link = ''.join([self.google_base_link, 'playlistItems?part=snippet&maxResults=50&playlistId={}'])
@@ -69,12 +62,13 @@ class youtube(object):
 
     def _playlist(self, url, limit):
 
-        # try:
-        result = client.request(url)
-        result = json.loads(result)
-        items = result['items']
-        # except Exception:
-        #     pass
+        try:
+            result = client.request(url)
+            result = json.loads(result)
+            items = result['items']
+        except Exception:
+            log_debug('Could not fetch items from Google, probably invalid key or no quota left')
+            return
 
         for i in list(range(1, limit)):
             try:
@@ -91,13 +85,13 @@ class youtube(object):
             try:
                 title = item['snippet']['title']
                 try:
-                    title = py2_encode(title)
+                    title = py2_enc(title)
                 except AttributeError:
                     pass
 
                 url = item['id']
                 try:
-                    url = py2_encode(url)
+                    url = py2_enc(url)
                 except AttributeError:
                     pass
 
@@ -105,7 +99,7 @@ class youtube(object):
                 if '/default.jpg' in image:
                     raise Exception
                 try:
-                    image = py2_encode(image)
+                    image = py2_enc(image)
                 except AttributeError:
                     pass
 
@@ -122,7 +116,8 @@ class youtube(object):
             result = json.loads(result)
             items = result['items']
         except Exception:
-            pass
+            log_debug('Could not fetch items from Google, probably invalid key or no quota left')
+            return
 
         for i in list(range(1, limit)):
 
@@ -149,7 +144,7 @@ class youtube(object):
             try:
                 title = item['snippet']['title']
                 try:
-                    title = py2_encode(title)
+                    title = py2_enc(title)
                 except AttributeError:
                     pass
 
@@ -159,7 +154,7 @@ class youtube(object):
                     url = item['id']['videoId']
 
                 try:
-                    url = py2_encode(url)
+                    url = py2_enc(url)
                 except AttributeError:
                     pass
 
@@ -167,7 +162,7 @@ class youtube(object):
                 if '/default.jpg' in image:
                     raise Exception
                 try:
-                    image = py2_encode(image)
+                    image = py2_enc(image)
                 except AttributeError:
                     pass
 
@@ -296,7 +291,7 @@ class youtube(object):
         except Exception:
 
             query = ' '.join([name, append_string])
-            query = self.youtube_search.format(py2_encode(query))
+            query = self.youtube_search.format(py2_enc(query))
             url = self.search(query)
 
             if url is None:

@@ -116,14 +116,12 @@ def request(
             pass
         elif mobile is not True:
             if allow_caching:
-                from tulip import cache
-                headers['User-Agent'] = cache.get(randomagent, 12)
+                headers['User-Agent'] = randomagent()
             else:
                 headers['User-Agent'] = CHROME
         else:
             if allow_caching:
-                from tulip import cache
-                headers['User-Agent'] = cache.get(random_mobile_agent, 12)
+                headers['User-Agent'] = random_mobile_agent()
             else:
                 headers['User-Agent'] = ANDROID
 
