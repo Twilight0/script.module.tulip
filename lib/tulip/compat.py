@@ -105,7 +105,7 @@ try:
     import httplib
     import BaseHTTPServer
     from cStringIO import StringIO
-    import BytesIO
+    BytesIO = StringIO
     from SocketServer import ThreadingMixIn
     from HTMLParser import HTMLParser
     unescape = HTMLParser().unescape
