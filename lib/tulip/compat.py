@@ -105,6 +105,7 @@ try:
     import httplib
     import BaseHTTPServer
     from cStringIO import StringIO
+    import BytesIO
     from SocketServer import ThreadingMixIn
     from HTMLParser import HTMLParser
     unescape = HTMLParser().unescape
@@ -120,7 +121,7 @@ except ImportError:
     URLopener = urllib2.URLopener
     import http.server as BaseHTTPServer
     from socketserver import ThreadingMixIn
-    from io import StringIO
+    from io import StringIO, BytesIO
     from urllib.parse import (
         urlparse, urlunparse, urljoin, quote, unquote, parse_qsl, parse_qs, urlencode, urlsplit, urlunsplit,
         unquote_plus, quote_plus
@@ -141,5 +142,5 @@ __all__ = [
     "range", "urlencode", "zip", "urlsplit", "urlunsplit", "cookielib", "URLopener", "quote_plus", "unescape",
     "parse_qs", "unquote_plus", "urllib2", "unicode", "database", "basestring", "urlopen", "Request", "OrderedDict",
     "iteritems", "BaseHTTPServer", "ThreadingMixIn", "addinfourl", "StringIO", "py2_enc", "py2_uni", "py3_dec",
-    "HTTPError", "pickle", "httplib"
+    "HTTPError", "pickle", "httplib", "BytesIO"
 ]
