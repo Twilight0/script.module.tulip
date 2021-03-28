@@ -287,7 +287,7 @@ class FunctionCache:
             kwargs = {}
 
         try:
-            payload = pickle.dumps(result)
+            payload = pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL)
 
             filename = os.path.join(cache_path, self._get_filename(name, args, kwargs))
             with open(filename, 'wb') as file_handle:
