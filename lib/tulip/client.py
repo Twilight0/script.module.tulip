@@ -298,14 +298,10 @@ def request(
         return
 
 
-def retriever(source, destination, user_agent=None, referer=None, reporthook=None, data=None, allow_caching=True,**kwargs):
+def retriever(source, destination, user_agent=None, referer=None, reporthook=None, data=None, **kwargs):
 
     if user_agent is None:
-        if allow_caching:
-            from tulip import cache
-            user_agent = cache.get(randomagent, 12)
-        else:
-            user_agent = CHROME
+        user_agent = CHROME
 
     if referer is None:
         referer = '{0}://{1}/'.format(urlparse(source).scheme, urlparse(source).netloc)
@@ -314,10 +310,11 @@ def retriever(source, destination, user_agent=None, referer=None, reporthook=Non
 
         version = user_agent
 
-        def __init__(self):
+        def __init__(self, **x509):
 
             URLopener.__init__(self)
 
+            super(Opener, self).__init__(**x509)
             headers = [('User-Agent', self.version), ('Accept', '*/*'), ('Referer', referer)]
 
             if kwargs:
