@@ -17,7 +17,10 @@ import time
 import hashlib
 import os
 import shutil
-from kodi_six import xbmcvfs
+try:
+    from kodi_six import xbmcvfs
+except Exception:
+    xbmcvfs = None
 
 from ast import literal_eval as evaluate
 from tulip.compat import str, database, pickle
@@ -263,7 +266,10 @@ class FunctionCache:
 
         filename = os.path.join(cache_path, self._get_filename(name, args, kwargs))
         if os.path.exists(filename):
-            mtime = xbmcvfs.Stat(filename).st_mtime()
+            if xbmcvfs:
+                mtime = xbmcvfs.Stat(filename).st_mtime()
+            else:
+                mtime = os.path.getmtime(filename)
 
             if mtime >= max_age:
                 with open(filename, 'rb') as file_handle:
