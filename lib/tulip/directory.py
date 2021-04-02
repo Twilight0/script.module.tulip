@@ -11,7 +11,7 @@
 from __future__ import absolute_import, print_function
 
 import traceback, sys
-from tulip.compat import urlencode, quote_plus, iteritems, basestring, parse_qsl, py3_dec
+from tulip.compat import urlencode, quote_plus, iteritems, basestring, parse_qsl
 from tulip.utils import percent
 from tulip import control
 from kodi_six.xbmc import log
@@ -19,7 +19,7 @@ from kodi_six.xbmc import log
 
 def add(
     items, cacheToDisc=True, content=None, mediatype=None, infotype='video', argv=None, as_playlist=False, auto_play=False,
-    pd_heading=None, pd_message='', clear_first=True, progress=False, category=None
+    pd_heading=None, pd_message='', clear_first=True, progress=False, category=None, artwork=None
 ):
 
     if argv is None:
@@ -281,12 +281,15 @@ def add(
 
         item = control.item(label=label)
 
-        item.setArt(
-            {
-                'icon': icon, 'thumb': icon, 'poster': icon, 'tvshow.poster': icon, 'season.poster': icon,
-                'banner': icon, 'tvshow.banner': icon, 'season.banner': icon, 'fanart': fanart
-            }
-        )
+        if artwork is not None:
+            item.setArt(artwork)
+        else:
+            item.setArt(
+                {
+                    'icon': icon, 'thumb': icon, 'poster': icon, 'tvshow.poster': icon, 'season.poster': icon,
+                    'banner': icon, 'tvshow.banner': icon, 'season.banner': icon, 'fanart': fanart
+                }
+            )
 
         control.addItem(handle=syshandle, url=url, listitem=item, isFolder=True, totalItems=len(items))
 
@@ -432,10 +435,13 @@ def resolve(
     item = control.item(path=url)
 
     if icon is not None:
-        item.setArt({'icon': icon, 'thumb': icon})
+        if isinstance(icon, dict):
+            item.setArt(icon)
+        else:
+            item.setArt({'icon': icon, 'thumb': icon})
 
     if meta is not None:
-        item.setInfo(type='Video', infoLabels=meta)
+        item.setInfo(type='video', infoLabels=meta)
 
     krypton_plus = control.kodi_version() >= 17.0
 
