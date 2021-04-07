@@ -34,6 +34,9 @@ except Exception:
     cache_path = os.path.join(os.curdir, 'function_cache')
 
 ENABLED = True
+SECONDS = 1
+MINUTES = 60
+HOURS = 360
 
 # noinspection PyUnboundLocalVariable
 def get(function_, duration, *args, **table):
@@ -298,7 +301,10 @@ class FunctionCache:
         except:  # pylint: disable=bare-except
             return False
 
-    def cache_method(self, limit):
+    def cache_method(self, limit, limit_mode=MINUTES):
+
+        limit = limit * limit_mode
+
         def wrap(func):
 
             @functools.wraps(func)
@@ -324,7 +330,9 @@ class FunctionCache:
 
         return wrap
 
-    def cache_function(self, limit):
+    def cache_function(self, limit, limit_mode=MINUTES):
+
+        limit = limit * limit_mode
 
         def wrap(func):
 
