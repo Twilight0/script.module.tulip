@@ -303,6 +303,13 @@ class FunctionCache:
 
     def cache_method(self, limit, limit_mode=MINUTES):
 
+        """
+        Uses pickle to cache a class method's returned result. Limit is in seconds, limit_mode is the multiplier
+        :param limit: int
+        :param limit_mode: int
+        :return: bytes
+        """
+
         limit = limit * limit_mode
 
         def wrap(func):
@@ -331,6 +338,13 @@ class FunctionCache:
         return wrap
 
     def cache_function(self, limit, limit_mode=MINUTES):
+
+        """
+        Uses pickle to cache a function's returned result. Limit is in seconds, limit_mode is the multiplier
+        :param limit: int
+        :param limit_mode: int
+        :return: bytes
+        """
 
         limit = limit * limit_mode
 
