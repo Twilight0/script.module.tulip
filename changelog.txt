@@ -1,3 +1,8 @@
+[B]2.9.X[/B]
+- Net module taken from ResolveURL and adapted
+- Deprecate request function
+- Remove caching from library itself
+
 [B]2.8.X[/B]
 - Replaced xbmc.python import with xbmc.addon for Matrix compatibility
 - New utils module

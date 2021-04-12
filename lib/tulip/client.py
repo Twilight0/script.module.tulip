@@ -13,7 +13,7 @@ from __future__ import absolute_import, division, print_function
 
 from tulip.cleantitle import replaceHTMLCodes, stripTags
 from tulip.parsers import parseDOM, parseDOM2, parse_headers
-from tulip.user_agents import randomagent, random_mobile_agent, CHROME, ANDROID
+from tulip.user_agents import CHROME, ANDROID
 from tulip.utils import enum
 import sys, traceback, json, ssl
 from os import sep
@@ -33,14 +33,12 @@ from tulip.compat import (
 # noinspection PyUnboundLocalVariable
 def request(
         url, close=True, redirect=True, error=False, proxy=None, post=None, headers=None, mobile=False, limit=None,
-        referer=None, cookie=None, output='', timeout='30', username=None, password=None, verify=True, as_bytes=False,
-        allow_caching=True
+        referer=None, cookie=None, output='', timeout='30', username=None, password=None, verify=True, as_bytes=False
 ):
 
-    try:
-        url = url.decode('utf-8')
-    except Exception:
-        pass
+    # This function will be deprecated
+
+    url = py3_dec(url)
 
     if isinstance(post, dict):
         post = bytes(urlencode(post), encoding='utf-8')
@@ -48,6 +46,7 @@ def request(
         post = bytes(post, encoding='utf-8')
 
     try:
+
         handlers = []
 
         if username is not None and password is not None and not proxy:
@@ -115,15 +114,9 @@ def request(
         if 'User-Agent' in headers:
             pass
         elif mobile is not True:
-            if allow_caching:
-                headers['User-Agent'] = randomagent()
-            else:
-                headers['User-Agent'] = CHROME
+            headers['User-Agent'] = CHROME
         else:
-            if allow_caching:
-                headers['User-Agent'] = random_mobile_agent()
-            else:
-                headers['User-Agent'] = ANDROID
+            headers['User-Agent'] = ANDROID
 
         if 'Referer' in headers:
             pass
@@ -375,7 +368,7 @@ def download_media(url, path, file_name, initiate_int='', completion_int='', exc
                 headers = {}
 
             if 'User-Agent' not in headers:
-                headers['User-Agent'] = cache.get(randomagent, 12)
+                headers['User-Agent'] = CHROME
 
             request = urllib2.Request(url.split('|')[0], headers=headers)
             response = urllib2.urlopen(request)

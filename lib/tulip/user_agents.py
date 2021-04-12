@@ -8,11 +8,9 @@
     See LICENSES/GPL-3.0-only for more information.
 '''
 
-from tulip.cache import FunctionCache
 from tulip.compat import urlencode
 from random import choice
 
-function_cache = FunctionCache().cache_function
 
 ANDROID = "Mozilla/5.0 (Linux; Android 10; STK-L21) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Mobile Safari/537.36"
 BRAVE = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Brave Chrome/83.0.4103.116 Safari/537.36"
@@ -31,7 +29,6 @@ PY_URLLIB_2 = "Python-urllib/2.7"
 PY_URLLIB_3 = "Python-urllib/3.8"
 
 
-@function_cache(2880)
 def randomagent():
 
     agents = [ANDROID, BRAVE, CHROME, EDGE, FIREFOX, FIREFOX_MAC, SAFARI, VIVALDI, IE_11]
@@ -49,7 +46,6 @@ def mobile_agent():
     return 'Mozilla/5.0 (Android 4.4.4; Mobile; rv:64.0) Gecko/64.0 Firefox/64.0'
 
 
-@function_cache(2880)
 def random_mobile_agent():
 
     agents = [

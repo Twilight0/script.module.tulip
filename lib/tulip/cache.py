@@ -228,10 +228,12 @@ def delete(withyes=True, label_yes_no=30401, label_success=30402):
 
 class FunctionCache:
 
-    def __init__(self):
+    def __init__(self, protocol=pickle.HIGHEST_PROTOCOL):
 
         if not os.path.exists(cache_path):
             os.makedirs(cache_path)
+
+        self.protocol = protocol
 
     def reset_cache(self, notify=False, label_success=30402):
 
@@ -290,7 +292,7 @@ class FunctionCache:
             kwargs = {}
 
         try:
-            payload = pickle.dumps(result, protocol=pickle.HIGHEST_PROTOCOL)
+            payload = pickle.dumps(result, protocol=self.protocol)
 
             filename = os.path.join(cache_path, self._get_filename(name, args, kwargs))
             with open(filename, 'wb') as file_handle:
