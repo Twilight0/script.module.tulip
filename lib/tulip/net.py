@@ -10,7 +10,7 @@
 
 import gzip
 import re
-import json
+import json as _json
 from tulip.user_agents import randomagent
 from tulip.compat import Request, urlencode, urlopen, cookielib, urllib2, is_py3, basestring, BytesIO
 import socket
@@ -155,7 +155,7 @@ class Net:
         opener = urllib2.build_opener(*handlers)
         urllib2.install_opener(opener)
 
-    def http_GET(self, url, headers={}, compression=True):
+    def http_GET(self, url, headers={}, compression=True, timeout=15):
         """
         Perform an HTTP GET request.
 
@@ -173,7 +173,7 @@ class Net:
             An :class:`HttpResponse` object containing headers and other
             meta-information about the page and the page content.
         """
-        return self._fetch(url, headers=headers, compression=compression)
+        return self._fetch(url, headers=headers, compression=compression, timeout=timeout)
 
     def http_POST(self, url, form_data, headers={}, compression=True, jdata=False):
         """
@@ -243,7 +243,7 @@ class Net:
         response = urllib2.urlopen(request)
         return HttpResponse(response)
 
-    def _fetch(self, url, form_data={}, headers={}, compression=True, jdata=False):
+    def _fetch(self, url, form_data={}, headers={}, compression=True, jdata=False, timeout=15):
         """
         Perform an HTTP GET or POST request.
 
@@ -267,7 +267,7 @@ class Net:
         req = Request(url)
         if form_data:
             if jdata:
-                form_data = json.dumps(form_data)
+                form_data = _json.dumps(form_data)
             elif isinstance(form_data, basestring):
                 form_data = form_data
             else:
@@ -283,7 +283,7 @@ class Net:
             req.add_header('Content-Type', 'application/json')
         host = req.host if is_py3 else req.get_host()
         req.add_unredirected_header('Host', host)
-        response = urlopen(req, timeout=15)
+        response = urlopen(req, timeout=timeout)
         return HttpResponse(response)
 
 
@@ -342,6 +342,13 @@ class HttpResponse:
         else:
             html = html.decode('ascii', errors='ignore') if is_py3 else html
         return html
+
+    def json(self, pprint=False):
+
+        if not pprint:
+            return _json.loads(self.content)
+        else:
+            return _json.dumps(_json.loads(self.content), skipkeys=True, indent=4)
 
     def get_headers(self, as_dict=False):
         """Returns headers returned by the server.

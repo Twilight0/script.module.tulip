@@ -2,6 +2,7 @@
 - Net module taken from ResolveURL and adapted
 - Deprecate request function
 - Remove caching from library itself
+- Update user agent strings
 
 [B]2.8.X[/B]
 - Replaced xbmc.python import with xbmc.addon for Matrix compatibility

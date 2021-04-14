@@ -15,6 +15,7 @@ from tulip.cleantitle import replaceHTMLCodes, stripTags
 from tulip.parsers import parseDOM, parseDOM2, parse_headers
 from tulip.user_agents import CHROME, ANDROID
 from tulip.utils import enum
+from tulip.net import Net
 import sys, traceback, json, ssl
 from os import sep
 from os.path import basename, splitext
@@ -511,5 +512,5 @@ def check_connection(url="1.1.1.1", timeout=3):
 
 __all__ = [
     'parseDOM', 'request', 'stripTags', 'retriever', 'replaceHTMLCodes', 'parseJSString', 'parse_headers',
-    'url2name', 'get_extension', 'check_connection', 'parseDOM2', 'quote_paths'
+    'url2name', 'get_extension', 'check_connection', 'parseDOM2', 'quote_paths', 'Net'
 ]
