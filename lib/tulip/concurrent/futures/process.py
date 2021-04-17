@@ -50,7 +50,7 @@ import threading
 import weakref
 import sys
 
-from concurrent.futures import _base
+from tulip.concurrent.futures import _base
 
 try:
     import queue
@@ -285,8 +285,7 @@ class ProcessPoolExecutor(_base.Executor):
         # Make the call queue slightly larger than the number of processes to
         # prevent the worker processes from idling. But don't make it too big
         # because futures in the call queue cannot be cancelled.
-        self._call_queue = multiprocessing.Queue(self._max_workers +
-                                                 EXTRA_QUEUED_CALLS)
+        self._call_queue = multiprocessing.Queue(self._max_workers + EXTRA_QUEUED_CALLS)
         self._result_queue = multiprocessing.Queue()
         self._work_ids = queue.Queue()
         self._queue_management_thread = None
@@ -320,8 +319,7 @@ class ProcessPoolExecutor(_base.Executor):
         for _ in range(len(self._processes), self._max_workers):
             p = multiprocessing.Process(
                     target=_process_worker,
-                    args=(self._call_queue,
-                          self._result_queue))
+                    args=(self._call_queue, self._result_queue))
             p.start()
             self._processes.add(p)
 

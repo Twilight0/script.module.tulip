@@ -5,16 +5,10 @@
 
 __author__ = 'Brian Quinlan (brian@sweetapp.com)'
 
-from concurrent.futures._base import (FIRST_COMPLETED,
-                                      FIRST_EXCEPTION,
-                                      ALL_COMPLETED,
-                                      CancelledError,
-                                      TimeoutError,
-                                      Future,
-                                      Executor,
-                                      wait,
-                                      as_completed)
-from concurrent.futures.thread import ThreadPoolExecutor
+from tulip.concurrent.futures._base import (
+    FIRST_COMPLETED, FIRST_EXCEPTION, ALL_COMPLETED, CancelledError, TimeoutError, Future, Executor, wait, as_completed
+)
+from tulip.concurrent.futures.thread import ThreadPoolExecutor
 
 # Jython doesn't have multiprocessing
 try:

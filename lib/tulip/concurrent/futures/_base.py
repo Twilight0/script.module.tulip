@@ -6,12 +6,12 @@ import logging
 import threading
 import time
 
-from concurrent.futures._compat import reraise
+from tulip.concurrent.futures._compat import reraise
 
 try:
     from collections import namedtuple
 except ImportError:
-    from concurrent.futures._compat import namedtuple
+    from tulip.concurrent.futures._compat import namedtuple
 
 __author__ = 'Brian Quinlan (brian@sweetapp.com)'
 
