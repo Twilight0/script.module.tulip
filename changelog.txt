@@ -7,6 +7,7 @@
 - Update user agent strings
 - Tweaks in compat module
 - Fixes in the bookmarking functions
+- Various other compatibility fixes
 
 [B]2.8.X[/B]
 - Replaced xbmc.python import with xbmc.addon for Matrix compatibility

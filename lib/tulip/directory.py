@@ -11,7 +11,7 @@
 from __future__ import absolute_import, print_function
 
 import traceback, sys
-from tulip.compat import urlencode, quote_plus, iteritems, basestring, parse_qsl
+from tulip.compat import urlencode, quote_plus, iteritems, basestring, parse_qsl, is_py2
 from tulip.utils import percent
 from tulip import control
 from kodi_six.xbmc import log
@@ -432,7 +432,11 @@ def resolve(
     if not dash and headers:
         url = '|'.join([url, headers])
 
-    item = control.item(path=url)
+    if is_py2:
+        item = control.item(path=url)
+    else:
+        item = control.item()
+        item.setPath(url)
 
     if icon is not None:
         if isinstance(icon, dict):
@@ -460,9 +464,13 @@ def resolve(
 
             mimetype = 'application/xml+dash'
 
+        inputstream_property = 'inputstream'
+        if is_py2:
+            inputstream_property += 'addon'
+
         item.setContentLookup(False)
         item.setMimeType('{0}'.format(mimetype))
-        item.setProperty('inputstreamaddon', 'inputstream.{}'.format(inputstream_type))
+        item.setProperty(inputstream_property, 'inputstream.{}'.format(inputstream_type))
         item.setProperty('inputstream.{0}.manifest_type'.format(inputstream_type), manifest_type)
 
         if headers:
