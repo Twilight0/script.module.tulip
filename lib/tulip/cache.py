@@ -38,10 +38,11 @@ SECONDS = 1
 MINUTES = 60
 HOURS = 360
 
+
 # noinspection PyUnboundLocalVariable
 def get(function_, duration, *args, **table):
 
-    log_notice('Tulip Library: This function does not work well on Python 3, please use cache_method or cache_function')
+    log_notice('Tulip Library: This function has been deprecated, please use cache_method or cache_function')
 
     try:
 
@@ -52,7 +53,10 @@ def get(function_, duration, *args, **table):
 
         a = hashlib.md5()
         for i in args:
-            a.update(str(i))
+            try:
+                a.update(str(i))
+            except TypeError:
+                a.update(i.encode('utf-8'))
         a = str(a.hexdigest())
 
     except Exception:

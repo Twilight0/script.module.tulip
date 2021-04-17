@@ -37,7 +37,7 @@ def request(
         referer=None, cookie=None, output='', timeout='30', username=None, password=None, verify=True, as_bytes=False
 ):
 
-    # This function will be deprecated
+    # This function has been deprecated
 
     url = py3_dec(url)
 

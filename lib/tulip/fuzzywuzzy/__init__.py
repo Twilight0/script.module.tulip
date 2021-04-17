@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 __version__ = '0.17.0'
 
-from tulip import control
+try:
+    from tulip import control
+except Exception:
+    control = None
 from tulip.fuzzywuzzy import process
 
 def wrapper(_list_, limit=5, score=70):
@@ -11,7 +14,10 @@ def wrapper(_list_, limit=5, score=70):
     if not _list_:
         return
 
-    term = control.inputDialog()
+    if control:
+        term = control.inputDialog()
+    else:
+        term = input('Please enter search term: ')
 
     if not term:
         return
@@ -21,7 +27,8 @@ def wrapper(_list_, limit=5, score=70):
     except AttributeError:
         pass
 
-    control.busy()
+    if control:
+        control.busy()
 
     titles = [i['title'].encode('unicode-escape') for i in _list_]
 
@@ -34,6 +41,7 @@ def wrapper(_list_, limit=5, score=70):
     for m in matches:
         results.append(_list_[m])
 
-    control.idle()
+    if control:
+        control.idle()
 
     return results

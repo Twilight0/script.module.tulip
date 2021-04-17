@@ -37,7 +37,7 @@ else:
 
 if is_py2:
 
-    _str = str
+    string = str
     str = unicode
     range = xrange
     from itertools import izip
@@ -47,15 +47,18 @@ if is_py2:
 
     def bytes(b, encoding="ascii"):
 
-        return _str(b)
+        return string(b)
 
     def iteritems(d, **kw):
 
         return d.iteritems(**kw)
 
+    import tulip.concurrent.futures
+    concurrent_futures = tulip.concurrent.futures
+
 elif is_py3:
 
-    bytes = bytes
+    bytes = string = bytes
     str = unicode = basestring = str
     range = range
     zip = zip
@@ -63,6 +66,9 @@ elif is_py3:
     def iteritems(d, **kw):
 
         return iter(d.items(**kw))
+
+    import concurrent.futures
+    concurrent_futures = concurrent.futures
 
 
 def py2_enc(s, encoding='utf-8'):
@@ -75,7 +81,7 @@ def py2_enc(s, encoding='utf-8'):
 
 def py2_uni(s, encoding='utf-8'):
 
-    if is_py2 and isinstance(s, str):
+    if is_py2 and isinstance(s, string):
         s = unicode(s, encoding)
 
     return s
@@ -104,13 +110,13 @@ try:
     import urllib2
     import httplib
     import BaseHTTPServer
+    import cPickle as pickle
     from cStringIO import StringIO
-    BytesIO = StringIO
     from SocketServer import ThreadingMixIn
     from HTMLParser import HTMLParser
     unescape = HTMLParser().unescape
     HTTPError = urllib2.HTTPError
-    import cPickle as pickle
+    BytesIO = StringIO
 
 # Python 3:
 except ImportError:
@@ -118,7 +124,6 @@ except ImportError:
     from http import client as httplib, cookiejar as cookielib
     from html import unescape
     import urllib.request as urllib2
-    URLopener = urllib2.URLopener
     import http.server as BaseHTTPServer
     from socketserver import ThreadingMixIn
     from io import StringIO, BytesIO
@@ -130,6 +135,7 @@ except ImportError:
     from urllib.error import HTTPError
     import queue as Queue
     import pickle
+    URLopener = urllib2.URLopener
 
 finally:
 
@@ -142,5 +148,5 @@ __all__ = [
     "range", "urlencode", "zip", "urlsplit", "urlunsplit", "cookielib", "URLopener", "quote_plus", "unescape",
     "parse_qs", "unquote_plus", "urllib2", "unicode", "database", "basestring", "urlopen", "Request", "OrderedDict",
     "iteritems", "BaseHTTPServer", "ThreadingMixIn", "addinfourl", "StringIO", "py2_enc", "py2_uni", "py3_dec",
-    "HTTPError", "pickle", "httplib", "BytesIO"
+    "HTTPError", "pickle", "httplib", "BytesIO", "concurrent_futures"
 ]

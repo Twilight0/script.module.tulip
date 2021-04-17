@@ -12,8 +12,8 @@ from __future__ import absolute_import
 
 import re, json
 from datetime import datetime
-from tulip.compat import urlparse, parse_qs, quote_plus, range, py3_dec, py2_enc
-from tulip import client, workers, control, directory, iso8601
+from tulip.compat import urlparse, parse_qs, quote_plus, range, py3_dec, py2_enc, concurrent_futures
+from tulip import client, control, directory, iso8601
 from tulip.log import log_debug
 
 MAXRES_THUMBNAIL = 2
@@ -22,9 +22,11 @@ MQ_THUMBNAIL = 0
 
 class youtube(object):
 
-    def __init__(self, key='', api_key_setting='yt_api_key', replace_url=True):
+    def __init__(self, key='', api_key_setting='yt_api_key', replace_url=True, max_workers=5):
 
         self.list = [];  self.data = []
+
+        self.max_workers = max_workers
 
         self.base_link = 'https://www.youtube.com/'
         self.base_addon = 'plugin://plugin.video.youtube/'
@@ -67,7 +69,7 @@ class youtube(object):
             result = json.loads(result)
             items = result['items']
         except Exception:
-            log_debug('Could not fetch items from Google, probably invalid key or no quota left')
+            log_debug('Youtube: Could not fetch items from the cdn, invalid key or no quota left')
             return
 
         for i in list(range(1, limit)):
@@ -116,7 +118,7 @@ class youtube(object):
             result = json.loads(result)
             items = result['items']
         except Exception:
-            log_debug('Could not fetch items from Google, probably invalid key or no quota left')
+            log_debug('Youtube: Could not fetch items from the cdn, invalid key or no quota left')
             return
 
         for i in list(range(1, limit)):
@@ -187,16 +189,22 @@ class youtube(object):
                 pass
 
         try:
-            u = [list(range(0, len(self.list)))[i:i+50] for i in list(range(len(list(range(0, len(self.list))))))[::50]]
-            u = [','.join([self.list[x]['url'] for x in i]) for i in u]
-            u = [self.content_link.format(''.join([i, self.key_link])) for i in u]
+            urls = [list(range(0, len(self.list)))[i:i+50] for i in list(range(len(list(range(0, len(self.list))))))[::50]]
+            urls = [','.join([self.list[x]['url'] for x in i]) for i in urls]
+            urls = [self.content_link.format(''.join([i, self.key_link])) for i in urls]
 
-            threads = []
-            for i in list(range(0, len(u))):
-                threads.append(workers.Thread(self.thread, u[i], i))
-                self.data.append('')
-            [i.start() for i in threads]
-            [i.join() for i in threads]
+            with concurrent_futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+                
+                threads = [executor.submit(self.thread, u) for u in urls]
+
+                for future in concurrent_futures.as_completed(threads):
+
+                    item = future.result()
+
+                    if not item:
+                        continue
+
+                    self.data.append(item)
 
             items = []
             for i in self.data:
@@ -234,11 +242,11 @@ class youtube(object):
 
         return self.list
 
-    def thread(self, url, i):
+    def thread(self, url):
 
         try:
             result = client.request(url)
-            self.data[i] = result
+            return result
         except Exception:
             return
 

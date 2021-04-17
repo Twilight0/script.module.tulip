@@ -15,7 +15,7 @@ import hashlib, json
 from ast import literal_eval as evaluate
 from tulip import control
 from tulip.cache import clear
-from tulip.compat import database, str, iteritems
+from tulip.compat import database, iteritems
 
 
 def add(url, file_=control.bookmarksFile):
@@ -27,9 +27,15 @@ def add(url, file_=control.bookmarksFile):
         dbid = hashlib.md5()
 
         for i in data['bookmark']:
-            dbid.update(str(i))
+            try:
+                dbid.update(str(i))
+            except TypeError:
+                dbid.update(i.encode('utf-8'))
         for i in data['action']:
-            dbid.update(str(i))
+            try:
+                dbid.update(str(i))
+            except TypeError:
+                dbid.update(i.encode('utf-8'))
 
         dbid = str(dbid.hexdigest())
 
@@ -58,10 +64,16 @@ def delete(url, file_=control.bookmarksFile):
         dbid = hashlib.md5()
 
         for i in data['delbookmark']:
-            dbid.update(str(i))
+            try:
+                dbid.update(str(i))
+            except TypeError:
+                dbid.update(i.encode('utf-8'))
 
         for i in data['action']:
-            dbid.update(str(i))
+            try:
+                dbid.update(str(i))
+            except TypeError:
+                dbid.update(i.encode('utf-8'))
 
         dbid = str(dbid.hexdigest())
 
@@ -98,7 +110,7 @@ def get(file_=control.bookmarksFile):
 
     except Exception:
 
-        pass
+        return
 
 
 __all__ = ['add', 'delete', 'get', 'clear']
