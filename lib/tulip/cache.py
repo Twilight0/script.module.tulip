@@ -9,7 +9,7 @@
 '''
 
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, division
 
 import re
 import functools
@@ -36,13 +36,11 @@ except Exception:
 ENABLED = True
 SECONDS = 1
 MINUTES = 60
-HOURS = 360
+HOURS = 3600
 
 
 # noinspection PyUnboundLocalVariable
-def get(function_, duration, *args, **table):
-
-    log_notice('Tulip Library: This function has been deprecated, please use cache_method or cache_function')
+def get(function_, duration, mode=HOURS, *args, **table):
 
     try:
 
@@ -86,9 +84,9 @@ def get(function_, duration, *args, **table):
         except AttributeError:
             response = evaluate(match[2])
 
-        t1 = int(match[3])
-        t2 = int(time.time())
-        update = (abs(t2 - t1) / 3600) >= int(duration)
+        t1 = float(match[3])
+        t2 = time.time()
+        update = (abs(t2 - t1) / float(mode)) >= float(duration)
         if not update:
             return response
 
@@ -135,7 +133,10 @@ def timeout(function_, *args, **table):
 
         a = hashlib.md5()
         for i in args:
-            a.update(str(i))
+            try:
+                a.update(str(i))
+            except TypeError:
+                a.update(i.encode('utf-8'))
         a = str(a.hexdigest())
     except Exception:
         pass

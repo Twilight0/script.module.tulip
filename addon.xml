@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="script.module.tulip" name="Tulip Library" version="2.9.2" provider-name="Twilight0">
+<addon id="script.module.tulip" name="Tulip Library" version="2.9.3" provider-name="Twilight0">
     <requires>
         <import addon="xbmc.addon" version="16.1.000"/>
         <import addon="script.module.kodi-six" version="0.0.2"/>
@@ -16,7 +16,6 @@
   > Deprecate client.request function
 - Add futures for compatibility
 - Utilize futures on youtube module (default maximum workers 5)
-- Deprecate request function
 - Remove caching from library itself
 - Update user agent strings
 - Tweaks in compat module

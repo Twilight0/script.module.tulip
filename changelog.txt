@@ -3,7 +3,6 @@
   > Deprecate client.request function
 - Add futures for compatibility
 - Utilize futures on youtube module (default maximum workers 5)
-- Deprecate request function
 - Remove caching from library itself
 - Update user agent strings
 - Tweaks in compat module
