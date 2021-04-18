@@ -40,7 +40,7 @@ HOURS = 3600
 
 
 # noinspection PyUnboundLocalVariable
-def get(function_, duration, mode=HOURS, *args, **table):
+def get(function_, duration, *args, **table):
 
     try:
 
@@ -86,7 +86,7 @@ def get(function_, duration, mode=HOURS, *args, **table):
 
         t1 = float(match[3])
         t2 = time.time()
-        update = (abs(t2 - t1) / float(mode)) >= float(duration)
+        update = (abs(t2 - t1) / float(HOURS)) >= float(duration)
         if not update:
             return response
 
