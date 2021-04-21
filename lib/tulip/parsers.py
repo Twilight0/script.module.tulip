@@ -12,7 +12,7 @@ from __future__ import print_function
 
 import re
 from collections import namedtuple
-from tulip.compat import iteritems, unicode, str, basestring
+from tulip.compat import iteritems, unicode, basestring, is_py2
 try:
     from tulip.log import log_debug
 except Exception:
@@ -356,9 +356,9 @@ def parseDOM2(html, name='', attrs=None, req=False, exclude_comments=False):
         attrs = {}
     name = name.strip()
 
-    if isinstance(html, unicode) or isinstance(html, DomMatch):
+    if (is_py2 and isinstance(html, unicode)) or isinstance(html, DomMatch):
         html = [html]
-    elif isinstance(html, str):
+    elif isinstance(html, basestring):
         try:
             html = [html.decode("utf-8")]  # Replace with chardet thingy
         except:
