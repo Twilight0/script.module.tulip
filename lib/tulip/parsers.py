@@ -12,7 +12,7 @@ from __future__ import print_function
 
 import re
 from collections import namedtuple
-from tulip.compat import iteritems, unicode, basestring, is_py2
+from tulip.compat import iteritems, unicode, str, basestring, is_py2
 try:
     from tulip.log import log_debug
 except Exception:
@@ -262,17 +262,14 @@ def _getDOMElements(item, name, attrs):
 
 
 def __get_dom_content(html, name, match):
-
-    if match.endswith('/>'):
-        return ''
+    if match.endswith('/>'): return ''
 
     # override tag name with tag from match if possible
-    tag = re.match(r'<([^\s/>]+)', match)
-    if tag:
-        name = tag.group(1)
+    tag = re.match('<([^\s/>]+)', match)
+    if tag: name = tag.group(1)
 
-    start_str = '<%s' % name
-    end_str = "</%s" % name
+    start_str = '<%s' % (name)
+    end_str = "</%s" % (name)
 
     # start/end tags without matching case cause issues
     start = html.find(match)
@@ -295,33 +292,31 @@ def __get_dom_content(html, name, match):
         result = html[start + len(match):]
     else:
         result = ''
+
     return result
 
 
 def __get_dom_elements(item, name, attrs):
     if not attrs:
-        pattern = r'(<%s(?:\s[^>]*>|/?>))' % name
+        pattern = r'(<%s(?:\s[^>]*>|/?>))' % (name)
         this_list = re.findall(pattern, item, re.M | re.S | re.I)
     else:
         last_list = None
-
         for key, value in iteritems(attrs):
             value_is_regex = isinstance(value, re_type)
             value_is_str = isinstance(value, basestring)
+            if value_is_str:
+                value = re.compile(value)
             pattern = r'''(<{tag}[^>]*\s{key}=(?P<delim>['"])(.*?)(?P=delim)[^>]*>)'''.format(tag=name, key=key)
             re_list = re.findall(pattern, item, re.M | re.S | re.I)
 
-            if value_is_regex:
-                this_list = [r[0] for r in re_list if re.match(value, r[2])]
-            else:
-                temp_value = [value] if value_is_str else value
-                this_list = [r[0] for r in re_list if set(temp_value) <= set(r[2].split(' '))]
+            this_list = [r[0] for r in re_list if re.match(value, r[2])]
 
             if not this_list:
-                has_space = (value_is_regex and ' ' in value.pattern) or (value_is_str and ' ' in value)
+                has_space = ' ' in value.pattern
                 if not has_space:
-                    pattern = r'''(<{tag}[^>]*\s{key}=((?:[^\s>]|/>)*)[^>]*>)'''.format(tag=name, key=key)
-                    re_list = re.findall(pattern, item, re.M | re.S | re.I)
+                    pattern = r'''(<{tag}[^>]*\s{key}=([^\s/>]*)[^>]*>)'''.format(tag=name, key=key)
+                    re_list = re.findall(pattern, item, re.M | re. S | re.I)
                     if value_is_regex:
                         this_list = [r[0] for r in re_list if re.match(value, r[1])]
                     else:
@@ -332,41 +327,45 @@ def __get_dom_elements(item, name, attrs):
             else:
                 last_list = [item for item in this_list if item in last_list]
         this_list = last_list
+
     return this_list
 
 
 def __get_attribs(element):
+
     attribs = {}
+
     for match in re.finditer(
             r'''\s+(?P<key>[^=]+)=\s*(?:(?P<delim>["'])(?P<value1>.*?)(?P=delim)|(?P<value2>[^"'][^>\s]*))''', element
     ):
+
         match = match.groupdict()
         value1 = match.get('value1')
         value2 = match.get('value2')
         value = value1 if value1 is not None else value2
+
         if value is None:
             continue
+
         attribs[match['key'].lower().strip()] = value
+
     return attribs
 
 
-def parseDOM2(html, name='', attrs=None, req=False, exclude_comments=False):
-
+def parseDOM2(html, name='', attrs=None, ret=False):
     if attrs is None:
         attrs = {}
     name = name.strip()
-
-    if (is_py2 and isinstance(html, unicode)) or isinstance(html, DomMatch):
+    if isinstance(html, unicode) or isinstance(html, DomMatch):
         html = [html]
-    elif isinstance(html, basestring):
+    elif isinstance(html, basestring) and is_py2:
         try:
             html = [html.decode("utf-8")]  # Replace with chardet thingy
         except:
             try:
                 html = [html.decode("utf-8", "replace")]
-            except:
+            except Exception:
                 html = [html]
-
     elif not isinstance(html, list):
         return ''
 
@@ -376,23 +375,20 @@ def parseDOM2(html, name='', attrs=None, req=False, exclude_comments=False):
     if not isinstance(attrs, dict):
         return ''
 
-    if req:
-        if not isinstance(req, list):
-            req = [req]
-        req = set([key.lower() for key in req])
+    if ret:
+        if not isinstance(ret, list):
+            ret = [ret]
+        ret = set([key.lower() for key in ret])
 
     all_results = []
     for item in html:
         if isinstance(item, DomMatch):
             item = item.content
 
-        if exclude_comments:
-            item = re.sub(re.compile(r'<!--.*?-->', re.DOTALL), '', item)
-
         results = []
         for element in __get_dom_elements(item, name, attrs):
             attribs = __get_attribs(element)
-            if req and not req <= set(attribs.keys()):
+            if ret and not ret <= set(attribs.keys()):
                 continue
             temp = __get_dom_content(item, name, element).strip()
             results.append(DomMatch(attribs, temp))
