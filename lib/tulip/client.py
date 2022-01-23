@@ -363,12 +363,15 @@ def download_media(
 
         start_time = time.time()
 
-        retriever(
-            url, destination, user_agent=user_agent, referer=referer,
-            reporthook=lambda numblocks, blocksize, filesize: _pbhook(
-                numblocks, blocksize, filesize, pd, start_time, line1
+        try:
+            retriever(
+                url, destination, user_agent=user_agent, referer=referer,
+                reporthook=lambda numblocks, blocksize, filesize: _pbhook(
+                    numblocks, blocksize, filesize, pd, start_time, line1
+                )
             )
-        )
+        except Exception:
+            pd.update(100, 'Cancelled')
 
 
 def _pbhook(numblocks, blocksize, filesize, pd, start_time, line1):
@@ -389,6 +392,9 @@ def _pbhook(numblocks, blocksize, filesize, pd, start_time, line1):
     line1 = line1 % (currently_downloaded, total, kbps_speed)
     line1 += ' - ETA: %02d:%02d' % divmod(eta, 60)
     pd.update(_percent, line1)
+
+    if pd.is_canceled():
+        raise Exception
 
 
 class M3U8:
