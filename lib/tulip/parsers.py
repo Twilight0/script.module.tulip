@@ -12,7 +12,7 @@ from __future__ import print_function
 
 import re
 from collections import namedtuple
-from tulip.compat import iteritems, unicode, str, basestring, is_py2
+from tulip.compat import iteritems, unicode, basestring, is_py2
 try:
     from tulip.log import log_debug
 except Exception:

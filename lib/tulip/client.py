@@ -604,5 +604,5 @@ def check_connection(url="1.1.1.1", timeout=3):
 
 __all__ = [
     'parseDOM', 'request', 'stripTags', 'retriever', 'replaceHTMLCodes', 'parseJSString', 'parse_headers',
-    'url2name', 'get_extension', 'check_connection', 'parseDOM2', 'quote_paths', 'Net', 'M3U8'
+    'url2name', 'check_connection', 'parseDOM2', 'quote_paths', 'Net', 'M3U8'
 ]

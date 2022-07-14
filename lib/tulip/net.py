@@ -10,10 +10,10 @@
 
 import gzip
 import re
+import socket
 import json as _json
 from tulip.user_agents import CHROME
 from tulip.compat import Request, urlencode, urlopen, cookielib, urllib2, is_py3, basestring, BytesIO, HTTPError
-import socket
 
 # Set Global timeout - Useful for slow connections and Putlocker.
 socket.setdefaulttimeout(10)
@@ -75,7 +75,7 @@ class Net:
             self._cj.load(cookie_file, ignore_discard=True)
             self._update_opener()
             return True
-        except:
+        except Exception:
             return False
 
     def get_cookies(self, as_dict=False):
@@ -118,7 +118,7 @@ class Net:
         """Returns user agent string."""
         return self._user_agent
 
-    def _update_opener(self, drop_tls_level=False):
+    def _update_opener(self):
         """
         Builds and installs a new opener to be used by all future calls to
         :func:`urllib2.urlopen`.
@@ -136,33 +136,33 @@ class Net:
         try:
             import platform
             node = platform.node().lower()
-        except:
+        except Exception:
             node = ''
 
         if not self._ssl_verify or node == 'xboxone':
             try:
                 import ssl
                 ctx = ssl.create_default_context()
+                ctx.set_alpn_protocols(['http/1.0', 'http/1.1'])
                 ctx.check_hostname = False
                 ctx.verify_mode = ssl.CERT_NONE
                 if self._http_debug:
                     handlers += [urllib2.HTTPSHandler(context=ctx, debuglevel=1)]
                 else:
                     handlers += [urllib2.HTTPSHandler(context=ctx)]
-            except:
+            except Exception:
                 pass
         else:
             try:
                 import ssl
                 import certifi
                 ctx = ssl.create_default_context(cafile=certifi.where())
-                if drop_tls_level:
-                    ctx.protocol = ssl.PROTOCOL_TLSv1_1
+                ctx.set_alpn_protocols(['http/1.0', 'http/1.1'])
                 if self._http_debug:
                     handlers += [urllib2.HTTPSHandler(context=ctx, debuglevel=1)]
                 else:
                     handlers += [urllib2.HTTPSHandler(context=ctx)]
-            except:
+            except Exception:
                 pass
 
         opener = urllib2.build_opener(*handlers)
@@ -297,11 +297,28 @@ class Net:
         host = req.host if is_py3 else req.get_host()
         req.add_unredirected_header('Host', host)
         try:
-            response = urlopen(req, timeout=timeout)
+            response = urllib2.urlopen(req, timeout=15)
         except HTTPError as e:
-            if e.code == 403:
-                self._update_opener(drop_tls_level=True)
-            response = urlopen(req, timeout=timeout)
+            if e.code == 403 and 'cloudflare' in e.hdrs.get('Expect-CT', ''):
+                import ssl
+                ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+                ctx.set_alpn_protocols(['http/1.0', 'http/1.1'])
+                handlers = [urllib2.HTTPSHandler(context=ctx)]
+                opener = urllib2.build_opener(*handlers)
+                try:
+                    response = opener.open(req, timeout=15)
+                except HTTPError as e:
+                    if e.code == 403:
+                        ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_1)
+                        ctx.set_alpn_protocols(['http/1.0', 'http/1.1'])
+                        handlers = [urllib2.HTTPSHandler(context=ctx)]
+                        opener = urllib2.build_opener(*handlers)
+                        try:
+                            response = opener.open(req, timeout=15)
+                        except HTTPError as e:
+                            response = e
+            else:
+                raise
 
         return HttpResponse(response)
 
@@ -336,7 +353,7 @@ class HttpResponse:
         try:
             if self._response.headers['content-encoding'].lower() == 'gzip':
                 html = gzip.GzipFile(fileobj=BytesIO(html)).read()
-        except:
+        except Exception:
             pass
 
         if self._nodecode:
@@ -346,7 +363,7 @@ class HttpResponse:
             content_type = self._response.headers['content-type']
             if 'charset=' in content_type:
                 encoding = content_type.split('charset=')[-1]
-        except:
+        except Exception:
             pass
 
         if encoding is None:
