@@ -82,7 +82,7 @@ def kodi_version():
     :return: float
     """
 
-    return float(addon('xbmc.addon').getAddonInfo('version')[:4])
+    return float(infoLabel("System.BuildVersion")[:4])
 
 
 if is_py3:
