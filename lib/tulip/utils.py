@@ -8,7 +8,7 @@
     See LICENSES/GPL-3.0-only for more information.
 '''
 
-from tulip.compat import range
+from tulip.compat import range, urlencode, parse_qsl
 
 
 def percent(count, total):
@@ -43,3 +43,13 @@ def merge_dicts(d1, d2):
     d.update(d2)
 
     return d
+
+
+def form_data_conversion(form_data):
+
+    if isinstance(form_data, dict):
+        return urlencode(form_data)
+    elif isinstance(form_data, str):
+        return dict(parse_qsl(form_data))
+    else:
+        pass  # won't do any conversion on other types

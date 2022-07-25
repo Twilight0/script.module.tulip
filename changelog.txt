@@ -3,6 +3,8 @@
 - Add ability to save locally unencrypted m3u8 ts video content
 - Update user agent strings
 - Change the way kodi version is obtained
+- Add limit to net module
+- Convert url bytes object to string (python 3 only)
 
 [B]2.9.X[/B]
 - Net module taken from ResolveURL and adapted

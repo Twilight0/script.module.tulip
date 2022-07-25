@@ -10,13 +10,11 @@
 
 import gzip
 import re
-import socket
-import json as _json
+import json
 from tulip.user_agents import CHROME
-from tulip.compat import Request, urlencode, urlopen, cookielib, urllib2, is_py3, basestring, BytesIO, HTTPError
-
-# Set Global timeout - Useful for slow connections and Putlocker.
-socket.setdefaulttimeout(10)
+from tulip.compat import (
+    Request, urlencode, urlopen, cookielib, urllib2, is_py3, basestring, BytesIO, HTTPError, py3_dec
+)
 
 
 class Net:
@@ -168,7 +166,7 @@ class Net:
         opener = urllib2.build_opener(*handlers)
         urllib2.install_opener(opener)
 
-    def http_GET(self, url, headers={}, compression=True, timeout=15):
+    def http_GET(self, url, headers={}, compression=True, timeout=15, jdata=False, limit=None):
         """
         Perform an HTTP GET request.
 
@@ -186,9 +184,9 @@ class Net:
             An :class:`HttpResponse` object containing headers and other
             meta-information about the page and the page content.
         """
-        return self._fetch(url, headers=headers, compression=compression, timeout=timeout)
+        return self._fetch(url, headers=headers, compression=compression, timeout=timeout, jdata=jdata, limit=limit)
 
-    def http_POST(self, url, form_data, headers={}, compression=True, jdata=False):
+    def http_POST(self, url, form_data, headers={}, compression=True, jdata=False, limit=None):
         """
         Perform an HTTP POST request.
 
@@ -208,7 +206,7 @@ class Net:
             An :class:`HttpResponse` object containing headers and other
             meta-information about the page and the page content.
         """
-        return self._fetch(url, form_data, headers=headers, compression=compression, jdata=jdata)
+        return self._fetch(url, form_data, headers=headers, compression=compression, jdata=jdata, limit=limit)
 
     def http_HEAD(self, url, headers={}):
         """
@@ -256,7 +254,7 @@ class Net:
         response = urlopen(request)
         return HttpResponse(response)
 
-    def _fetch(self, url, form_data={}, headers={}, compression=True, jdata=False, timeout=15):
+    def _fetch(self, url, form_data={}, headers={}, compression=True, jdata=False, timeout=15, limit=None):
         """
         Perform an HTTP GET or POST request.
 
@@ -264,6 +262,7 @@ class Net:
             url (str): The URL to GET or POST.
 
             form_data (dict): A dictionary of form data to POST. If empty, the
+            limit (int): limit response length, size in bytes
             request will be a GET, if it contains form data it will be a POST.
 
         Kwargs:
@@ -277,10 +276,13 @@ class Net:
             An :class:`HttpResponse` object containing headers and other
             meta-information about the page and the page content.
         """
+
+        url = py3_dec(url)
         req = Request(url)
+
         if form_data:
             if jdata:
-                form_data = _json.dumps(form_data)
+                form_data = json.dumps(form_data)
             elif isinstance(form_data, basestring):
                 form_data = form_data
             else:
@@ -297,7 +299,10 @@ class Net:
         host = req.host if is_py3 else req.get_host()
         req.add_unredirected_header('Host', host)
         try:
-            response = urllib2.urlopen(req, timeout=15)
+            if limit is not None:
+                response = urllib2.urlopen(req, timeout=timeout).read(limit)
+            else:
+                response = urllib2.urlopen(req, timeout=timeout)
         except HTTPError as e:
             if e.code == 403 and 'cloudflare' in e.hdrs.get('Expect-CT', ''):
                 import ssl
@@ -306,7 +311,10 @@ class Net:
                 handlers = [urllib2.HTTPSHandler(context=ctx)]
                 opener = urllib2.build_opener(*handlers)
                 try:
-                    response = opener.open(req, timeout=15)
+                    if limit is not None:
+                        response = opener.open(req, timeout=timeout).read(limit)
+                    else:
+                        response = opener.open(req, timeout=timeout)
                 except HTTPError as e:
                     if e.code == 403:
                         ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_1)
@@ -314,7 +322,10 @@ class Net:
                         handlers = [urllib2.HTTPSHandler(context=ctx)]
                         opener = urllib2.build_opener(*handlers)
                         try:
-                            response = opener.open(req, timeout=15)
+                            if limit is not None:
+                                response = opener.open(req, timeout=timeout).read(limit)
+                            else:
+                                response = opener.open(req, timeout=timeout)
                         except HTTPError as e:
                             response = e
             else:
@@ -400,6 +411,10 @@ class HttpResponse:
         """
         return self._response.geturl()
 
+    def get_json(self):
+
+        return json.loads(self.content)
+
     def nodecode(self, nodecode):
         """
         Sets whether or not content returns decoded text
@@ -408,3 +423,4 @@ class HttpResponse:
         """
         self._nodecode = bool(nodecode)
         return self
+
