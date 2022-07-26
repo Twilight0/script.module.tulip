@@ -36,7 +36,10 @@ class Net:
     _user_agent = CHROME
     _http_debug = False
 
-    def __init__(self, cookie_file='', proxy='', user_agent='', ssl_verify=True, http_debug=False):
+    def __init__(
+            self, url=None, cookie_file='', proxy='', user_agent='', ssl_verify=True, http_debug=False,
+            username=None, password=None
+    ):
         """
         Kwargs:
             cookie_file (str): Full path to a file to be used to load and save
@@ -59,6 +62,9 @@ class Net:
             self.set_user_agent(user_agent)
         self._ssl_verify = ssl_verify
         self._http_debug = http_debug
+        self.url = url
+        self.username = username
+        self.password = password
         self._update_opener()
 
     def set_cookies(self, cookie_file):
@@ -81,6 +87,7 @@ class Net:
         if as_dict:
             return dict((cookie.name, cookie.value) for cookie in self._cj)
         else:
+            # noinspection PyProtectedMember
             return self._cj._cookies
 
     def save_cookies(self, cookie_file):
@@ -121,7 +128,12 @@ class Net:
         Builds and installs a new opener to be used by all future calls to
         :func:`urllib2.urlopen`.
         """
-        handlers = [urllib2.HTTPCookieProcessor(self._cj), urllib2.HTTPBasicAuthHandler()]
+        if self.username is not None and self.password is not None:
+            passmgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            passmgr.add_password(None, uri=self.url, user=self.username, passwd=self.password)
+            handlers = [urllib2.HTTPCookieProcessor(self._cj), urllib2.HTTPBasicAuthHandler(passmgr)]
+        else:
+            handlers = [urllib2.HTTPCookieProcessor(self._cj), urllib2.HTTPBasicAuthHandler()]
 
         if self._http_debug:
             handlers += [urllib2.HTTPHandler(debuglevel=1)]
@@ -138,6 +150,7 @@ class Net:
             node = ''
 
         if not self._ssl_verify or node == 'xboxone':
+
             try:
                 import ssl
                 ctx = ssl.create_default_context()
@@ -150,7 +163,9 @@ class Net:
                     handlers += [urllib2.HTTPSHandler(context=ctx)]
             except Exception:
                 pass
+
         else:
+
             try:
                 import ssl
                 import certifi
@@ -166,7 +181,7 @@ class Net:
         opener = urllib2.build_opener(*handlers)
         urllib2.install_opener(opener)
 
-    def http_GET(self, url, headers={}, compression=True, timeout=15, jdata=False, limit=None):
+    def http_GET(self, url=None, headers={}, compression=True, timeout=15, jdata=False, limit=None):
         """
         Perform an HTTP GET request.
 
@@ -184,9 +199,12 @@ class Net:
             An :class:`HttpResponse` object containing headers and other
             meta-information about the page and the page content.
         """
-        return self._fetch(url, headers=headers, compression=compression, timeout=timeout, jdata=jdata, limit=limit)
+        if self.url is not None:
+            return self._fetch(self.url, headers=headers, compression=compression, timeout=timeout, jdata=jdata, limit=limit)
+        else:
+            return self._fetch(url, headers=headers, compression=compression, timeout=timeout, jdata=jdata, limit=limit)
 
-    def http_POST(self, url, form_data, headers={}, compression=True, jdata=False, limit=None):
+    def http_POST(self, url=None, form_data=None, headers={}, compression=True, jdata=False, limit=None):
         """
         Perform an HTTP POST request.
 
@@ -206,9 +224,12 @@ class Net:
             An :class:`HttpResponse` object containing headers and other
             meta-information about the page and the page content.
         """
-        return self._fetch(url, form_data, headers=headers, compression=compression, jdata=jdata, limit=limit)
+        if self.url is not None:
+            return self._fetch(self.url, form_data, headers=headers, compression=compression, jdata=jdata, limit=limit)
+        else:
+            return self._fetch(url, form_data, headers=headers, compression=compression, jdata=jdata, limit=limit)
 
-    def http_HEAD(self, url, headers={}):
+    def http_HEAD(self, url=None, headers={}):
         """
         Perform an HTTP HEAD request.
 
@@ -223,7 +244,10 @@ class Net:
             An :class:`HttpResponse` object containing headers and other
             meta-information about the page.
         """
-        request = urllib2.Request(url)
+        if self.url is not None:
+            request = Request(self.url)
+        else:
+            request = Request(url)
         request.get_method = lambda: 'HEAD'
         request.add_header('User-Agent', self._user_agent)
         for key in headers:
@@ -246,7 +270,10 @@ class Net:
             An :class:`HttpResponse` object containing headers and other
             meta-information about the page.
         """
-        request = Request(url)
+        if self.url is not None:
+            request = Request(self.url)
+        else:
+            request = Request(url)
         request.get_method = lambda: 'DELETE'
         request.add_header('User-Agent', self._user_agent)
         for key in headers:
@@ -262,7 +289,7 @@ class Net:
             url (str): The URL to GET or POST.
 
             form_data (dict): A dictionary of form data to POST. If empty, the
-            limit (int): limit response length, size in bytes
+
             request will be a GET, if it contains form data it will be a POST.
 
         Kwargs:
@@ -299,10 +326,7 @@ class Net:
         host = req.host if is_py3 else req.get_host()
         req.add_unredirected_header('Host', host)
         try:
-            if limit is not None:
-                response = urllib2.urlopen(req, timeout=timeout).read(limit)
-            else:
-                response = urllib2.urlopen(req, timeout=timeout)
+            response = urllib2.urlopen(req, timeout=timeout)
         except HTTPError as e:
             if e.code == 403 and 'cloudflare' in e.hdrs.get('Expect-CT', ''):
                 import ssl
@@ -311,10 +335,7 @@ class Net:
                 handlers = [urllib2.HTTPSHandler(context=ctx)]
                 opener = urllib2.build_opener(*handlers)
                 try:
-                    if limit is not None:
-                        response = opener.open(req, timeout=timeout).read(limit)
-                    else:
-                        response = opener.open(req, timeout=timeout)
+                    response = opener.open(req, timeout=timeout)
                 except HTTPError as e:
                     if e.code == 403:
                         ctx = ssl.SSLContext(ssl.PROTOCOL_TLSv1_1)
@@ -322,16 +343,13 @@ class Net:
                         handlers = [urllib2.HTTPSHandler(context=ctx)]
                         opener = urllib2.build_opener(*handlers)
                         try:
-                            if limit is not None:
-                                response = opener.open(req, timeout=timeout).read(limit)
-                            else:
-                                response = opener.open(req, timeout=timeout)
+                            response = opener.open(req, timeout=timeout)
                         except HTTPError as e:
                             response = e
             else:
                 raise
 
-        return HttpResponse(response)
+        return HttpResponse(response, limit=limit)
 
 
 class HttpResponse:
@@ -346,9 +364,9 @@ class HttpResponse:
     """
 
     # content = ''
-    """Unicode encoded string containing the body of the reponse."""
+    """Unicode encoded string containing the body of the response."""
 
-    def __init__(self, response):
+    def __init__(self, response, limit=None):
         """
         Args:
             response (:class:`mimetools.Message`): The object returned by a call
@@ -356,10 +374,14 @@ class HttpResponse:
         """
         self._response = response
         self._nodecode = False
+        self._limit = limit
 
     @property
     def content(self):
-        html = self._response.read()
+        if self._limit:
+            html = self._response.read(self._limit)
+        else:
+            html = self._response.read()
         encoding = None
         try:
             if self._response.headers['content-encoding'].lower() == 'gzip':
