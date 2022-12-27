@@ -37,8 +37,8 @@ class Net:
     _http_debug = False
 
     def __init__(
-            self, url=None, cookie_file='', proxy='', user_agent='', ssl_verify=True, http_debug=False,
-            username=None, password=None
+            self, url=None, cookie_file='', proxy='', user_agent='', ssl_verify=True,
+            http_debug=False, username=None, password=None
     ):
         """
         Kwargs:
@@ -445,4 +445,3 @@ class HttpResponse:
         """
         self._nodecode = bool(nodecode)
         return self
-

@@ -22,9 +22,9 @@ from tulip import m3u8
 import sys, traceback, json, ssl, time
 from os.path import basename
 try:
-    from tulip.log import log_debug, log_info
+    from tulip.log import log_debug
 except Exception:
-    log_debug = log_info = None
+    log_debug = None
 try:
     from tulip import control
 except Exception:

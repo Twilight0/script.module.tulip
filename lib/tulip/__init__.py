@@ -8,5 +8,4 @@
     See LICENSES/GPL-3.0-only for more information.
 '''
 
-
 __author__ = 'Twilight0'

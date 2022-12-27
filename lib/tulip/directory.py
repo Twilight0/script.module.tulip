@@ -18,8 +18,8 @@ from kodi_six.xbmc import log
 
 
 def add(
-    items, cacheToDisc=True, content=None, mediatype=None, infotype='video', argv=None, as_playlist=False, auto_play=False,
-    pd_heading=None, pd_message='', clear_first=True, progress=False, category=None, artwork=None
+    items, cacheToDisc=True, content=None, mediatype=None, infotype='video', argv=None, as_playlist=False,
+    auto_play=False, pd_heading=None, pd_message='', clear_first=True, progress=False, category=None, artwork=None
 ):
 
     if argv is None:
@@ -56,10 +56,11 @@ def add(
         'count', 'size', 'date', 'genre', 'country', 'year', 'episode', 'season', 'sortepisode', 'sortseason',
         'episodeguide', 'showlink', 'top250', 'setid', 'tracknumber', 'rating', 'userrating', 'watched', 'playcount',
         'overlay', 'cast', 'castandrole', 'director', 'mpaa', 'plot', 'plotoutline', 'title', 'originaltitle',
-        'sorttitle', 'duration', 'studio', 'tagline', 'writer', 'tvshowtitle', 'premiered', 'status', 'set', 'gameclient',
+        'sorttitle', 'duration', 'studio', 'tagline', 'writer', 'tvshowtitle', 'premiered', 'status', 'set',
         'setoverview', 'tag', 'imdbnumber', 'code', 'aired', 'credits', 'lastplayed', 'album', 'artist', 'votes',
         'path', 'trailer', 'dateadded', 'mediatype', 'dbid', 'tracknumber', 'discnumber', 'lyrics', 'listeners',
-        'musicbrainztrackid', 'comment', 'picturepath', 'platform', 'genres', 'publisher', 'developer', 'overview'
+        'musicbrainztrackid', 'comment', 'picturepath', 'platform', 'genres', 'publisher', 'developer', 'overview',
+        'gameclient'
     ]
 
     for c, i in list(enumerate(items)):

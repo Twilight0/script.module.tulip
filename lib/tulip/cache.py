@@ -27,7 +27,7 @@ from tulip.compat import str, database, pickle
 
 try:
     from tulip import control
-    from tulip.log import log_debug, log_notice
+    from tulip.log import log_debug
     cache_path = control.join(control.dataPath, 'cache')
 except Exception:
     control = None
