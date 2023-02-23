@@ -22,7 +22,7 @@ def read_file(file_, line_by_line=False, reverse=False, encoding='utf-8'):
         f = codecs.open(file_, 'r', encoding=encoding)
 
     if line_by_line:
-        text = [i.rstrip('\n') for i in file_.readlines()]
+        text = [i.rstrip('\n') for i in f.readlines()]
         if reverse:
             text = text[::-1]
     else:
@@ -98,8 +98,6 @@ def add_to_file(file_, text, trim_file=True, encoding='utf-8'):
             f = codecs.open(file_, 'r', encoding=encoding)
             if py2_uni(text) + '\n' in f.readlines():
                 return
-            else:
-                pass
         f.close()
 
     except IOError:

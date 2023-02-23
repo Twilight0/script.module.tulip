@@ -19,7 +19,8 @@ from kodi_six.xbmc import log
 
 def add(
     items, cacheToDisc=True, content=None, mediatype=None, infotype='video', argv=None, as_playlist=False,
-    auto_play=False, pd_heading=None, pd_message='', clear_first=True, progress=False, category=None, artwork=None
+    auto_play=False, pd_heading=None, pd_message='', clear_first=True, progress=False, category=None, artwork=None,
+    offscreen=False
 ):
 
     if argv is None:
@@ -280,7 +281,7 @@ def add(
         except Exception:
             label = 'Next'
 
-        item = control.item(label=label)
+        item = control.item(label=label, offscreen=offscreen)
 
         if artwork is not None:
             item.setArt(artwork)

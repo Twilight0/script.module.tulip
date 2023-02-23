@@ -1,6 +1,8 @@
 [B]3.1.X[/B]
 - Update user agent strings
 - Added a few more utilities
+- Add offscreen boolean parameter for ListItem
+- Bug fixes
 
 [B]3.0.X[/B]
 - Utilize certifi for net module
