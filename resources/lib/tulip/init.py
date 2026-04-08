@@ -8,10 +8,8 @@
     See LICENSES/GPL-3.0-only for more information.
 '''
 
-from __future__ import absolute_import
-
 import sys
-from tulip.compat import parse_qsl
+from urllib.parse import parse_qsl
 
 argv = sys.argv
 

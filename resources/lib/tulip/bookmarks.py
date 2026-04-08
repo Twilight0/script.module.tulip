@@ -8,17 +8,15 @@
     See LICENSES/GPL-3.0-only for more information.
 '''
 
-
-from __future__ import absolute_import
-
-import hashlib, json
+import hashlib
+import json
 from ast import literal_eval as evaluate
-from tulip import control
-from tulip.cache import clear
-from tulip.compat import database, iteritems
+from sqlite3 import dbapi2 as database
+from tulip import kodi
+from tulip.utils import iteritems
 
 
-def add(url, file_=control.bookmarksFile):
+def add(url, path=kodi.bookmarksFile):
 
     try:
 
@@ -28,22 +26,22 @@ def add(url, file_=control.bookmarksFile):
 
         for i in data['bookmark']:
             try:
-                dbid.update(str(i))
+                dbid.update(i)
             except TypeError:
                 dbid.update(i.encode('utf-8'))
         for i in data['action']:
             try:
-                dbid.update(str(i))
+                dbid.update(i)
             except TypeError:
                 dbid.update(i.encode('utf-8'))
 
         dbid = str(dbid.hexdigest())
 
-        item = dict((k,v) for k, v in iteritems(data) if not k == 'bookmark')
+        item = dict((k, v) for k, v in iteritems(data) if not k == 'bookmark')
         item = repr(item)
 
-        control.makeFile(control.dataPath)
-        dbcon = database.connect(file_)
+        kodi.makeFile(kodi.dataPath)
+        dbcon = database.connect(path)
         dbcur = dbcon.cursor()
         dbcur.execute("CREATE TABLE IF NOT EXISTS bookmark (""dbid TEXT, ""item TEXT, ""UNIQUE(dbid)"");")
         dbcur.execute("DELETE FROM bookmark WHERE dbid = '{}'".format(dbid))
@@ -55,7 +53,7 @@ def add(url, file_=control.bookmarksFile):
         pass
 
 
-def delete(url, file_=control.bookmarksFile):
+def delete(url, path=kodi.bookmarksFile):
 
     try:
 
@@ -65,38 +63,38 @@ def delete(url, file_=control.bookmarksFile):
 
         for i in data['delbookmark']:
             try:
-                dbid.update(str(i))
+                dbid.update(i)
             except TypeError:
                 dbid.update(i.encode('utf-8'))
 
         for i in data['action']:
             try:
-                dbid.update(str(i))
+                dbid.update(i)
             except TypeError:
                 dbid.update(i.encode('utf-8'))
 
         dbid = str(dbid.hexdigest())
 
-        control.makeFile(control.dataPath)
-        dbcon = database.connect(file_)
+        kodi.makeFile(kodi.dataPath)
+        dbcon = database.connect(path)
         dbcur = dbcon.cursor()
         dbcur.execute("CREATE TABLE IF NOT EXISTS bookmark (""dbid TEXT, ""item TEXT, ""UNIQUE(dbid)"");")
         dbcur.execute("DELETE FROM bookmark WHERE dbid = '{}'".format(dbid))
         dbcon.commit()
 
-        control.refresh()
+        kodi.refresh()
 
     except Exception:
 
         pass
 
 
-def get(file_=control.bookmarksFile):
+def get(path=kodi.bookmarksFile):
 
     try:
 
-        control.makeFile(control.dataPath)
-        dbcon = database.connect(file_)
+        kodi.makeFile(kodi.dataPath)
+        dbcon = database.connect(path)
         dbcur = dbcon.cursor()
         dbcur.execute("SELECT * FROM bookmark")
         items = dbcur.fetchall()
@@ -111,6 +109,25 @@ def get(file_=control.bookmarksFile):
     except Exception:
 
         return
+
+
+def clear(table=None, path=kodi.bookmarksFile):
+
+    try:
+
+        dbcon = database.connect(path)
+        dbcur = dbcon.cursor()
+
+        for t in table:
+            try:
+                dbcur.execute("DROP TABLE IF EXISTS {0}".format(t))
+                dbcur.execute("VACUUM")
+                dbcon.commit()
+            except Exception:
+                pass
+
+    except Exception:
+        pass
 
 
 __all__ = ['add', 'delete', 'get', 'clear']

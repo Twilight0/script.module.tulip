@@ -8,10 +8,9 @@
     See LICENSES/GPL-3.0-only for more information.
 '''
 
-from __future__ import absolute_import
-
-import re, unicodedata
-from tulip.compat import unicode, unescape
+import re
+import unicodedata
+from html import unescape
 
 
 def get(title, lower=True):
@@ -51,7 +50,7 @@ def normalize(title):
 
         t = ''
         for i in title:
-            c = unicodedata.normalize('NFKD', unicode(i, 'ISO-8859-1'))
+            c = unicodedata.normalize('NFKD', str(i, 'ISO-8859-1'))
             c = c.encode('ascii', 'ignore').strip()
             if i == ' ':
                 c = i
@@ -87,13 +86,28 @@ def replaceHTMLCodes(txt):
 
     txt = re.sub("(&#[0-9]+)([^;^0-9]+)", "\\1;\\2", txt)
     txt = unescape(txt)
-    txt = txt.replace("&quot;", "\"")
-    txt = txt.replace("&amp;", "&")
-    txt = txt.replace("&#38;", "&")
-    txt = txt.replace("&nbsp;", " ")
-    txt = txt.replace('&#8230;', '...')
-    txt = txt.replace('&#8217;', '\'')
-    txt = txt.replace('&#8211;', '-')
+    replacements = {
+        "&quot;": "\"",
+        "&amp;": "&",
+        "&#38;": "&",
+        "&nbsp;": " ",
+        "&lt;": "<",
+        "&gt;": ">",
+        "&apos;": "'",
+        "&#8211;": "-",
+        "&#8212;": "--",
+        "&#8216;": "'",
+        "&#8217;": "'",
+        "&#8220;": "\"",
+        "&#8221;": "\"",
+        "&#8230;": "...",
+        "&#8482;": "(TM)",
+        "&#169;": "(c)",
+        "&#174;": "(r)",
+    }
+
+    for entity, char in replacements.items():
+        txt = txt.replace(entity, char)
 
     return txt
 

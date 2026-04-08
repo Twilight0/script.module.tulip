@@ -8,10 +8,6 @@
     See LICENSES/GPL-3.0-only for more information.
 '''
 
-from __future__ import print_function
-
-import sys
-import traceback
 import threading
 
 
@@ -27,6 +23,4 @@ class Thread(threading.Thread):
         try:
             self.__target(*self.__args)
         except TypeError:
-            _, __, tb = sys.exc_info()
-            print(traceback.print_tb(tb))
             return

@@ -8,18 +8,20 @@
     See LICENSES/GPL-3.0-only for more information.
 '''
 
-
-from __future__ import absolute_import, division
-
-from kodi_six import xbmc, xbmcaddon, xbmcplugin, xbmcgui, xbmcvfs
-import os, json, time
+import xbmc
+import xbmcaddon
+import xbmcplugin
+import xbmcgui
+import xbmcvfs
+import os
+import json
+import time
 from tulip.init import syshandle
-from tulip.compat import basestring, is_py3
 
 
 integer = 1000
 addon = xbmcaddon.Addon
-lang = addon().getLocalizedString
+i18n = addon().getLocalizedString
 setting = addon().getSetting
 setSetting = addon().setSetting
 addonInfo = addon().getAddonInfo
@@ -31,7 +33,7 @@ content = xbmcplugin.setContent
 setproperty = xbmcplugin.setProperty
 setcategory = xbmcplugin.setPluginCategory
 resolve = xbmcplugin.setResolvedUrl
-sortmethod = xbmcplugin.addSortMethod
+addsortmethod = xbmcplugin.addSortMethod
 
 infoLabel = xbmc.getInfoLabel
 condVisibility = xbmc.getCondVisibility
@@ -46,6 +48,7 @@ wait = monitor().waitForAbort
 aborted = monitor().abortRequested
 cleanmovietitle = xbmc.getCleanMovieTitle
 getregion = xbmc.getRegion
+videostreamdetail = xbmc.VideoStreamDetail
 
 window = xbmcgui.Window(10000)
 dialog = xbmcgui.Dialog()
@@ -71,7 +74,20 @@ listDir = xbmcvfs.listdir
 exists = xbmcvfs.exists
 copy = xbmcvfs.copy
 rename = xbmcvfs.rename
+legalfilename = xbmcvfs.makeLegalFilename
+transPath = xbmcvfs.translatePath
+skinPath = transPath('special://skin/')
+addonPath = transPath(addonInfo('path'))
+dataPath = transPath(addonInfo('profile'))
 join = os.path.join
+settingsFile = join(dataPath, 'settings.xml')
+bookmarksFile = join(dataPath, 'bookmarks.db')
+cacheFile = join(dataPath, 'cache.db')
+cacheDirectory = join(dataPath, 'cache')
+
+
+if not exists(cacheDirectory):
+    makeFile(cacheDirectory)
 
 
 def kodi_version():
@@ -83,21 +99,6 @@ def kodi_version():
     """
 
     return float(infoLabel("System.BuildVersion")[:4])
-
-
-if is_py3:
-    legalfilename = xbmcvfs.makeLegalFilename
-    transPath = xbmcvfs.translatePath
-else:
-    legalfilename = xbmc.makeLegalFilename
-    transPath = xbmc.translatePath
-
-skinPath = transPath('special://skin/')
-addonPath = transPath(addonInfo('path'))
-dataPath = transPath(addonInfo('profile'))
-settingsFile = join(dataPath, 'settings.xml')
-bookmarksFile = join(dataPath, 'bookmarks.db')
-cacheFile = join(dataPath, 'cache.db')
 
 
 def name():
@@ -141,46 +142,35 @@ def okDialog(heading, line1):
 
 def yesnoDialog(line1, heading=addonInfo('name'), nolabel='', yeslabel=''):
 
-    if is_py3:
-        return dialog.yesno(heading, message=line1, nolabel=nolabel, yeslabel=yeslabel)
-    else:
-        return dialog.yesno(heading, line1=line1, nolabel=nolabel, yeslabel=yeslabel)
+    return dialog.yesno(heading, message=line1, nolabel=nolabel, yeslabel=yeslabel)
 
 
+# noinspection PyShadowingBuiltins
 def selectDialog(list, heading=addonInfo('name'), autoclose=0, preselect=-1, useDetails=False):
 
-    if kodi_version() >= 17.0:
-        return dialog.select(heading, list, autoclose=autoclose, preselect=preselect, useDetails=useDetails)
-    else:
-        return dialog.select(heading, list)
+    return dialog.select(heading, list, autoclose=autoclose, preselect=preselect, useDetails=useDetails)
 
 
+# noinspection PyShadowingBuiltins
 def inputDialog(heading=name(), default='', type=alphanum_input, option=0, autoclose=0):
 
     try:
+        # noinspection PyArgumentList
         return dialog.input(heading=heading, default=default, type=type, option=option, autoclose=autoclose)
     except Exception:
         return dialog.input(heading=heading, defaultt=default, type=type, option=option, autoclose=autoclose)
 
 
-if kodi_version() >= 18.0:
+def text_viewer(heading, text, use_mono=False):
 
-    def text_viewer(heading, text, use_mono=False):
-
-        dialog.textviewer(heading, text, use_mono)
-
-else:
-
-    def text_viewer(heading, text):
-
-        dialog.textviewer(heading, text)
+    dialog.textviewer(heading, text, use_mono)
 
 
 class WorkingDialog(object):
 
     def __init__(self):
 
-        busy()
+        busynocancel()
 
     def __enter__(self):
 
@@ -282,10 +272,7 @@ class CountdownDialog(object):
 
             else:
 
-                if isinstance(expiration, int):
-                    expiration = lang(expiration).format(countdown)
-                else:
-                    expiration = expiration.format(countdown)
+                expiration = expiration.format(countdown)
 
             pd.create(self.heading, self.line1 + '[CR]' + expiration)
             pd.update(100)
@@ -337,6 +324,7 @@ class CountdownDialog(object):
             result = func(*args, **kwargs)
             if result:
                 return result
+        return None
 
     def is_canceled(self):
         if self.pd is None:
@@ -349,38 +337,33 @@ class CountdownDialog(object):
             self.pd.update(percent, line1)
 
 
-def read(file_, numBytes=0):
+def read(f, numBytes=0):
 
-    return openFile(file_).read(numBytes)
-
-
-def readbytes(file_, numBytes=0):
-
-    return openFile(file_).readBytes(numBytes)
+    return openFile(f).read(numBytes)
 
 
-def openSettings(query=None, id=addonInfo('id'), execute_=True):
+def readbytes(f, numBytes=0):
+
+    return openFile(f).readBytes(numBytes)
+
+
+def openSettings(query=None, addon_id=addonInfo('id'), explicit=False):
 
     idle()
 
-    if execute_:
+    if explicit:
         execute('Addon.OpenSettings({0})'.format(id))
     else:
-        addon(id).openSettings()
+        addon(addon_id).openSettings()
 
     if query is not None:
 
         try:
 
             c, f = query.split('.')
-            if kodi_version() >= 18.0:
-                execute('SetFocus(-{0})'.format(100 - int(c)))
-                if int(f):
-                    execute('SetFocus(-{0})'.format(80 - int(f)))
-            else:
-                execute('SetFocus({0})'.format(100 + int(c)))
-                if int(f):
-                    execute('SetFocus({0})'.format(200 + int(f)))
+            execute('SetFocus(-{0})'.format(100 - int(c)))
+            if int(f):
+                execute('SetFocus(-{0})'.format(80 - int(f)))
 
         except Exception:
 
@@ -417,20 +400,24 @@ def refresh():
     return execute('Container.Refresh')
 
 
+def update_container(uri):
+
+    return execute('Container.Update({})'.format(uri))
+
+
 def idle():
 
-    if kodi_version() >= 18.0:
-        execute('Dialog.Close(busydialognocancel)')
-    else:
-        execute('Dialog.Close(busydialog)')
+    execute('Dialog.Close(busydialognocancel)')
+
+
+def busynocancel():
+
+    execute('ActivateWindow(busydialognocancel)')
 
 
 def busy():
 
-    if kodi_version() >= 18.0:
-        execute('ActivateWindow(busydialognocancel)')
-    else:
-        execute('ActivateWindow(busydialog)')
+    execute('ActivateWindow(busydialog)')
 
 
 def close_all():
@@ -447,15 +434,15 @@ def set_view_mode(view_mode):
 
 
 # for compartmentalized theme addons
-def addonmedia(icon, addonid=addonInfo('id'), theme=None, media_subfolder=True):
+def addonmedia(path, addonid=addonInfo('id'), theme=None, media_subfolder=True):
 
     if not theme:
-        return join(addon(addonid).getAddonInfo('path'), 'resources', 'media' if media_subfolder else '', icon)
+        return join(addon(addonid).getAddonInfo('path'), 'resources', 'media' if media_subfolder else '', path)
     else:
-        return join(addon(addonid).getAddonInfo('path'), 'resources', 'media' if media_subfolder else '', theme, icon)
+        return join(addon(addonid).getAddonInfo('path'), 'resources', 'media' if media_subfolder else '', theme, path)
 
 
-def sortmethods(method='unsorted', mask='%D'):
+def setsortmethod(method='unsorted', mask='%D'):
 
     """
     Function to sort directory items
@@ -472,94 +459,94 @@ def sortmethods(method='unsorted', mask='%D'):
     #  "%A" "%B" "%C" "%D" ...
 
     if method == 'none':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_NONE, label2Mask=mask)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_NONE, label2Mask=mask)
     elif method == 'label':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_LABEL, label2Mask=mask)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_LABEL, label2Mask=mask)
     elif method == 'label_ignore_the':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE, label2Mask=mask)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_LABEL_IGNORE_THE, label2Mask=mask)
     elif method == 'date':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_DATE)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_DATE)
     elif method == 'size':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_SIZE)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_SIZE)
     elif method == 'file':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_FILE, label2Mask=mask)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_FILE, label2Mask=mask)
     elif method == 'drive_type':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_DRIVE_TYPE)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_DRIVE_TYPE)
     elif method == 'tracknum':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_TRACKNUM, label2Mask=mask)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_TRACKNUM, label2Mask=mask)
     elif method == 'duration':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_DURATION)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_DURATION)
     elif method == 'title':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_TITLE, label2Mask=mask)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_TITLE, label2Mask=mask)
     elif method == 'title_ignore_the':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE, label2Mask=mask)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_TITLE_IGNORE_THE, label2Mask=mask)
     elif method == 'artist':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_ARTIST)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_ARTIST)
     elif method == 'artist_ignore_the':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_ARTIST_IGNORE_THE)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_ARTIST_IGNORE_THE)
     elif method == 'album':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_ALBUM)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_ALBUM)
     elif method == 'album_ignore_the':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_ALBUM_IGNORE_THE)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_ALBUM_IGNORE_THE)
     elif method == 'genre':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_GENRE)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_GENRE)
     elif method == 'year':
         try:
-            return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_YEAR)
+            return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_YEAR)
         except Exception:
-            return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_YEAR)
+            return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_YEAR)
     elif method == 'video_rating':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_RATING)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_RATING)
     elif method == 'program_count':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_PROGRAM_COUNT)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_PROGRAM_COUNT)
     elif method == 'playlist_order':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_PLAYLIST_ORDER)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_PLAYLIST_ORDER)
     elif method == 'episode':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_EPISODE)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_EPISODE)
     elif method == 'video_title':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_TITLE, label2Mask=mask)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_TITLE, label2Mask=mask)
     elif method == 'video_sort_title':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE, label2Mask=mask)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE, label2Mask=mask)
     elif method == 'video_sort_title_ignore_the':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE_IGNORE_THE, label2Mask=mask)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_SORT_TITLE_IGNORE_THE, label2Mask=mask)
     elif method == 'production_code':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_PRODUCTIONCODE)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_PRODUCTIONCODE)
     elif method == 'song_rating':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_SONG_RATING)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_SONG_RATING)
     elif method == 'mpaa_rating':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_MPAA_RATING)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_MPAA_RATING)
     elif method == 'video_runtime':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_RUNTIME)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_RUNTIME)
     elif method == 'studio':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_STUDIO)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_STUDIO)
     elif method == 'studio_ignore_the':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_STUDIO_IGNORE_THE)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_STUDIO_IGNORE_THE)
     elif method == 'unsorted':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_UNSORTED, label2Mask=mask)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_UNSORTED, label2Mask=mask)
     elif method == 'bitrate':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_BITRATE)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_BITRATE)
     elif method == 'listeners':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_LISTENERS)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_LISTENERS)
     elif method == 'country':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_COUNTRY)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_COUNTRY)
     elif method == 'date_added':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_DATEADDED)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_DATEADDED)
     elif method == 'full_path':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_FULLPATH, label2Mask=mask)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_FULLPATH, label2Mask=mask)
     elif method == 'label_ignore_folders':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_LABEL_IGNORE_FOLDERS, label2Mask=mask)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_LABEL_IGNORE_FOLDERS, label2Mask=mask)
     elif method == 'last_played':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_LASTPLAYED)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_LASTPLAYED)
     elif method == 'play_count':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_PLAYCOUNT)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_PLAYCOUNT)
     elif method == 'channel':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_CHANNEL, label2Mask=mask)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_CHANNEL, label2Mask=mask)
     elif method == 'date_taken':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_DATE_TAKEN)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_DATE_TAKEN)
     elif method == 'video_user_rating':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_USER_RATING)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_VIDEO_USER_RATING)
     elif method == 'song_user_rating':
-        return sortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_SONG_USER_RATING)
+        return addsortmethod(handle=syshandle, sortMethod=xbmcplugin.SORT_METHOD_SONG_USER_RATING)
     else:
         pass
 
@@ -568,7 +555,7 @@ def json_rpc(command):
 
     # This function was taken from tknorris's kodi.py
 
-    if not isinstance(command, basestring):
+    if not isinstance(command, str):
         command = json.dumps(command)
     response = jsonrpc(command)
 
@@ -718,7 +705,7 @@ def active_mode():
 
 def quit_kodi():
 
-    busy()
+    busynocancel()
 
     execute('Quit')
 
@@ -757,6 +744,54 @@ def update_repositories():
 def update_addons():
 
     xbmc.executebuiltin('UpdateLocalAddons')
+
+
+def add_to_playlist():
+
+    execute('Action(Queue)')
+
+
+def clear_playlist():
+
+    execute('Playlist.Clear')
+
+
+def toggle_watched():
+
+    execute('Action(ToggleWatched)')
+
+
+def toggle_debug():
+
+    execute('ToggleDebug')
+
+
+def skin_debug():
+
+    execute('Skin.ToggleDebug')
+
+
+def skin_choice():
+
+    execute('Addon.Default.Set(xbmc.gui.skin)')
+
+
+def global_settings():
+
+    execute('Dialog.Close(all)')
+    execute('ActivateWindow(settings,return)')
+
+
+def pvr_settings():
+
+    execute('Dialog.Close(all)')
+    execute('ActivateWindow(pvrsettings)')
+
+
+def system_info():
+
+    execute('Dialog.Close(all)')
+    execute('ActivateWindow(systeminfo,return)')
 
 
 def install_addon(addon_id, send_yes=True):
