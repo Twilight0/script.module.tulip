@@ -504,8 +504,20 @@ def resolve(
                 item.setProperty('inputstream.adaptive.manifest_headers', headers)
 
         if licence_key and licence_type:
-            item.setProperty('inputstream.adaptive.license_type', licence_type)
-            item.setProperty('inputstream.adaptive.license_key', licence_key)
+            if licence_type == 'org.w3.clearkey':
+                try:
+                    k_dict = json.loads(licence_key) if isinstance(licence_key, str) else licence_key
+                    if isinstance(k_dict, dict):
+                        pairs = '|'.join([f'{k}:{v}' for k, v in k_dict.items()])
+                        item.setProperty('inputstream.adaptive.drm_legacy', f'org.w3.clearkey|{pairs}')
+                except Exception:
+                    pass
+                if kodi.kodi_version() < 21:
+                    item.setProperty('inputstream.adaptive.license_type', licence_type)
+                    item.setProperty('inputstream.adaptive.license_key', licence_key)
+            else:
+                item.setProperty('inputstream.adaptive.license_type', licence_type)
+                item.setProperty('inputstream.adaptive.license_key', licence_key)
 
     elif mimetype:
 
