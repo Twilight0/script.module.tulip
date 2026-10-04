@@ -182,7 +182,98 @@ def builder(
         if cm_list:
             directory_item.addContextMenuItems(cm_list)
 
-        directory_item.setInfo(type=list_item.get('infotype', infotype), infoLabels=meta)
+        info_type = list_item.get('infotype', infotype)
+        tag_set = False
+
+        if info_type == 'video' and hasattr(directory_item, 'getVideoInfoTag'):
+            try:
+                v_tag = directory_item.getVideoInfoTag()
+                if 'title' in meta:
+                    v_tag.setTitle(meta['title'])
+                if 'originaltitle' in meta:
+                    v_tag.setOriginalTitle(meta['originaltitle'])
+                if 'plot' in meta:
+                    v_tag.setPlot(meta['plot'])
+                if 'plotoutline' in meta:
+                    v_tag.setPlotOutline(meta['plotoutline'])
+                if 'tagline' in meta:
+                    v_tag.setTagLine(meta['tagline'])
+                if 'genre' in meta:
+                    genres = meta['genre'] if isinstance(meta['genre'], list) else [meta['genre']]
+                    v_tag.setGenres(genres)
+                if 'year' in meta and str(meta['year']).isdigit():
+                    v_tag.setYear(int(meta['year']))
+                if 'premiered' in meta:
+                    v_tag.setPremiered(str(meta['premiered']))
+                if 'duration' in meta and str(meta['duration']).isdigit():
+                    v_tag.setDuration(int(meta['duration']))
+                if 'rating' in meta:
+                    try:
+                        v_tag.setRating(float(meta['rating']))
+                    except (ValueError, TypeError):
+                        pass
+                if 'userrating' in meta:
+                    try:
+                        v_tag.setUserRating(int(meta['userrating']))
+                    except (ValueError, TypeError):
+                        pass
+                if 'playcount' in meta and str(meta['playcount']).isdigit():
+                    v_tag.setPlaycount(int(meta['playcount']))
+                if 'director' in meta:
+                    directors = meta['director'] if isinstance(meta['director'], list) else [meta['director']]
+                    v_tag.setDirectors(directors)
+                if 'writer' in meta:
+                    writers = meta['writer'] if isinstance(meta['writer'], list) else [meta['writer']]
+                    v_tag.setWriters(writers)
+                if 'cast' in meta and isinstance(meta['cast'], list):
+                    v_tag.setCast(meta['cast'])
+                if 'studio' in meta:
+                    studios = meta['studio'] if isinstance(meta['studio'], list) else [meta['studio']]
+                    v_tag.setStudios(studios)
+                if 'country' in meta:
+                    countries = meta['country'] if isinstance(meta['country'], list) else [meta['country']]
+                    v_tag.setCountries(countries)
+                if 'mpaa' in meta:
+                    v_tag.setMpaa(str(meta['mpaa']))
+                if 'season' in meta and str(meta['season']).isdigit():
+                    v_tag.setSeason(int(meta['season']))
+                if 'episode' in meta and str(meta['episode']).isdigit():
+                    v_tag.setEpisode(int(meta['episode']))
+                if 'tvshowtitle' in meta:
+                    v_tag.setTvShowTitle(meta['tvshowtitle'])
+                if 'mediatype' in meta:
+                    v_tag.setMediaType(meta['mediatype'])
+                if 'trailer' in meta:
+                    v_tag.setTrailer(meta['trailer'])
+                tag_set = True
+            except Exception:
+                tag_set = False
+
+        elif info_type in ('music', 'audio') and hasattr(directory_item, 'getMusicInfoTag'):
+            try:
+                m_tag = directory_item.getMusicInfoTag()
+                if 'title' in meta:
+                    m_tag.setTitle(meta['title'])
+                if 'artist' in meta:
+                    artists = meta['artist'] if isinstance(meta['artist'], list) else [meta['artist']]
+                    m_tag.setArtist(artists[0] if artists else '')
+                if 'album' in meta:
+                    m_tag.setAlbum(meta['album'])
+                if 'genre' in meta:
+                    genres = meta['genre'] if isinstance(meta['genre'], list) else [meta['genre']]
+                    m_tag.setGenre(genres[0] if genres else '')
+                if 'year' in meta and str(meta['year']).isdigit():
+                    m_tag.setYear(int(meta['year']))
+                if 'duration' in meta and str(meta['duration']).isdigit():
+                    m_tag.setDuration(int(meta['duration']))
+                if 'tracknumber' in meta and str(meta['tracknumber']).isdigit():
+                    m_tag.setTrack(int(meta['tracknumber']))
+                tag_set = True
+            except Exception:
+                tag_set = False
+
+        if not tag_set:
+            directory_item.setInfo(type=info_type, infoLabels=meta)
 
         if isPlayable:
 
